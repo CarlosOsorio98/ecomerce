@@ -58,7 +58,21 @@ function createCartSection(cart, user, router) {
           "button",
           {
             onclick: () => {
-              updateCartItemQuantity(item.id, item.quantity - 1);
+              const newQuantity = item.quantity - 1;
+              fetch("/api/log-cart-action", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "decrement",
+                  product: item.name,
+                  productId: item.id,
+                  oldQuantity: item.quantity,
+                  newQuantity,
+                  user: user.name,
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+              updateCartItemQuantity(item.id, newQuantity);
               router.handleRoute(); // Re-render
             },
           },
@@ -69,7 +83,21 @@ function createCartSection(cart, user, router) {
           "button",
           {
             onclick: () => {
-              updateCartItemQuantity(item.id, item.quantity + 1);
+              const newQuantity = item.quantity + 1;
+              fetch("/api/log-cart-action", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "increment",
+                  product: item.name,
+                  productId: item.id,
+                  oldQuantity: item.quantity,
+                  newQuantity,
+                  user: user.name,
+                  timestamp: new Date().toISOString(),
+                }),
+              });
+              updateCartItemQuantity(item.id, newQuantity);
               router.handleRoute(); // Re-render
             },
           },
@@ -94,6 +122,18 @@ function createCartSection(cart, user, router) {
         {
           className: "remove-item",
           onclick: () => {
+            fetch("/api/log-cart-action", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "remove",
+                product: item.name,
+                productId: item.id,
+                quantity: item.quantity,
+                user: user.name,
+                timestamp: new Date().toISOString(),
+              }),
+            });
             removeFromCart(item.id);
             router.handleRoute(); // Re-render
           },

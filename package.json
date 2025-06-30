@@ -1,0 +1,14 @@
+{
+  "name": "proyecto",
+  "private": true,
+  "scripts": {
+    "start": "bun run server.js",
+    "dev": "bun run --hot server.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

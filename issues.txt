@@ -1,0 +1,8 @@
+cuando cambia algo en el carrito, agrego o quito algo, la pagina me sigue mostrar un producto que ya se habia borrado anteriormente
+
+--
+
+Seccion de pago 
+confirmacion de correo electronico al usuario 
+una de ofertas y descuentos
+carrito desplegable que este en la barra de navegacion
