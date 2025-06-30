@@ -161,13 +161,126 @@
         text-align: center;
         padding: 1rem;
       }
+
+      .logout-button,
+      .delete-account {
+        background: none;
+        border: 1px solid white;
+        color: white;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 1rem;
+        border-radius: 4px;
+        transition: background-color 0.2s, color 0.2s;
+      }
+
+      .logout-button:hover {
+        background-color: #f4f4f4;
+        color: #333;
+      }
+
+      .delete-account {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        margin-top: 1rem;
+      }
+      .delete-account:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+      }
+
+      /* Estilos del Modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal-content h2 {
+        margin-top: 0;
+      }
+
+      .modal-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
+      .modal-actions button {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+      }
+      .modal-actions .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+      .modal-actions .btn-secondary {
+        background-color: #f4f4f4;
+      }
+
+      /* Estilos de la página de perfil/carrito */
+      .profile-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .cart-section,
+      .account-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .cart-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 1rem;
+      }
+
+      .cart-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .cart-item:last-child {
+        border-bottom: none;
+      }
+
+      .cart-total {
+        margin-top: 1rem;
+        font-weight: bold;
+        font-size: 1.2rem;
+        text-align: right;
+      }
     </style>
   </head>
   <body>
     <header>
       <nav>
         <h1>Mi Tienda</h1>
-        <ul>
+        <ul id="main-nav-links">
           <li><a href="/index.html" data-link>Inicio</a></li>
           <li><a href="/login" data-link>Iniciar Sesión</a></li>
           <li><a href="/register" data-link>Registro</a></li>
