@@ -1,304 +1,34 @@
-import { AuthService } from "./services/auth.js";
-import { UserService } from "./services/user.js";
+/**
+ * @file main.js
+ * @description
+ * Este es el archivo principal y el punto de entrada de toda la aplicación.
+ * Ahora, con el código refactorizado, su responsabilidad principal es:
+ * 1. Importar todas las piezas modulares (vistas, componentes, servicios).
+ * 2. Crear las instancias de los objetos principales (Router, Servicios).
+ * 3. Configurar el enrutador con las vistas, inyectando las dependencias necesarias.
+ * 4. Inicializar la aplicación.
+ */
+
+import { authService } from "./services/auth.js";
 import { createElement, createRouter } from "./spa.js";
-import { addToCart, getCart, getUser, store } from "./state.js";
+import { store } from "./state.js";
 
-// Servicios
-const authService = new AuthService();
-const userService = new UserService();
+// Importar las Vistas (factorías que crean las vistas)
+import { HomeView } from "./views/home.js";
+import { LoginView } from "./views/login.js";
+import { ProfileView } from "./views/profile.js";
+import { RegisterView } from "./views/register.js";
 
-// Obtener la ruta base del proyecto
+// --- OBTENER RUTA BASE ---
 const basePath = document
   .querySelector('script[src*="main.js"]')
   .getAttribute("src")
   .replace("src/main.js", "");
 
-// Vistas
-async function HomeView() {
-  const container = createElement("div", { className: "products-grid" });
-
-  try {
-    const response = await fetch(basePath + "assets.json");
-    const products = await response.json();
-
-    products.forEach((product) => {
-      const card = createElement(
-        "div",
-        { className: "product-card" },
-        createElement("img", {
-          src: basePath + product.url,
-          alt: product.name,
-        }),
-        createElement("h3", {}, product.name),
-        createElement("p", { className: "price" }, `$${product.price}`),
-        createElement(
-          "button",
-          {
-            className: "add-to-cart",
-            onclick: () => showQuantityModal(product),
-          },
-          "Agregar al carrito"
-        )
-      );
-      container.appendChild(card);
-    });
-  } catch (error) {
-    console.error("Error cargando productos:", error);
-    container.appendChild(
-      createElement(
-        "p",
-        { className: "error-message" },
-        "Error al cargar los productos. Por favor, intente más tarde."
-      )
-    );
-  }
-
-  return container;
-}
-
-function LoginView() {
-  const container = createElement(
-    "div",
-    { className: "auth-container" },
-    createElement(
-      "form",
-      {
-        className: "auth-form",
-        onsubmit: async (e) => {
-          e.preventDefault();
-          const email = e.target.email.value;
-          const password = e.target.password.value;
-
-          try {
-            await authService.signIn(email, password);
-            router.navigateTo("/");
-          } catch (error) {
-            alert(error.message);
-          }
-        },
-      },
-      createElement("h2", {}, "Iniciar Sesión"),
-      createElement("input", {
-        type: "email",
-        name: "email",
-        placeholder: "Correo electrónico",
-        required: true,
-      }),
-      createElement("input", {
-        type: "password",
-        name: "password",
-        placeholder: "Contraseña",
-        required: true,
-      }),
-      createElement("button", { type: "submit" }, "Ingresar")
-    )
-  );
-
-  return container;
-}
-
-function RegisterView() {
-  const container = createElement(
-    "div",
-    { className: "auth-container" },
-    createElement(
-      "form",
-      {
-        className: "auth-form",
-        onsubmit: async (e) => {
-          e.preventDefault();
-          const name = e.target.name.value;
-          const email = e.target.email.value;
-          const password = e.target.password.value;
-          const confirmPassword = e.target.confirmPassword.value;
-
-          if (password !== confirmPassword) {
-            alert("Las contraseñas no coinciden");
-            return;
-          }
-
-          try {
-            await authService.signUp({ name, email, password });
-            router.navigateTo("/login");
-          } catch (error) {
-            alert(error.message);
-          }
-        },
-      },
-      createElement("h2", {}, "Registro"),
-      createElement("input", {
-        type: "text",
-        name: "name",
-        placeholder: "Nombre completo",
-        required: true,
-      }),
-      createElement("input", {
-        type: "email",
-        name: "email",
-        placeholder: "Correo electrónico",
-        required: true,
-      }),
-      createElement("input", {
-        type: "password",
-        name: "password",
-        placeholder: "Contraseña",
-        required: true,
-      }),
-      createElement("input", {
-        type: "password",
-        name: "confirmPassword",
-        placeholder: "Confirmar contraseña",
-        required: true,
-      }),
-      createElement("button", { type: "submit" }, "Registrarse")
-    )
-  );
-
-  return container;
-}
-
-function ProfileView() {
-  const user = getUser();
-  const cart = getCart();
-
-  const container = createElement("div", { className: "profile-container" });
-
-  // Sección de bienvenida y carrito
-  const welcomeSection = createElement(
-    "div",
-    { className: "cart-section" },
-    createElement("h2", {}, `Bienvenido, ${user.name}`),
-    createElement("h3", {}, "Tu Carrito de Compras")
-  );
-
-  if (cart.length === 0) {
-    welcomeSection.appendChild(
-      createElement("p", {}, "Tu carrito está vacío.")
-    );
-  } else {
-    let total = 0;
-    const cartList = createElement("ul", { className: "cart-list" });
-
-    cart.forEach((item) => {
-      const subtotal = item.price * item.quantity;
-      total += subtotal;
-      const cartItem = createElement(
-        "li",
-        { className: "cart-item" },
-        `${item.name} - Cantidad: ${
-          item.quantity
-        } - Subtotal: $${subtotal.toFixed(2)}`
-      );
-      cartList.appendChild(cartItem);
-    });
-
-    const totalElement = createElement(
-      "p",
-      { className: "cart-total" },
-      `Total: $${total.toFixed(2)}`
-    );
-
-    welcomeSection.appendChild(cartList);
-    welcomeSection.appendChild(totalElement);
-  }
-
-  container.appendChild(welcomeSection);
-
-  // Sección de gestión de cuenta
-  const accountSection = createElement(
-    "div",
-    { className: "account-section auth-form" },
-    createElement("h3", {}, "Gestionar Cuenta"),
-    createElement(
-      "button",
-      {
-        className: "delete-account",
-        onclick: async () => {
-          const password = prompt(
-            "Para eliminar tu cuenta, por favor, introduce tu contraseña:"
-          );
-          if (password === null) return;
-
-          try {
-            await userService.deleteAccount(user.id, password);
-            alert("Cuenta eliminada exitosamente.");
-            router.navigateTo("/");
-          } catch (error) {
-            alert(`Error: ${error.message}`);
-          }
-        },
-      },
-      "Eliminar cuenta"
-    )
-  );
-
-  container.appendChild(accountSection);
-
-  return container;
-}
-
-function showQuantityModal(product) {
-  const modalOverlay = createElement("div", { className: "modal-overlay" });
-  const modalContent = createElement("div", { className: "modal-content" });
-
-  let quantity = 1;
-  let totalPrice = product.price;
-
-  const title = createElement("h2", {}, `Agregar ${product.name}`);
-  const quantityLabel = createElement("p", {}, "Cantidad:");
-  const quantityInput = createElement("input", {
-    type: "number",
-    value: quantity,
-    min: 1,
-    oninput: (e) => {
-      quantity = parseInt(e.target.value, 10);
-      if (isNaN(quantity) || quantity < 1) {
-        quantity = 1;
-      }
-      totalPrice = product.price * quantity;
-      priceDisplay.textContent = `Precio Total: $${totalPrice.toFixed(2)}`;
-    },
-  });
-  const priceDisplay = createElement(
-    "p",
-    {},
-    `Precio Total: $${totalPrice.toFixed(2)}`
-  );
-
-  const actions = createElement("div", { className: "modal-actions" });
-  const addButton = createElement(
-    "button",
-    {
-      className: "btn-primary",
-      onclick: () => {
-        addToCart(product, quantity);
-        document.body.removeChild(modalOverlay);
-      },
-    },
-    "Agregar"
-  );
-
-  const cancelButton = createElement(
-    "button",
-    {
-      className: "btn-secondary",
-      onclick: () => document.body.removeChild(modalOverlay),
-    },
-    "Cancelar"
-  );
-
-  actions.append(cancelButton, addButton);
-  modalContent.append(
-    title,
-    quantityLabel,
-    quantityInput,
-    priceDisplay,
-    actions
-  );
-  modalOverlay.appendChild(modalContent);
-  document.body.appendChild(modalOverlay);
-}
-
+/**
+ * Renderiza la barra de navegación.
+ * Su contenido cambia dependiendo de si el usuario está autenticado o no.
+ */
 function renderNavbar() {
   const navLinks = document.getElementById("main-nav-links");
   const isAuthenticated = store.getState().isAuthenticated;
@@ -356,22 +86,43 @@ function renderNavbar() {
   }
 }
 
-// Configuración de rutas
-const routes = [
-  { path: "/", component: HomeView },
-  { path: "/login", component: LoginView },
-  { path: "/register", component: RegisterView },
-  { path: "/profile", component: ProfileView },
-  { path: "*", component: HomeView }, // Ruta por defecto
+// --- CONFIGURACIÓN E INICIALIZACIÓN ---
+
+// Definimos un array de rutas base. Aún no son los componentes finales.
+const routeDefinitions = [
+  { path: "/", componentFactory: HomeView },
+  { path: "/login", componentFactory: LoginView },
+  { path: "/register", componentFactory: RegisterView },
+  { path: "/profile", componentFactory: ProfileView },
+  { path: "*", componentFactory: HomeView },
 ];
 
-// Crear y inicializar el router
-const router = createRouter(routes);
+// Creamos una instancia del enrutador. Todavía no tiene las rutas finales.
+const router = createRouter([]);
+
+// Ahora, procesamos las definiciones de ruta para crear los componentes finales,
+// inyectando las dependencias necesarias (como el propio router o la basePath).
+const routes = routeDefinitions.map((routeDef) => {
+  let component;
+  // La vista de inicio necesita `basePath`.
+  if (routeDef.componentFactory === HomeView) {
+    component = routeDef.componentFactory(basePath);
+  } else {
+    // Las otras vistas necesitan la instancia del `router`.
+    component = routeDef.componentFactory(router);
+  }
+  return { path: routeDef.path, component };
+});
+
+// Asignamos las rutas procesadas al enrutador.
+router.routes = routes;
+
+// Inicializamos el enrutador para que cargue la vista inicial.
 router.init();
 
-// Verificar sesión al cargar y renderizar navbar
+// Al cargar la página, verificamos si hay una sesión guardada y renderizamos la navbar.
 authService.checkSession();
 renderNavbar();
 
-// Suscribirse a los cambios de autenticación para re-renderizar la navbar
+// Nos suscribimos a los cambios de autenticación para re-renderizar la navbar.
 store.subscribe("isAuthenticated", renderNavbar);
