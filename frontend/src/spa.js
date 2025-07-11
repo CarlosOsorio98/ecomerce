@@ -118,16 +118,17 @@ class Router {
    * @param {string} path - La ruta a la que se quiere navegar (ej. "/login").
    */
   navigateTo(path) {
-    // Construimos la URL completa que se mostrará en la barra del navegador.
-    const separator =
-      this.basePath.endsWith("/") || this.basePath.length === 1 ? "" : "/";
-    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-    const fullPath = this.basePath + separator + cleanPath;
-
-    // `history.pushState` es la magia de las SPAs. Cambia la URL en la barra
-    // de direcciones SIN recargar la página.
+    // Si la ruta ya es absoluta, no anteponer basePath
+    let fullPath;
+    if (path.startsWith("/")) {
+      fullPath = path;
+    } else {
+      // Solo para rutas relativas (no debería ocurrir en tu app)
+      const separator =
+        this.basePath.endsWith("/") || this.basePath.length === 1 ? "" : "/";
+      fullPath = this.basePath + separator + path;
+    }
     window.history.pushState(null, null, fullPath);
-    // Después de cambiar la URL, llamamos a `handleRoute` para que renderice la vista correcta.
     this.handleRoute();
   }
 

@@ -17,10 +17,7 @@
  * 4. "Actions": Funciones para MODIFICAR datos del estado.
  */
 import { createStore } from "./reactivity.js";
-
-// Intentamos cargar el carrito desde localStorage. Si no hay nada, empezamos con un array vacío.
-// `localStorage` es un pequeño almacenamiento en el navegador que persiste incluso si se cierra la pestaña.
-const initialCart = JSON.parse(localStorage.getItem("cart") || "[]");
+import { cartService } from "./services/cart.js";
 
 // --- ESTADO INICIAL ---
 // Este es el estado por defecto de la aplicación cuando se carga por primera vez.
@@ -28,7 +25,7 @@ const initialState = {
   user: null, // No hay usuario conectado al principio.
   isAuthenticated: false, // Por lo tanto, no está autenticado.
   currentRoute: window.location.pathname, // La ruta actual.
-  cart: initialCart, // El carrito de compras.
+  cart: [], // El carrito se sincroniza con la API
 };
 
 // --- STORE GLOBAL ---
@@ -69,70 +66,54 @@ export const setCurrentRoute = (route) => {
 };
 
 /**
+ * Sincroniza el carrito con la API y actualiza el estado global
+ */
+export const syncCart = async () => {
+  try {
+    const cart = await cartService.getCart();
+    store.setState({ cart });
+  } catch {
+    store.setState({ cart: [] });
+  }
+};
+
+/**
  * Agrega un producto al carrito de compras.
- * @param {object} product - El producto a agregar.
+ * @param {string} asset_id - El ID del activo a agregar.
  * @param {number} quantity - La cantidad del producto.
  */
-export const addToCart = (product, quantity) => {
-  // Obtenemos el estado actual del carrito para no modificarlo directamente.
-  const currentCart = store.getState().cart;
-  const existingProductIndex = currentCart.findIndex(
-    (item) => item.id === product.id
-  );
-
-  let updatedCart;
-
-  if (existingProductIndex > -1) {
-    // Si el producto ya existe, creamos un nuevo array donde actualizamos solo la cantidad de ese producto.
-    // Usamos `.map()` para no mutar el array original.
-    updatedCart = currentCart.map((item, index) =>
-      index === existingProductIndex
-        ? { ...item, quantity: item.quantity + quantity }
-        : item
-    );
-  } else {
-    // Si es un producto nuevo, creamos un nuevo array con el producto anterior más el nuevo.
-    // El "spread operator" (`...`) es clave para la inmutabilidad.
-    updatedCart = [...currentCart, { ...product, quantity }];
-  }
-
-  // Guardamos el carrito actualizado en localStorage para que no se pierda.
-  localStorage.setItem("cart", JSON.stringify(updatedCart));
-  // Y actualizamos el estado global, lo que notificará a los suscriptores.
-  store.setState({ cart: updatedCart });
+export const addToCart = async (asset_id, quantity) => {
+  await cartService.addToCart(asset_id, quantity);
+  await syncCart();
 };
 
 /**
  * Elimina un producto completamente del carrito.
- * @param {string} productId - El ID del producto a eliminar.
+ * @param {string} id - El ID del producto a eliminar.
  */
-export const removeFromCart = (productId) => {
-  const currentCart = store.getState().cart;
-  const updatedCart = currentCart.filter((item) => item.id !== productId);
-
-  localStorage.setItem("cart", JSON.stringify(updatedCart));
-  store.setState({ cart: updatedCart });
+export const removeFromCart = async (id) => {
+  await cartService.removeFromCart(id);
+  await syncCart();
 };
 
 /**
  * Actualiza la cantidad de un item específico en el carrito.
  * Si la cantidad llega a 0, el item es eliminado.
- * @param {string} productId - El ID del producto a actualizar.
+ * @param {string} asset_id - El ID del producto a actualizar.
  * @param {number} newQuantity - La nueva cantidad total del producto.
  */
-export const updateCartItemQuantity = (productId, newQuantity) => {
+export const updateCartItemQuantity = async (asset_id, newQuantity) => {
+  // Para actualizar cantidad, usamos addToCart con la diferencia
+  const cart = store.getState().cart;
+  const item = cart.find((i) => i.asset_id === asset_id);
+  if (!item) return;
+  const diff = newQuantity - item.quantity;
+  if (diff === 0) return;
   if (newQuantity <= 0) {
-    removeFromCart(productId);
-    return;
+    await removeFromCart(item.id);
+  } else {
+    await addToCart(asset_id, diff);
   }
-
-  const currentCart = store.getState().cart;
-  const updatedCart = currentCart.map((item) =>
-    item.id === productId ? { ...item, quantity: newQuantity } : item
-  );
-
-  localStorage.setItem("cart", JSON.stringify(updatedCart));
-  store.setState({ cart: updatedCart });
 };
 
 /**
@@ -142,8 +123,6 @@ export const logout = () => {
   store.setState({
     user: null,
     isAuthenticated: false,
+    cart: [],
   });
-  // También podríamos querer limpiar el carrito al cerrar sesión.
-  // localStorage.removeItem('cart');
-  // store.setState({ cart: [] });
 };

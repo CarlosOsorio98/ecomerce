@@ -2,13 +2,18 @@
   "name": "proyecto",
   "private": true,
   "scripts": {
-    "start": "bun run server.js",
-    "dev": "bun run --hot server.js"
+    "start": "bun run server/app.js",
+    "dev": "bun run --hot server/app.js",
+    "migrate": "bun run scripts/migrate.js"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.25.69"
   }
 }

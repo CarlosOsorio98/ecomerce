@@ -5,17 +5,9 @@
  * Un "servicio" en arquitectura de software es una clase que encapsula una lógica de negocio específica.
  * En este caso, toda la lógica relacionada con la autenticación de usuarios: iniciar sesión,
  * registrarse, cerrar sesión y verificar la sesión actual.
- *
- * NOTA IMPORTANTE PARA EL APRENDIZAJE:
- * Este servicio es una **simulación**. En una aplicación real, en lugar de usar `localStorage`
- * para guardar y comprobar usuarios, aquí se harían peticiones de red (con `fetch`) a un
- * servidor backend (una API) que se encargaría de gestionar los usuarios en una base de datos real.
- * Usamos `localStorage` para poder prototipar y probar la lógica del frontend sin necesitar un backend.
  */
 import { logout, setUser } from "../state.js";
-
-// Esta es la clave que usaremos en localStorage para guardar los datos del usuario logueado.
-const STORAGE_KEY = "auth_user";
+import { userApi } from "./user.js";
 
 export class AuthService {
   /**
@@ -23,26 +15,38 @@ export class AuthService {
    * Aquí lo usamos para comprobar si ya existe una sesión de usuario guardada.
    */
   constructor() {
-    this.checkSession();
+    // No hay sesión persistente en localStorage, solo en memoria
   }
 
   /**
-   * Comprueba si hay un usuario guardado en localStorage y, si es así,
-   * actualiza el estado global de la aplicación para reflejar que el usuario está logueado.
+   * Comprueba si hay una sesión activa en el backend (cookie JWT).
+   * Si existe, actualiza el estado global con el usuario autenticado.
+   * Además, guarda el resultado en localStorage para debug.
    */
-  checkSession() {
-    const savedUser = localStorage.getItem(STORAGE_KEY);
-    if (savedUser) {
-      try {
-        // `JSON.parse` convierte el string guardado en localStorage de nuevo a un objeto JavaScript.
-        const user = JSON.parse(savedUser);
-        // `setUser` es la acción de nuestro gestor de estado que actualiza la información del usuario.
-        setUser(user);
-      } catch (error) {
-        console.error("Error al restaurar la sesión:", error);
-        // Si hay un error (ej. los datos guardados están corruptos), cerramos la sesión por seguridad.
-        this.signOut();
+  async checkSession() {
+    try {
+      const res = await fetch("/api/session", { credentials: "include" });
+      const debugInfo = { status: res.status, ok: res.ok };
+      if (!res.ok) {
+        debugInfo.result = await res.text();
+        localStorage.setItem("debug_session", JSON.stringify(debugInfo));
+        console.debug("[checkSession] No session:", debugInfo);
+        localStorage.removeItem("user_session");
+        return;
       }
+      const user = await res.json();
+      debugInfo.user = user;
+      localStorage.setItem("debug_session", JSON.stringify(debugInfo));
+      localStorage.setItem("user_session", JSON.stringify(user));
+      setUser(user);
+      console.debug("[checkSession] Session restored:", user);
+    } catch (e) {
+      localStorage.setItem(
+        "debug_session",
+        JSON.stringify({ error: e.message })
+      );
+      console.error("[checkSession] Error:", e);
+      localStorage.removeItem("user_session");
     }
   }
 
@@ -63,24 +67,24 @@ export class AuthService {
     }
 
     // Obtenemos la "tabla" de usuarios de localStorage.
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    // Buscamos un usuario que coincida. En una app real, esto sería una consulta a la base de datos.
-    const user = users.find(
-      (u) => u.email === email && u.password === password // ¡OJO! Guardar contraseñas en texto plano es muy inseguro.
-    );
+    const user = await userApi.login({ email, password });
 
     if (!user) {
       throw new Error("Credenciales inválidas");
     }
 
+    // Guardar debug del login
+    localStorage.setItem("debug_login", JSON.stringify(user));
+
     // ¡Buena práctica de seguridad! Nunca guardes la contraseña en el estado global o en la sesión.
     // Usamos "desestructuración con resto" para crear un nuevo objeto sin la propiedad `password`.
     const { password: _, ...userWithoutPassword } = user;
 
-    // Guardamos al usuario en localStorage para persistir la sesión.
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userWithoutPassword));
     // Actualizamos el estado global para que toda la app sepa que el usuario ha iniciado sesión.
     setUser(userWithoutPassword);
+
+    // Esperar a que la cookie esté lista y sincronizar estado
+    await this.checkSession();
 
     return userWithoutPassword;
   }
@@ -98,35 +102,17 @@ export class AuthService {
       throw new Error("Todos los campos son requeridos");
     }
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const user = await userApi.register({ name, email, password });
 
-    if (users.some((user) => user.email === email)) {
-      throw new Error("El email ya está registrado");
-    }
+    // No loguea automáticamente
 
-    // Creamos el objeto para el nuevo usuario.
-    const newUser = {
-      id: Date.now().toString(), // Usamos un timestamp como ID simple y único.
-      email,
-      password, // De nuevo, esto es inseguro, solo para la simulación.
-      name,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Añadimos el nuevo usuario a nuestra "base de datos" y guardamos.
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-
-    // Tras un registro exitoso, iniciamos sesión automáticamente.
-    return this.signIn(email, password);
+    return user;
   }
 
   /**
    * Cierra la sesión del usuario actual.
    */
   signOut() {
-    // Eliminamos los datos de la sesión de localStorage.
-    localStorage.removeItem(STORAGE_KEY);
     // Llamamos a la acción `logout` para limpiar el estado global.
     logout();
   }

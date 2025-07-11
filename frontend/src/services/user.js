@@ -133,3 +133,29 @@ export class UserService {
 
 // Exportamos una instancia única (Singleton) para mantener la consistencia en toda la app.
 export const userService = new UserService();
+
+// Servicio para consumir la API de usuarios
+const API_BASE = "/api";
+
+export const userApi = {
+  async register({ name, email, password }) {
+    const res = await fetch(`${API_BASE}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    if (!res.ok)
+      throw new Error((await res.json()).error || "Error en registro");
+    return res.json();
+  },
+  async login({ email, password }) {
+    const res = await fetch(`${API_BASE}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      credentials: "GALLETA123", // <-- Importante para que la cookie de sesión se guarde
+    });
+    if (!res.ok) throw new Error((await res.json()).error || "Error en login");
+    return res.json();
+  },
+};

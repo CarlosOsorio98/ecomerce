@@ -35,7 +35,13 @@ export function RegisterView(router) {
               await authService.signUp({ name, email, password });
               router.navigateTo("/login");
             } catch (error) {
-              alert(error.message);
+              let msg = error;
+              if (msg && typeof msg === "object") {
+                if (msg.error) msg = msg.error;
+                else if (msg.message) msg = msg.message;
+                else msg = JSON.stringify(msg);
+              }
+              alert(msg);
             }
           },
         },

@@ -4,13 +4,13 @@
  * Componente que contiene la lógica para mostrar un modal de selección de cantidad.
  */
 import { createElement } from "../spa.js";
-import { addToCart } from "../state.js";
 
 /**
  * Muestra un modal para que el usuario elija la cantidad de un producto.
  * @param {object} product - El objeto del producto que se va a agregar.
+ * @param {object} cartService - Servicio para interactuar con la API del carrito.
  */
-export function showQuantityModal(product) {
+export function showQuantityModal(product, cartService) {
   const modalOverlay = createElement("div", { className: "modal-overlay" });
   const modalContent = createElement("div", { className: "modal-content" });
 
@@ -43,8 +43,13 @@ export function showQuantityModal(product) {
     "button",
     {
       className: "btn-primary",
-      onclick: () => {
-        addToCart(product, quantity);
+      onclick: async () => {
+        try {
+          await cartService.addToCart(product.id, quantity);
+          // Opcional: mostrar feedback
+        } catch (e) {
+          alert("Error al agregar al carrito");
+        }
         document.body.removeChild(modalOverlay);
       },
     },
@@ -60,14 +65,15 @@ export function showQuantityModal(product) {
     "Cancelar"
   );
 
-  actions.append(cancelButton, addButton);
-  modalContent.append(
-    title,
-    quantityLabel,
-    quantityInput,
-    priceDisplay,
-    actions
-  );
+  actions.appendChild(addButton);
+  actions.appendChild(cancelButton);
+
+  modalContent.appendChild(title);
+  modalContent.appendChild(quantityLabel);
+  modalContent.appendChild(quantityInput);
+  modalContent.appendChild(priceDisplay);
+  modalContent.appendChild(actions);
+
   modalOverlay.appendChild(modalContent);
   document.body.appendChild(modalOverlay);
 }

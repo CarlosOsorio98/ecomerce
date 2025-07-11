@@ -5,26 +5,33 @@
 
 import { showQuantityModal } from "../components/modal.js";
 import { createElement } from "../spa.js";
+import { cartService } from "../services/cart.js";
 
 /**
  * Crea la vista de la página de inicio.
  * @param {string} basePath - La ruta base del proyecto para cargar assets.
  * @returns {Function} La función de la vista real.
  */
-export function HomeView(basePath) {
+export function HomeView() {
   return async function () {
     const container = createElement("div", { className: "products-grid" });
 
     try {
-      const response = await fetch(basePath + "assets.json");
+      // Consumir la API de productos
+      const response = await fetch("/api/assets");
       const products = await response.json();
 
       products.forEach((product) => {
+        // Si la url ya empieza con /assets o http, no anteponer nada
+        const imgSrc =
+          product.url.startsWith("/") || product.url.startsWith("http")
+            ? product.url
+            : "/frontend/" + product.url;
         const card = createElement(
           "div",
           { className: "product-card" },
           createElement("img", {
-            src: basePath + product.url,
+            src: imgSrc,
             alt: product.name,
           }),
           createElement("h3", {}, product.name),
@@ -33,7 +40,7 @@ export function HomeView(basePath) {
             "button",
             {
               className: "add-to-cart",
-              onclick: () => showQuantityModal(product),
+              onclick: () => showQuantityModal(product, cartService),
             },
             "Agregar al carrito"
           )

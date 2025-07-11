@@ -4,12 +4,8 @@
  */
 import { userService } from "../services/user.js";
 import { createElement } from "../spa.js";
-import {
-  getCart,
-  getUser,
-  removeFromCart,
-  updateCartItemQuantity,
-} from "../state.js";
+import { cartService } from "../services/cart.js";
+import { getCart, getUser } from "../state.js";
 
 /**
  * Crea la vista del perfil de usuario.
@@ -17,24 +13,26 @@ import {
  * @returns {Function} La función de la vista real.
  */
 export function ProfileView(router) {
-  return function () {
+  return async function () {
     const user = getUser();
-    const cart = getCart();
+    // Obtener el carrito desde la API
+    let cart = [];
+    try {
+      cart = await cartService.getCart();
+    } catch (e) {
+      // Si hay error, muestra vacío
+      cart = [];
+    }
     const container = createElement("div", { className: "profile-container" });
-
-    // Sección del carrito
-    const cartSection = createCartSection(cart, user, router);
+    const cartSection = await createCartSection(cart, user, router);
     container.appendChild(cartSection);
-
-    // Sección de gestión de cuenta
     const accountSection = createAccountSection(user, router);
     container.appendChild(accountSection);
-
     return container;
   };
 }
 
-function createCartSection(cart, user, router) {
+async function createCartSection(cart, user, router) {
   const cartSection = createElement(
     "div",
     { className: "cart-section" },
@@ -42,38 +40,25 @@ function createCartSection(cart, user, router) {
     createElement("h3", {}, "Tu Carrito de Compras")
   );
 
-  if (cart.length === 0) {
+  if (!cart || cart.length === 0) {
     cartSection.appendChild(createElement("p", {}, "Tu carrito está vacío."));
   } else {
     let total = 0;
     const cartList = createElement("ul", { className: "cart-list" });
-    cart.forEach((item) => {
+    for (const item of cart) {
       const subtotal = item.price * item.quantity;
       total += subtotal;
-
       const quantityControls = createElement(
         "div",
         { className: "quantity-controls" },
         createElement(
           "button",
           {
-            onclick: () => {
-              const newQuantity = item.quantity - 1;
-              fetch("/api/log-cart-action", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  action: "decrement",
-                  product: item.name,
-                  productId: item.id,
-                  oldQuantity: item.quantity,
-                  newQuantity,
-                  user: user.name,
-                  timestamp: new Date().toISOString(),
-                }),
-              });
-              updateCartItemQuantity(item.id, newQuantity);
-              router.handleRoute(); // Re-render
+            onclick: async () => {
+              if (item.quantity > 1) {
+                await cartService.addToCart(item.asset_id, -1);
+                router.handleRoute();
+              }
             },
           },
           "-"
@@ -82,65 +67,35 @@ function createCartSection(cart, user, router) {
         createElement(
           "button",
           {
-            onclick: () => {
-              const newQuantity = item.quantity + 1;
-              fetch("/api/log-cart-action", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  action: "increment",
-                  product: item.name,
-                  productId: item.id,
-                  oldQuantity: item.quantity,
-                  newQuantity,
-                  user: user.name,
-                  timestamp: new Date().toISOString(),
-                }),
-              });
-              updateCartItemQuantity(item.id, newQuantity);
-              router.handleRoute(); // Re-render
+            onclick: async () => {
+              await cartService.addToCart(item.asset_id, 1);
+              router.handleRoute();
             },
           },
           "+"
         )
       );
-
       const itemDetails = createElement(
         "div",
         { className: "item-details" },
         `${item.name} ($${item.price.toFixed(2)} c/u)`
       );
-
       const itemSubtotal = createElement(
         "div",
         { className: "item-subtotal" },
         `Subtotal: $${subtotal.toFixed(2)}`
       );
-
       const removeButton = createElement(
         "button",
         {
           className: "remove-item",
-          onclick: () => {
-            fetch("/api/log-cart-action", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                action: "remove",
-                product: item.name,
-                productId: item.id,
-                quantity: item.quantity,
-                user: user.name,
-                timestamp: new Date().toISOString(),
-              }),
-            });
-            removeFromCart(item.id);
-            router.handleRoute(); // Re-render
+          onclick: async () => {
+            await cartService.removeFromCart(item.id);
+            router.handleRoute();
           },
         },
         "×"
       );
-
       const cartItem = createElement(
         "li",
         { className: "cart-item" },
@@ -150,7 +105,7 @@ function createCartSection(cart, user, router) {
         removeButton
       );
       cartList.appendChild(cartItem);
-    });
+    }
     const totalElement = createElement(
       "p",
       { className: "cart-total" },
