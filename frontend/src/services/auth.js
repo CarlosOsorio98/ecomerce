@@ -23,31 +23,65 @@ export class AuthService {
    * Si existe, actualiza el estado global con el usuario autenticado.
    * Además, guarda el resultado en localStorage para debug.
    */
-  async checkSession() {
-    try {
-      const res = await fetch("/api/session", { credentials: "include" });
-      const debugInfo = { status: res.status, ok: res.ok };
-      if (!res.ok) {
-        debugInfo.result = await res.text();
-        localStorage.setItem("debug_session", JSON.stringify(debugInfo));
-        console.debug("[checkSession] No session:", debugInfo);
-        localStorage.removeItem("user_session");
-        return;
+  async checkSession(retries = 2) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const res = await fetch("/api/session", { 
+          credentials: "include",
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            console.debug("[checkSession] No hay sesión activa en el servidor");
+            this.clearLocalData();
+            return null;
+          }
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const user = await res.json();
+        console.debug("[checkSession] Sesión restaurada desde el servidor:", user);
+        
+        localStorage.setItem("user_session", JSON.stringify(user));
+        localStorage.setItem("debug_session", JSON.stringify({ 
+          status: res.status, 
+          ok: res.ok, 
+          user: user,
+          timestamp: new Date().toISOString(),
+          attempt: attempt + 1
+        }));
+        
+        setUser(user);
+        return user;
+        
+      } catch (error) {
+        console.error(`[checkSession] Intento ${attempt + 1} falló:`, error);
+        
+        if (attempt === retries) {
+          this.clearLocalData();
+          localStorage.setItem("debug_session", JSON.stringify({ 
+            error: error.message,
+            timestamp: new Date().toISOString(),
+            totalAttempts: retries + 1
+          }));
+          return null;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
       }
-      const user = await res.json();
-      debugInfo.user = user;
-      localStorage.setItem("debug_session", JSON.stringify(debugInfo));
-      localStorage.setItem("user_session", JSON.stringify(user));
-      setUser(user);
-      console.debug("[checkSession] Session restored:", user);
-    } catch (e) {
-      localStorage.setItem(
-        "debug_session",
-        JSON.stringify({ error: e.message })
-      );
-      console.error("[checkSession] Error:", e);
-      localStorage.removeItem("user_session");
     }
+    
+    return null;
+  }
+
+  clearLocalData() {
+    localStorage.removeItem("user_session");
+    localStorage.removeItem("debug_session");
+    localStorage.removeItem("debug_login");
   }
 
   /**
@@ -58,33 +92,22 @@ export class AuthService {
    * @throws {Error} Si las credenciales son inválidas.
    */
   async signIn(email, password) {
-    // La palabra `async` convierte esta función en asíncrona, lo que nos permite usar `await` dentro.
-    // Aunque aquí no hay una petición de red real, es una buena práctica hacer los métodos de servicio
-    // asíncronos, ya que en el futuro sí podrían serlo.
-
     if (!email || !password) {
       throw new Error("Email y contraseña son requeridos");
     }
 
-    // Obtenemos la "tabla" de usuarios de localStorage.
     const user = await userApi.login({ email, password });
 
     if (!user) {
       throw new Error("Credenciales inválidas");
     }
 
-    // Guardar debug del login
     localStorage.setItem("debug_login", JSON.stringify(user));
+    localStorage.setItem("user_session", JSON.stringify(user));
 
-    // ¡Buena práctica de seguridad! Nunca guardes la contraseña en el estado global o en la sesión.
-    // Usamos "desestructuración con resto" para crear un nuevo objeto sin la propiedad `password`.
     const { password: _, ...userWithoutPassword } = user;
 
-    // Actualizamos el estado global para que toda la app sepa que el usuario ha iniciado sesión.
     setUser(userWithoutPassword);
-
-    // Esperar a que la cookie esté lista y sincronizar estado
-    await this.checkSession();
 
     return userWithoutPassword;
   }
@@ -109,16 +132,29 @@ export class AuthService {
     return user;
   }
 
-  /**
-   * Cierra la sesión del usuario actual.
-   */
-  signOut() {
-    // Llamamos a la acción `logout` para limpiar el estado global.
-    logout();
+  async signOut() {
+    try {
+      const res = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (!res.ok) {
+        console.warn("[signOut] Error al cerrar sesión en el servidor, pero limpiando sesión local");
+      }
+      
+      console.log("[signOut] Sesión cerrada correctamente");
+      
+    } catch (error) {
+      console.error("[signOut] Error al cerrar sesión:", error);
+    } finally {
+      this.clearLocalData();
+      logout();
+    }
   }
 }
 
-// Exportamos una única instancia del servicio (Patrón Singleton).
-// Esto asegura que toda la aplicación use el mismo objeto AuthService,
-// manteniendo la consistencia.
 export const authService = new AuthService();

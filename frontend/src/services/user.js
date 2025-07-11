@@ -153,7 +153,7 @@ export const userApi = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
-      credentials: "GALLETA123", // <-- Importante para que la cookie de sesión se guarde
+      credentials: "include",
     });
     if (!res.ok) throw new Error((await res.json()).error || "Error en login");
     return res.json();

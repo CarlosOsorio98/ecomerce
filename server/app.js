@@ -205,15 +205,22 @@ const server = Bun.serve({
             }
           );
         }
-        // Generar JWT y setear cookie
+        
         const token = signJWT({ id: validUser.id, email: validUser.email });
-        saveJWTToken(validUser.id, token); // Guardar token en la base de datos
+        console.log("[LOGIN] Token generado:", token ? "sí" : "no");
+        
+        saveJWTToken(validUser.id, token);
+        console.log("[LOGIN] Token guardado en BD");
+        
+        const cookieValue = setSessionCookie(token);
+        console.log("[LOGIN] Cookie configurada:", cookieValue);
+        
         return new Response(JSON.stringify(validUser), {
           status: 200,
           headers: {
             ...getCORSHeaders(),
             "Content-Type": "application/json",
-            "Set-Cookie": setSessionCookie(token),
+            "Set-Cookie": cookieValue,
           },
         });
       } catch (e) {
@@ -227,15 +234,25 @@ const server = Bun.serve({
 
     // --- API: Obtener sesión actual ---
     if (url.pathname === "/api/session" && req.method === "GET") {
+      const cookies = req.headers.get("cookie");
+      console.log("[SESSION] Cookies recibidas:", cookies);
+      
       const token = getCookie(req, "session");
+      console.log("[SESSION] Token extraído:", token ? "presente" : "ausente");
+      
       if (!token) {
+        console.log("[SESSION] No hay token de sesión");
         return new Response(JSON.stringify({ error: "No autenticado" }), {
           status: 401,
           headers: { ...getCORSHeaders(), "Content-Type": "application/json" },
         });
       }
+      
       const payload = verifyJWT(token);
+      console.log("[SESSION] Payload JWT:", payload ? "válido" : "inválido");
+      
       if (!payload || isJWTRevoked(token)) {
+        console.log("[SESSION] Token inválido o revocado");
         return new Response(
           JSON.stringify({ error: "Token inválido o revocado" }),
           {
@@ -247,11 +264,13 @@ const server = Bun.serve({
           }
         );
       }
-      // Buscar usuario por id
+      
       const user = db
         .query("SELECT id, name, email, created_at FROM users WHERE id = ?")
         .get(payload.id);
+        
       if (!user) {
+        console.log("[SESSION] Usuario no encontrado en BD");
         return new Response(
           JSON.stringify({ error: "Usuario no encontrado" }),
           {
@@ -263,6 +282,8 @@ const server = Bun.serve({
           }
         );
       }
+      
+      console.log("[SESSION] Usuario encontrado:", user.email);
       return new Response(JSON.stringify(user), {
         status: 200,
         headers: { ...getCORSHeaders(), "Content-Type": "application/json" },

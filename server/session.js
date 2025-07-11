@@ -2,7 +2,7 @@
 import jwt from "jsonwebtoken";
 import { db } from "./data/schema.js";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || "ecomerce_jwt_secrec";
 const JWT_EXPIRES_IN = "7d"; // 7 días
 
 export function signJWT(payload) {
@@ -30,13 +30,12 @@ export function getCookie(req, name) {
 }
 
 export function setSessionCookie(token) {
-  // Secure solo en producción, httpOnly siempre
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `Set-Cookie: session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800${secure}`;
+  return `session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${secure}`;
 }
 
 export function clearSessionCookie() {
-  return `Set-Cookie: session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
+  return `session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }
 
 export function saveJWTToken(user_id, token) {

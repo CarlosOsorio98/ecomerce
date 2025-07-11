@@ -54,9 +54,9 @@ function renderNavbar() {
       "button",
       {
         className: "logout-button",
-        onclick: (e) => {
+        onclick: async (e) => {
           e.preventDefault();
-          authService.signOut();
+          await authService.signOut();
           router.navigateTo("/");
         },
       },
@@ -117,12 +117,43 @@ const routes = routeDefinitions.map((routeDef) => {
 // Asignamos las rutas procesadas al enrutador.
 router.routes = routes;
 
-// Inicializamos el enrutador para que cargue la vista inicial.
-router.init();
+async function initializeApp() {
+  const loadingIndicator = document.getElementById("loading-indicator");
+  
+  try {
+    console.log("[App] Iniciando aplicación...");
+    
+    if (loadingIndicator) {
+      loadingIndicator.style.display = "block";
+    }
+    
+    console.log("[App] Verificando sesión...");
+    await authService.checkSession();
+    
+    console.log("[App] Inicializando router...");
+    router.init();
+    
+    console.log("[App] Renderizando navbar...");
+    renderNavbar();
+    
+    console.log("[App] Aplicación inicializada correctamente");
+    
+  } catch (error) {
+    console.error("[App] Error al inicializar la aplicación:", error);
+    
+    router.init();
+    renderNavbar();
+  } finally {
+    if (loadingIndicator) {
+      loadingIndicator.style.display = "none";
+    }
+  }
+}
 
-// Al cargar la página, verificamos si hay una sesión guardada y renderizamos la navbar.
-authService.checkSession();
-renderNavbar();
-
-// Nos suscribimos a los cambios de autenticación para re-renderizar la navbar.
 store.subscribe("isAuthenticated", renderNavbar);
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeApp);
+} else {
+  initializeApp();
+}
