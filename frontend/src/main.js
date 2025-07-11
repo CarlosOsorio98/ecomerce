@@ -18,6 +18,7 @@ import { HomeView } from "./views/home.js";
 import { LoginView } from "./views/login.js";
 import { ProfileView } from "./views/profile.js";
 import { RegisterView } from "./views/register.js";
+import { initFloatingCart } from "./components/floatingCart.js";
 
 // --- OBTENER RUTA BASE ---
 const basePath = document
@@ -119,28 +120,30 @@ router.routes = routes;
 
 async function initializeApp() {
   const loadingIndicator = document.getElementById("loading-indicator");
-  
+
   try {
     console.log("[App] Iniciando aplicación...");
-    
+
     if (loadingIndicator) {
       loadingIndicator.style.display = "block";
     }
-    
+
     console.log("[App] Verificando sesión...");
     await authService.checkSession();
-    
+
     console.log("[App] Inicializando router...");
     router.init();
-    
+
     console.log("[App] Renderizando navbar...");
     renderNavbar();
-    
+
+    console.log("[App] Inicializando carrito flotante...");
+    initFloatingCart();
+
     console.log("[App] Aplicación inicializada correctamente");
-    
   } catch (error) {
     console.error("[App] Error al inicializar la aplicación:", error);
-    
+
     router.init();
     renderNavbar();
   } finally {

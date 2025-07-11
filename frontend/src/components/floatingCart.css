@@ -1,0 +1,215 @@
+/* frontend/src/components/floatingCart.css */
+
+/* Estilos para el botón flotante del carrito */
+.floating-cart-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #007bff; /* Color primario de Bootstrap */
+  color: white;
+  border: none;
+  border-radius: 50%; /* Forma redonda */
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+  font-size: 1.5em;
+  transition: background-color 0.3s ease;
+}
+
+.floating-cart-button:hover {
+  background-color: #0056b3; /* Color más oscuro al pasar el mouse */
+}
+
+.floating-cart-button .cart-icon {
+  margin-right: 5px;
+}
+
+.floating-cart-button .cart-count {
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.6em;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.floating-cart-button .cart-count.updated {
+  transform: scale(1.2); /* Efecto de escala al actualizar */
+}
+
+/* Estilos para el overlay del carrito (modal/sidebar) */
+.cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+  z-index: 1001; /* Por encima del botón flotante */
+  display: flex;
+  justify-content: flex-end; /* Alinea el contenido a la derecha (sidebar) */
+  visibility: hidden; /* Oculto por defecto */
+  opacity: 0;
+  transition: visibility 0.3s ease, opacity 0.3s ease;
+}
+
+.cart-overlay.open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.cart-content {
+  background-color: white;
+  width: 350px; /* Ancho del sidebar */
+  max-width: 90%; /* Ancho máximo en pantallas pequeñas */
+  height: 100%;
+  transform: translateX(100%); /* Inicialmente fuera de la pantalla */
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-overlay.open .cart-content {
+  transform: translateX(0); /* Se desliza hacia adentro */
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-header h2 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+.close-cart-button {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+.cart-items {
+  flex-grow: 1; /* Ocupa el espacio restante */
+  padding: 15px;
+  overflow-y: auto; /* Scroll si hay muchos items */
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  margin-right: 15px;
+  border-radius: 5px;
+}
+
+.cart-item-details {
+  flex-grow: 1;
+}
+
+.cart-item-details h4 {
+  margin: 0 0 5px 0;
+  font-size: 1em;
+}
+
+.cart-item-details p {
+  margin: 0 0 10px 0;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.cart-item-quantity-control {
+  display: flex;
+  align-items: center;
+}
+
+.cart-item-quantity-control button {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  padding: 2px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 1em;
+}
+
+.cart-item-quantity-control span {
+  margin: 0 10px;
+  font-size: 1em;
+}
+
+.remove-item-button {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 1.2em;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.cart-total {
+  padding: 15px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+/* Estilos para los iconos SVG */
+.svg-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.close-cart-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-cart-button:hover {
+  opacity: 0.7;
+}
+
+.remove-item-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-item-button:hover {
+  opacity: 0.7;
+}
