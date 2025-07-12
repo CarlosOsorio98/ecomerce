@@ -42,10 +42,37 @@ export class Observable {
    */
   set value(newValue) {
     // Solo notificamos si el valor realmente ha cambiado.
-    if (this._value !== newValue) {
+    if (!this._deepEqual(this._value, newValue)) {
       this._value = newValue;
       this._notify();
     }
+  }
+
+  /**
+   * Compara dos valores de manera profunda (deep comparison).
+   * Para arrays y objetos, compara su contenido, no solo la referencia.
+   */
+  _deepEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (!this._deepEqual(a[i], b[i])) return false;
+      }
+      return true;
+    }
+    if (typeof a === 'object' && typeof b === 'object') {
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+      if (keysA.length !== keysB.length) return false;
+      for (let key of keysA) {
+        if (!keysB.includes(key)) return false;
+        if (!this._deepEqual(a[key], b[key])) return false;
+      }
+      return true;
+    }
+    return false;
   }
 
   /**

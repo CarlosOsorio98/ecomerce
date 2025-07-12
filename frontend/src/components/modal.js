@@ -4,13 +4,13 @@
  * Componente que contiene la lógica para mostrar un modal de selección de cantidad.
  */
 import { createElement } from "../spa.js";
+import { addToCart } from "../state.js";
 
 /**
  * Muestra un modal para que el usuario elija la cantidad de un producto.
  * @param {object} product - El objeto del producto que se va a agregar.
- * @param {object} cartService - Servicio para interactuar con la API del carrito.
  */
-export function showQuantityModal(product, cartService) {
+export function showQuantityModal(product) {
   const modalOverlay = createElement("div", { className: "modal-overlay" });
   const modalContent = createElement("div", { className: "modal-content" });
 
@@ -45,7 +45,7 @@ export function showQuantityModal(product, cartService) {
       className: "btn-primary",
       onclick: async () => {
         try {
-          await cartService.addToCart(product.id, quantity);
+          await addToCart(product.id, quantity);
           // Opcional: mostrar feedback
         } catch (e) {
           alert("Error al agregar al carrito");

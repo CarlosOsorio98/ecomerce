@@ -4,8 +4,7 @@
  */
 import { userService } from "../services/user.js";
 import { createElement } from "../spa.js";
-import { cartService } from "../services/cart.js";
-import { getCart, getUser } from "../state.js";
+import { getCart, getUser, addToCart, removeFromCart, syncCart } from "../state.js";
 
 /**
  * Crea la vista del perfil de usuario.
@@ -15,14 +14,10 @@ import { getCart, getUser } from "../state.js";
 export function ProfileView(router) {
   return async function () {
     const user = getUser();
-    // Obtener el carrito desde la API
-    let cart = [];
-    try {
-      cart = await cartService.getCart();
-    } catch (e) {
-      // Si hay error, muestra vacío
-      cart = [];
-    }
+    // Sincronizar el carrito con la API
+    await syncCart();
+    const cart = getCart();
+    
     const container = createElement("div", { className: "profile-container" });
     const cartSection = await createCartSection(cart, user, router);
     container.appendChild(cartSection);
@@ -55,10 +50,8 @@ async function createCartSection(cart, user, router) {
           "button",
           {
             onclick: async () => {
-              if (item.quantity > 1) {
-                await cartService.addToCart(item.asset_id, -1);
-                router.handleRoute();
-              }
+              await addToCart(item.asset_id, -1);
+              router.handleRoute();
             },
           },
           "-"
@@ -68,7 +61,7 @@ async function createCartSection(cart, user, router) {
           "button",
           {
             onclick: async () => {
-              await cartService.addToCart(item.asset_id, 1);
+              await addToCart(item.asset_id, 1);
               router.handleRoute();
             },
           },
@@ -90,7 +83,7 @@ async function createCartSection(cart, user, router) {
         {
           className: "remove-item",
           onclick: async () => {
-            await cartService.removeFromCart(item.id);
+            await removeFromCart(item.id);
             router.handleRoute();
           },
         },

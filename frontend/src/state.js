@@ -71,8 +71,10 @@ export const setCurrentRoute = (route) => {
 export const syncCart = async () => {
   try {
     const cart = await cartService.getCart();
+    console.log("[State] Sincronizando carrito:", cart);
     store.setState({ cart });
-  } catch {
+  } catch (error) {
+    console.error("[State] Error al sincronizar carrito:", error);
     store.setState({ cart: [] });
   }
 };
@@ -83,6 +85,7 @@ export const syncCart = async () => {
  * @param {number} quantity - La cantidad del producto.
  */
 export const addToCart = async (asset_id, quantity) => {
+  console.log("[State] Agregando al carrito:", { asset_id, quantity });
   await cartService.addToCart(asset_id, quantity);
   await syncCart();
 };
@@ -92,6 +95,7 @@ export const addToCart = async (asset_id, quantity) => {
  * @param {string} id - El ID del producto a eliminar.
  */
 export const removeFromCart = async (id) => {
+  console.log("[State] Eliminando del carrito, ID:", id);
   await cartService.removeFromCart(id);
   await syncCart();
 };
@@ -103,15 +107,23 @@ export const removeFromCart = async (id) => {
  * @param {number} newQuantity - La nueva cantidad total del producto.
  */
 export const updateCartItemQuantity = async (asset_id, newQuantity) => {
+  console.log("[State] Actualizando cantidad:", { asset_id, newQuantity });
   // Para actualizar cantidad, usamos addToCart con la diferencia
   const cart = store.getState().cart;
   const item = cart.find((i) => i.asset_id === asset_id);
-  if (!item) return;
+  if (!item) {
+    console.log("[State] Item no encontrado para asset_id:", asset_id);
+    return;
+  }
+  console.log("[State] Item encontrado:", item);
   const diff = newQuantity - item.quantity;
+  console.log("[State] Diferencia de cantidad:", diff);
   if (diff === 0) return;
   if (newQuantity <= 0) {
+    console.log("[State] Cantidad <= 0, eliminando item con ID:", item.id);
     await removeFromCart(item.id);
   } else {
+    console.log("[State] Agregando diferencia:", diff);
     await addToCart(asset_id, diff);
   }
 };

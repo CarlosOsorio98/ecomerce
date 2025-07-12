@@ -43,7 +43,7 @@ store.subscribe("cart", (cart) => {
   // If the cart items container exists (sidebar has been opened), re-render the list
   if (cartItemsContainer) {
     try {
-      renderCartItems(cartItemsContainer);
+      renderCartItems(cartItemsContainer, cart);
       console.log("[FloatingCart] Cart items re-rendered."); // Log successful re-render
     } catch (error) {
       console.error("[FloatingCart] Error rendering cart items:", error); // Log errors during rendering
@@ -121,22 +121,26 @@ function createCartOverlay() {
  * Renderiza la lista de items dentro del contenedor del carrito.
  * @param {HTMLElement} container - El contenedor donde se renderizarán los items.
  */
-function renderCartItems(container) {
+function renderCartItems(container, cart = null) {
   console.log("[FloatingCart] Rendering cart items..."); // Log start of rendering
   container.innerHTML = ""; // Limpiar contenido actual
-  const cart = getCart();
+  const cartData = cart || getCart();
 
-  if (!cart || cart.length === 0) {
+  if (!cartData || cartData.length === 0) {
     container.appendChild(createElement("p", {}, "El carrito está vacío."));
     return;
   }
 
-  cart.forEach((item) => {
+  cartData.forEach((item) => {
+    const imgSrc = item.url.startsWith("/") || item.url.startsWith("http")
+      ? item.url
+      : "/frontend/" + item.url;
+    
     const itemElement = createElement(
       "div",
       { className: "cart-item" },
       createElement("img", {
-        src: item.url,
+        src: imgSrc,
         alt: item.name,
         className: "cart-item-image",
       }),
@@ -153,7 +157,6 @@ function renderCartItems(container) {
             {
               onclick: () =>
                 updateCartItemQuantity(item.asset_id, item.quantity - 1),
-              disabled: item.quantity <= 1,
             },
             "-"
           ),
@@ -171,7 +174,7 @@ function renderCartItems(container) {
       (() => {
         const removeButton = createElement("button", {
           className: "remove-item-button",
-          onclick: () => removeFromCart(item.asset_id),
+          onclick: () => removeFromCart(item.id),
         });
         removeButton.innerHTML = trashSVG;
         return removeButton;
@@ -181,7 +184,7 @@ function renderCartItems(container) {
   });
 
   // Calcular y mostrar total
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalElement = createElement(
     "div",
     { className: "cart-total" },

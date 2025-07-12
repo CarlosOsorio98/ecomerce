@@ -5,7 +5,6 @@
 
 import { showQuantityModal } from "../components/modal.js";
 import { createElement } from "../spa.js";
-import { cartService } from "../services/cart.js";
 
 /**
  * Crea la vista de la página de inicio.
@@ -40,7 +39,7 @@ export function HomeView() {
             "button",
             {
               className: "add-to-cart",
-              onclick: () => showQuantityModal(product, cartService),
+              onclick: () => showQuantityModal(product),
             },
             "Agregar al carrito"
           )
