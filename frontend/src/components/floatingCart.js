@@ -7,7 +7,7 @@ import { createElement } from "../spa.js";
 import {
   store,
   getCart,
-  updateCartItemQuantity,
+  addToCart,
   removeFromCart,
   syncCart,
 } from "../state.js";
@@ -156,7 +156,7 @@ function renderCartItems(container, cart = null) {
             "button",
             {
               onclick: () =>
-                updateCartItemQuantity(item.asset_id, item.quantity - 1),
+                addToCart(item.asset_id, -1),
             },
             "-"
           ),
@@ -165,7 +165,7 @@ function renderCartItems(container, cart = null) {
             "button",
             {
               onclick: () =>
-                updateCartItemQuantity(item.asset_id, item.quantity + 1),
+                addToCart(item.asset_id, 1),
             },
             "+"
           )

@@ -51,7 +51,7 @@ async function createCartSection(cart, user, router) {
           {
             onclick: async () => {
               await addToCart(item.asset_id, -1);
-              router.handleRoute();
+              window.location.reload();
             },
           },
           "-"
@@ -62,7 +62,7 @@ async function createCartSection(cart, user, router) {
           {
             onclick: async () => {
               await addToCart(item.asset_id, 1);
-              router.handleRoute();
+              window.location.reload();
             },
           },
           "+"
@@ -84,7 +84,7 @@ async function createCartSection(cart, user, router) {
           className: "remove-item",
           onclick: async () => {
             await removeFromCart(item.id);
-            router.handleRoute();
+            window.location.reload();
           },
         },
         "×"

@@ -18,9 +18,14 @@
       }
 
       header {
-        background-color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 1rem;
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
       }
 
       nav {
@@ -29,27 +34,87 @@
         align-items: center;
         max-width: 1200px;
         margin: 0 auto;
+        padding: 0 1rem;
       }
 
       nav h1 {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, #ffffff 0%, #f0f8ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        letter-spacing: -0.5px;
       }
 
       nav ul {
         display: flex;
         list-style: none;
-        gap: 1rem;
+        gap: 0.5rem;
+        align-items: center;
       }
 
       nav a {
         color: white;
         text-decoration: none;
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 25px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
+      }
+
+      nav a:hover::before {
+        left: 100%;
       }
 
       nav a:hover {
-        background-color: #555;
-        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+      }
+
+    
+
+      /* Responsive navbar */
+      @media (max-width: 768px) {
+        nav {
+          flex-direction: column;
+          gap: 1rem;
+          padding: 0.5rem 1rem;
+        }
+
+        nav h1 {
+          font-size: 1.5rem;
+        }
+
+        nav ul {
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        nav a {
+          padding: 0.6rem 1.2rem;
+          font-size: 0.9rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        nav ul {
+          width: 100%;
+          justify-content: space-around;
+        }
+
+        nav a {
+          padding: 0.5rem 1rem;
+          font-size: 0.85rem;
+        }
       }
 
       main {
@@ -162,32 +227,93 @@
         padding: 1rem;
       }
 
-      .logout-button,
-      .delete-account {
-        background: none;
-        border: 1px solid white;
+      .logout-button {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         color: white;
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1.5rem;
         cursor: pointer;
         font-family: inherit;
-        font-size: 1rem;
-        border-radius: 4px;
-        transition: background-color 0.2s, color 0.2s;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border-radius: 25px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        letter-spacing: 0.5px;
+        backdrop-filter: blur(10px);
+      }
+
+      .logout-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .logout-button:hover::before {
+        left: 100%;
       }
 
       .logout-button:hover {
-        background-color: #f4f4f4;
-        color: #333;
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .logout-button:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       }
 
       .delete-account {
-        background-color: #dc3545;
-        border-color: #dc3545;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: 2px solid #dc3545;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border-radius: 25px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        letter-spacing: 0.5px;
         margin-top: 1rem;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
       }
+
+      .delete-account::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .delete-account:hover::before {
+        left: 100%;
+      }
+
       .delete-account:hover {
-        background-color: #c82333;
+        background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
         border-color: #bd2130;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+      }
+
+      .delete-account:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
       }
 
       /* Estilos del Modal */
@@ -355,6 +481,86 @@
         margin-bottom: 0;
       }
 
+      /* Estilos para el componente plus-and-minus */
+      .plus-and-minus {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        margin-bottom: 1.5rem;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .plus-and-minus:hover {
+        border-color: #cbd5e0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .plus-and-minus button {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        min-width: 40px;
+      }
+
+      .minus-button {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+      }
+
+      .plus-button {
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+      }
+
+      .plus-and-minus button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+
+      .plus-and-minus button:active {
+        transform: scale(0.95);
+      }
+
+      .plus-and-minus input[type="number"] {
+        width: 80px;
+        margin: 0 !important;
+        border: none;
+        background: white;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2d3748;
+        border-radius: 0;
+        box-shadow: none;
+        transform: none;
+        border-left: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        height: 40px;
+      }
+
+      .plus-and-minus input[type="number"]:focus {
+        outline: none;
+        background: white;
+        border-color: #cbd5e0;
+        box-shadow: none;
+        transform: none;
+      }
+
       /* Responsive para el modal */
       @media (max-width: 480px) {
         .modal-content {
@@ -368,6 +574,10 @@
         
         .modal-actions button {
           width: 100%;
+        }
+
+        .plus-and-minus {
+          margin-bottom: 1rem;
         }
       }
 
@@ -492,7 +702,9 @@
     </div>
     <header>
       <nav>
-        <h1>Mi Tienda</h1>
+        <a href="/index.html" data-link>
+          <h1>Mi Tienda</h1>
+        </a>
         <ul id="main-nav-links">
           <li><a href="/index.html" data-link>Inicio</a></li>
           <li><a href="/login" data-link>Iniciar Sesión</a></li>

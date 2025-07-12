@@ -27,7 +27,7 @@ setupDatabase();
 // Esquema para agregar al carrito
 const addToCartSchema = z.object({
   asset_id: z.string(),
-  quantity: z.number().int().min(1),
+  quantity: z.number().int().min(-100).max(100),
 });
 
 // Servidor Bun simple para SPA
@@ -93,15 +93,25 @@ const server = Bun.serve({
           .query("SELECT * FROM cart WHERE asset_id = ?")
           .get(body.asset_id);
         if (existing) {
-          db.run("UPDATE cart SET quantity = quantity + ? WHERE asset_id = ?", [
-            body.quantity,
-            body.asset_id,
-          ]);
+          const newQuantity = existing.quantity + body.quantity;
+          if (newQuantity <= 0) {
+            // Si la cantidad resultante es 0 o menos, eliminar el item
+            db.run("DELETE FROM cart WHERE asset_id = ?", [body.asset_id]);
+          } else {
+            // Actualizar la cantidad
+            db.run("UPDATE cart SET quantity = ? WHERE asset_id = ?", [
+              newQuantity,
+              body.asset_id,
+            ]);
+          }
         } else {
-          db.run("INSERT INTO cart (asset_id, quantity) VALUES (?, ?)", [
-            body.asset_id,
-            body.quantity,
-          ]);
+          // Solo insertar si la cantidad es positiva
+          if (body.quantity > 0) {
+            db.run("INSERT INTO cart (asset_id, quantity) VALUES (?, ?)", [
+              body.asset_id,
+              body.quantity,
+            ]);
+          }
         }
         return new Response(JSON.stringify({ ok: true }), {
           status: 200,
