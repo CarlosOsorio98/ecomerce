@@ -100,8 +100,13 @@
 .close-cart-button {
   background: none;
   border: none;
-  font-size: 1.5em;
   cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: opacity 0.2s ease;
 }
 
 .cart-items {
@@ -167,10 +172,14 @@
 .remove-item-button {
   background: none;
   border: none;
-  color: red;
-  font-size: 1.2em;
   cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff0000;
   margin-left: 10px;
+  transition: opacity 0.2s ease;
 }
 
 .cart-total {
@@ -182,34 +191,16 @@
   font-weight: bold;
 }
 
-/* Estilos para los iconos SVG */
-.svg-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.svg-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.close-cart-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .close-cart-button:hover {
   opacity: 0.7;
 }
 
-.remove-item-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .remove-item-button:hover {
   opacity: 0.7;
+}
+
+.close-cart-button svg,
+.remove-item-button svg {
+  width: 24px;
+  height: 24px;
 }
