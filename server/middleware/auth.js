@@ -1,6 +1,7 @@
 import { config } from '@/config.js'
 import { db } from '@/data/schema.js'
-import { createAuthError } from '@/errors.js'
+import { validateAdminPassword } from '@/dto/admin.js'
+import { createAuthError, createValidationError } from '@/errors.js'
 import jwt from 'jsonwebtoken'
 
 export const getCookie = (req, name) => {
@@ -52,6 +53,18 @@ export const adminMiddleware = (req) => {
   }
 
   const token = authHeader.split(' ')[1]
+
+  try {
+    validateAdminPassword(token)
+  } catch (error) {
+    if (error.name === 'ZodError') {
+      throw createValidationError(
+        `Invalid admin password: ${error.errors[0].message}`
+      )
+    }
+    throw createAuthError('Invalid admin token format')
+  }
+
   if (token !== config.admin.key) {
     throw createAuthError('Invalid admin token')
   }
