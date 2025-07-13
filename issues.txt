@@ -5,4 +5,6 @@ cuando cambia algo en el carrito, agrego o quito algo, la pagina me sigue mostra
 Seccion de pago 
 confirmacion de correo electronico al usuario 
 una de ofertas y descuentos
-carrito desplegable que este en la barra de navegacion
+carrito desplegable que este en la barra de navegacion ---------
+Agregar un administrador de contenido con permisos de agregar nuevos items
+seccion de productos favoritos 

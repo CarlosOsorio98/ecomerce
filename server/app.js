@@ -9,6 +9,7 @@ import {
   validateUserLogin,
   hashPassword, // <-- Importar la función de hash
 } from "./data/setup.js";
+import { handleAdminRoutes } from "./secret.route.js";
 import {
   signJWT,
   verifyJWT,
@@ -18,8 +19,21 @@ import {
   saveJWTToken,
   revokeJWTToken,
   isJWTRevoked,
-} from "./session.js";
-import { z } from "zod";
+} from "./jwt.js";
+
+// Cargar variables de entorno desde .env
+await import("dotenv/config");
+// También podemos usar Bun.env para acceder a las variables de entorno
+const adminKey = process.env.ADMIN_KEY || Bun.env.ADMIN_KEY;
+
+if (!adminKey) {
+  console.error(
+    "ERROR: ADMIN_KEY no está definida en las variables de entorno"
+  );
+  process.exit(1);
+}
+
+console.log("Variables de entorno cargadas. ADMIN_KEY presente:", !!adminKey);
 
 // Inicializar la base de datos y poblarla
 setupDatabase();
@@ -35,6 +49,14 @@ const server = Bun.serve({
   port: 3000,
   async fetch(req) {
     const url = new URL(req.url);
+
+    // Rutas de administrador
+    if (
+      url.pathname.startsWith("/admin") ||
+      url.pathname.startsWith("/api/admin")
+    ) {
+      return handleAdminRoutes(req);
+    }
 
     // --- API: Listar productos ---
     if (url.pathname === "/api/assets" && req.method === "GET") {
@@ -215,16 +237,16 @@ const server = Bun.serve({
             }
           );
         }
-        
+
         const token = signJWT({ id: validUser.id, email: validUser.email });
         console.log("[LOGIN] Token generado:", token ? "sí" : "no");
-        
+
         saveJWTToken(validUser.id, token);
         console.log("[LOGIN] Token guardado en BD");
-        
+
         const cookieValue = setSessionCookie(token);
         console.log("[LOGIN] Cookie configurada:", cookieValue);
-        
+
         return new Response(JSON.stringify(validUser), {
           status: 200,
           headers: {
@@ -246,10 +268,10 @@ const server = Bun.serve({
     if (url.pathname === "/api/session" && req.method === "GET") {
       const cookies = req.headers.get("cookie");
       console.log("[SESSION] Cookies recibidas:", cookies);
-      
+
       const token = getCookie(req, "session");
       console.log("[SESSION] Token extraído:", token ? "presente" : "ausente");
-      
+
       if (!token) {
         console.log("[SESSION] No hay token de sesión");
         return new Response(JSON.stringify({ error: "No autenticado" }), {
@@ -257,10 +279,10 @@ const server = Bun.serve({
           headers: { ...getCORSHeaders(), "Content-Type": "application/json" },
         });
       }
-      
+
       const payload = verifyJWT(token);
       console.log("[SESSION] Payload JWT:", payload ? "válido" : "inválido");
-      
+
       if (!payload || isJWTRevoked(token)) {
         console.log("[SESSION] Token inválido o revocado");
         return new Response(
@@ -274,11 +296,11 @@ const server = Bun.serve({
           }
         );
       }
-      
+
       const user = db
         .query("SELECT id, name, email, created_at FROM users WHERE id = ?")
         .get(payload.id);
-        
+
       if (!user) {
         console.log("[SESSION] Usuario no encontrado en BD");
         return new Response(
@@ -292,7 +314,7 @@ const server = Bun.serve({
           }
         );
       }
-      
+
       console.log("[SESSION] Usuario encontrado:", user.email);
       return new Response(JSON.stringify(user), {
         status: 200,
