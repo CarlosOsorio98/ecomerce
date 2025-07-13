@@ -1,7 +1,7 @@
+import { localData } from '@/data/local.js'
+import { getAllAssets } from '@/repositories/assetRepository.js'
 import { randomUUID } from 'crypto'
 import fs from 'node:fs'
-import { localData } from '../data/local.js'
-import { getAllAssets } from '../repositories/assetRepository.js'
 
 const ASSETS_JSON_PATH = 'frontend/assets.json'
 

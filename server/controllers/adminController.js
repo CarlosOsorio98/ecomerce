@@ -1,14 +1,14 @@
-import { createNotFoundError, createValidationError } from '../errors.js'
-import { getCORSHeaders } from '../middleware/cors.js'
+import { createNotFoundError, createValidationError } from '@/errors.js'
+import { getCORSHeaders } from '@/middleware/cors.js'
 import {
   createAsset,
   deleteAsset,
   getAssetsFromFile,
-} from '../services/assetService.js'
-import { processAndSaveImage } from '../services/imageService.js'
+} from '@/services/assetService.js'
+import { processAndSaveImage } from '@/services/imageService.js'
 
 export const getAdminPanel = async (req) => {
-  const file = Bun.file('./server/templates/admin.html')
+  const file = globalThis.Bun.file('./server/templates/admin.html')
   return new Response(file, {
     headers: { ...getCORSHeaders(), 'Content-Type': 'text/html' },
   })

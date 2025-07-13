@@ -1,5 +1,5 @@
+import { db } from '@/data/schema.js'
 import { createHash, randomUUID } from 'crypto'
-import { db } from '../data/schema.js'
 
 export const hashPassword = (password) =>
   createHash('sha256').update(password).digest('hex')
@@ -7,14 +7,14 @@ export const hashPassword = (password) =>
 export const createUser = ({ name, email, password }) => {
   const id = randomUUID()
   const hashedPassword = hashPassword(password)
-  const created_at = new Date().toISOString()
+  const createdAt = new Date().toISOString()
 
   db.run(
     'INSERT INTO users (id, name, email, password, created_at) VALUES (?, ?, ?, ?, ?)',
-    [id, name, email, hashedPassword, created_at]
+    [id, name, email, hashedPassword, createdAt]
   )
 
-  return { id, name, email, created_at }
+  return { id, name, email, createdAt }
 }
 
 export const getUserByEmail = (email) =>

@@ -1,7 +1,7 @@
+import { config } from '@/config.js'
+import { db } from '@/data/schema.js'
+import { createAuthError } from '@/errors.js'
 import jwt from 'jsonwebtoken'
-import { config } from '../config.js'
-import { db } from '../data/schema.js'
-import { createAuthError } from '../errors.js'
 
 export const getCookie = (req, name) => {
   const cookie = req.headers.get('cookie')

@@ -1,15 +1,15 @@
-import { userLoginSchema, userRegisterSchema } from '../dto/auth.js'
-import { createNotFoundError, createValidationError } from '../errors.js'
-import { authMiddleware, getCookie } from '../middleware/auth.js'
-import { getCORSHeaders } from '../middleware/cors.js'
-import { getUserById } from '../repositories/userRepository.js'
+import { userLoginSchema, userRegisterSchema } from '@/dto/auth.js'
+import { createNotFoundError, createValidationError } from '@/errors.js'
+import { authMiddleware, getCookie } from '@/middleware/auth.js'
+import { getCORSHeaders } from '@/middleware/cors.js'
+import { getUserById } from '@/repositories/userRepository.js'
 import {
   clearSessionCookie,
   loginUser,
   logoutUser,
   registerUser,
   setSessionCookie,
-} from '../services/authService.js'
+} from '@/services/authService.js'
 
 export const register = async (req) => {
   const body = await req.json()

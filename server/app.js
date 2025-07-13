@@ -4,7 +4,7 @@ import { router } from './router.js'
 
 localData().syncAssets()
 
-const server = Bun.serve({
+export const server = globalThis.Bun.serve({
   port: config.server.port,
   fetch: router,
 })

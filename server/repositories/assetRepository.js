@@ -1,4 +1,4 @@
-import { db } from '../data/schema.js'
+import { db } from '@/data/schema.js'
 
 export const getAllAssets = () => db.query('SELECT * FROM assets').all()
 

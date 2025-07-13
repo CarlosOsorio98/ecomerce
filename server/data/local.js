@@ -44,7 +44,7 @@ function deleteProduct(id) {
   const products = getProducts()
   const index = products.findIndex((product) => product.id === id)
   if (index !== -1) {
-    const [removed] = products.splice(index, 1)
+    products.splice(index, 1)
     fs.writeFileSync(ASSETS_PATH, JSON.stringify(products, null, 2))
     db.run(`DELETE FROM assets WHERE id = ?`, [id])
   }

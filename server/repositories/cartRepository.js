@@ -1,4 +1,4 @@
-import { db } from '../data/schema.js'
+import { db } from '@/data/schema.js'
 
 export const getCart = () =>
   db

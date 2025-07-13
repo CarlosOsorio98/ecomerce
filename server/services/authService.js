@@ -1,12 +1,12 @@
-import jwt from 'jsonwebtoken'
-import { config } from '../config.js'
-import { createAuthError, createConflictError } from '../errors.js'
-import { revokeJWTToken, saveJWTToken } from '../repositories/jwtRepository.js'
+import { config } from '@/config.js'
+import { createAuthError, createConflictError } from '@/errors.js'
+import { revokeJWTToken, saveJWTToken } from '@/repositories/jwtRepository.js'
 import {
   createUser,
   getUserByEmail,
   validateUserCredentials,
-} from '../repositories/userRepository.js'
+} from '@/repositories/userRepository.js'
+import jwt from 'jsonwebtoken'
 
 export const signJWT = (payload) =>
   jwt.sign(payload, config.jwt.secret, { expiresIn: config.jwt.expiresIn })

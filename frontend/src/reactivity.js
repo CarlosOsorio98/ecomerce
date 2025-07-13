@@ -66,7 +66,7 @@ export class Observable {
       const keysA = Object.keys(a)
       const keysB = Object.keys(b)
       if (keysA.length !== keysB.length) return false
-      for (let key of keysA) {
+      for (const key of keysA) {
         if (!keysB.includes(key)) return false
         if (!this._deepEqual(a[key], b[key])) return false
       }

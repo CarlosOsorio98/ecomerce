@@ -1,5 +1,5 @@
-import { getCORSHeaders } from '../middleware/cors.js'
-import { getAssets } from '../services/assetService.js'
+import { getCORSHeaders } from '@/middleware/cors.js'
+import { getAssets } from '@/services/assetService.js'
 
 export const getAssetsList = async (req) => {
   const assets = getAssets()

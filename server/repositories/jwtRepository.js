@@ -1,4 +1,4 @@
-import { db } from '../data/schema.js'
+import { db } from '@/data/schema.js'
 
 export const saveJWTToken = (userId, token) =>
   db.run('INSERT INTO jwt_tokens (user_id, token) VALUES (?, ?)', [

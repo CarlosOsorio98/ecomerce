@@ -1,11 +1,11 @@
-import { addToCartSchema } from '../dto/cart.js'
-import { createValidationError } from '../errors.js'
-import { getCORSHeaders } from '../middleware/cors.js'
+import { addToCartSchema } from '@/dto/cart.js'
+import { createValidationError } from '@/errors.js'
+import { getCORSHeaders } from '@/middleware/cors.js'
 import {
   addItemToCart,
   getCartItems,
   removeItemFromCart,
-} from '../services/cartService.js'
+} from '@/services/cartService.js'
 
 export const getCart = async (req) => {
   const cart = getCartItems()

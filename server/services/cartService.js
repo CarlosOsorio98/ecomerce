@@ -1,5 +1,5 @@
-import { createNotFoundError } from '../errors.js'
-import { getAssetById } from '../repositories/assetRepository.js'
+import { createNotFoundError } from '@/errors.js'
+import { getAssetById } from '@/repositories/assetRepository.js'
 import {
   addToCart,
   getCart,
@@ -7,7 +7,7 @@ import {
   removeCartItem,
   removeFromCart,
   updateCartQuantity,
-} from '../repositories/cartRepository.js'
+} from '@/repositories/cartRepository.js'
 
 export const getCartItems = () => getCart()
 

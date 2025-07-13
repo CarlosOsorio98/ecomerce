@@ -1,20 +1,11 @@
-// Admin panel configuration
-// Uses admin.html template
-// Requires admin password equal to .env ADMIN_KEY
-// Serves basic admin panel for adding/removing products
-// Images are saved in frontend/assets
-// Server converts images to WEBP and saves in same directory
-// Only WEBP files are preserved
-// Updates assets.json when work is done
-
 import {
   addAsset,
   getAdminPanel,
   getAssets,
   removeAsset,
-} from '../controllers/adminController.js'
-import { adminMiddleware } from '../middleware/auth.js'
-import { asyncHandler } from '../middleware/errorHandler.js'
+} from '@/controllers/adminController.js'
+import { adminMiddleware } from '@/middleware/auth.js'
+import { asyncHandler } from '@/middleware/errorHandler.js'
 
 const adminRoutes = [
   ['/admin', 'GET', getAdminPanel],

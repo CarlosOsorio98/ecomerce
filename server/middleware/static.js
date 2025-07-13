@@ -9,14 +9,14 @@ export const staticMiddleware = async (req) => {
   }
 
   try {
-    const file = Bun.file(`.${filePath}`)
+    const file = globalThis.Bun.file(`.${filePath}`)
     if (await file.exists()) {
       return new Response(file, {
         headers: getCORSHeaders(),
       })
     }
 
-    const indexFile = Bun.file('./frontend/index.html')
+    const indexFile = globalThis.Bun.file('./frontend/index.html')
     return new Response(indexFile, {
       headers: { ...getCORSHeaders(), 'Content-Type': 'text/html' },
     })
