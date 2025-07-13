@@ -7,5 +7,5 @@ export async function up(db) {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     revoked BOOLEAN DEFAULT 0,
     FOREIGN KEY(user_id) REFERENCES users(id)
-  )`);
+  )`)
 }

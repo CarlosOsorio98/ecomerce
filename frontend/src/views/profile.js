@@ -2,9 +2,15 @@
  * @file profile.js
  * @description La vista del perfil de usuario.
  */
-import { userService } from "../services/user.js";
-import { createElement } from "../spa.js";
-import { getCart, getUser, addToCart, removeFromCart, syncCart } from "../state.js";
+import { userService } from '../services/user.js'
+import { createElement } from '../spa.js'
+import {
+  addToCart,
+  getCart,
+  getUser,
+  removeFromCart,
+  syncCart,
+} from '../state.js'
 
 /**
  * Crea la vista del perfil de usuario.
@@ -13,187 +19,187 @@ import { getCart, getUser, addToCart, removeFromCart, syncCart } from "../state.
  */
 export function ProfileView(router) {
   return async function () {
-    const user = getUser();
+    const user = getUser()
     // Sincronizar el carrito con la API
-    await syncCart();
-    const cart = getCart();
-    
-    const container = createElement("div", { className: "profile-container" });
-    const cartSection = await createCartSection(cart, user, router);
-    container.appendChild(cartSection);
-    const accountSection = createAccountSection(user, router);
-    container.appendChild(accountSection);
-    return container;
-  };
+    await syncCart()
+    const cart = getCart()
+
+    const container = createElement('div', { className: 'profile-container' })
+    const cartSection = await createCartSection(cart, user, router)
+    container.appendChild(cartSection)
+    const accountSection = createAccountSection(user, router)
+    container.appendChild(accountSection)
+    return container
+  }
 }
 
 async function createCartSection(cart, user, router) {
   const cartSection = createElement(
-    "div",
-    { className: "cart-section" },
-    createElement("h2", {}, `Bienvenido, ${user.name}`),
-    createElement("h3", {}, "Tu Carrito de Compras")
-  );
+    'div',
+    { className: 'cart-section' },
+    createElement('h2', {}, `Bienvenido, ${user.name}`),
+    createElement('h3', {}, 'Tu Carrito de Compras')
+  )
 
   if (!cart || cart.length === 0) {
-    cartSection.appendChild(createElement("p", {}, "Tu carrito está vacío."));
+    cartSection.appendChild(createElement('p', {}, 'Tu carrito está vacío.'))
   } else {
-    let total = 0;
-    const cartList = createElement("ul", { className: "cart-list" });
+    let total = 0
+    const cartList = createElement('ul', { className: 'cart-list' })
     for (const item of cart) {
-      const subtotal = item.price * item.quantity;
-      total += subtotal;
+      const subtotal = item.price * item.quantity
+      total += subtotal
       const quantityControls = createElement(
-        "div",
-        { className: "quantity-controls" },
+        'div',
+        { className: 'quantity-controls' },
         createElement(
-          "button",
+          'button',
           {
             onclick: async () => {
-              await addToCart(item.asset_id, -1);
-              window.location.reload();
+              await addToCart(item.asset_id, -1)
+              window.location.reload()
             },
           },
-          "-"
+          '-'
         ),
-        createElement("span", {}, item.quantity),
+        createElement('span', {}, item.quantity),
         createElement(
-          "button",
+          'button',
           {
             onclick: async () => {
-              await addToCart(item.asset_id, 1);
-              window.location.reload();
+              await addToCart(item.asset_id, 1)
+              window.location.reload()
             },
           },
-          "+"
+          '+'
         )
-      );
+      )
       const itemDetails = createElement(
-        "div",
-        { className: "item-details" },
+        'div',
+        { className: 'item-details' },
         `${item.name} ($${item.price.toFixed(2)} c/u)`
-      );
+      )
       const itemSubtotal = createElement(
-        "div",
-        { className: "item-subtotal" },
+        'div',
+        { className: 'item-subtotal' },
         `Subtotal: $${subtotal.toFixed(2)}`
-      );
+      )
       const removeButton = createElement(
-        "button",
+        'button',
         {
-          className: "remove-item",
+          className: 'remove-item',
           onclick: async () => {
-            await removeFromCart(item.id);
-            window.location.reload();
+            await removeFromCart(item.id)
+            window.location.reload()
           },
         },
-        "×"
-      );
+        '×'
+      )
       const cartItem = createElement(
-        "li",
-        { className: "cart-item" },
+        'li',
+        { className: 'cart-item' },
         itemDetails,
         quantityControls,
         itemSubtotal,
         removeButton
-      );
-      cartList.appendChild(cartItem);
+      )
+      cartList.appendChild(cartItem)
     }
     const totalElement = createElement(
-      "p",
-      { className: "cart-total" },
+      'p',
+      { className: 'cart-total' },
       `Total: $${total.toFixed(2)}`
-    );
-    cartSection.appendChild(cartList);
-    cartSection.appendChild(totalElement);
+    )
+    cartSection.appendChild(cartList)
+    cartSection.appendChild(totalElement)
   }
-  return cartSection;
+  return cartSection
 }
 
 function createAccountSection(user, router) {
-  const accountSection = createElement("div", {
-    className: "account-section auth-form",
-  });
+  const accountSection = createElement('div', {
+    className: 'account-section auth-form',
+  })
 
   // --- Formulario para cambiar contraseña ---
-  const changePasswordForm = createElement("form", {
-    className: "change-password-form",
+  const changePasswordForm = createElement('form', {
+    className: 'change-password-form',
     onsubmit: async (e) => {
-      e.preventDefault();
-      const currentPassword = e.target.currentPassword.value;
-      const newPassword = e.target.newPassword.value;
-      const confirmPassword = e.target.confirmPassword.value;
+      e.preventDefault()
+      const currentPassword = e.target.currentPassword.value
+      const newPassword = e.target.newPassword.value
+      const confirmPassword = e.target.confirmPassword.value
 
       if (newPassword !== confirmPassword) {
-        alert("La nueva contraseña y la confirmación no coinciden.");
-        return;
+        alert('La nueva contraseña y la confirmación no coinciden.')
+        return
       }
       if (!newPassword || !currentPassword) {
-        alert("Por favor, completa todos los campos.");
-        return;
+        alert('Por favor, completa todos los campos.')
+        return
       }
 
       try {
-        await userService.changePassword(user.id, currentPassword, newPassword);
-        alert("¡Contraseña actualizada exitosamente!");
-        e.target.reset(); // Limpiar el formulario
+        await userService.changePassword(user.id, currentPassword, newPassword)
+        alert('¡Contraseña actualizada exitosamente!')
+        e.target.reset() // Limpiar el formulario
       } catch (error) {
-        alert(`Error: ${error.message}`);
+        alert(`Error: ${error.message}`)
       }
     },
-  });
+  })
 
   changePasswordForm.append(
-    createElement("h3", {}, "Cambiar Contraseña"),
-    createElement("input", {
-      type: "password",
-      name: "currentPassword",
-      placeholder: "Contraseña Actual",
+    createElement('h3', {}, 'Cambiar Contraseña'),
+    createElement('input', {
+      type: 'password',
+      name: 'currentPassword',
+      placeholder: 'Contraseña Actual',
       required: true,
     }),
-    createElement("input", {
-      type: "password",
-      name: "newPassword",
-      placeholder: "Nueva Contraseña",
+    createElement('input', {
+      type: 'password',
+      name: 'newPassword',
+      placeholder: 'Nueva Contraseña',
       required: true,
     }),
-    createElement("input", {
-      type: "password",
-      name: "confirmPassword",
-      placeholder: "Confirmar Nueva Contraseña",
+    createElement('input', {
+      type: 'password',
+      name: 'confirmPassword',
+      placeholder: 'Confirmar Nueva Contraseña',
       required: true,
     }),
-    createElement("button", { type: "submit" }, "Actualizar Contraseña")
-  );
+    createElement('button', { type: 'submit' }, 'Actualizar Contraseña')
+  )
 
   // --- Botón para eliminar cuenta ---
   const deleteButton = createElement(
-    "button",
+    'button',
     {
-      className: "delete-account",
+      className: 'delete-account',
       onclick: async () => {
         const password = prompt(
-          "Para eliminar tu cuenta, por favor, introduce tu contraseña:"
-        );
-        if (password === null) return;
+          'Para eliminar tu cuenta, por favor, introduce tu contraseña:'
+        )
+        if (password === null) return
 
         try {
-          await userService.deleteAccount(user.id, password);
-          alert("Cuenta eliminada exitosamente.");
-          router.navigateTo("/");
+          await userService.deleteAccount(user.id, password)
+          alert('Cuenta eliminada exitosamente.')
+          router.navigateTo('/')
         } catch (error) {
-          alert(`Error: ${error.message}`);
+          alert(`Error: ${error.message}`)
         }
       },
     },
-    "Eliminar cuenta"
-  );
+    'Eliminar cuenta'
+  )
 
   accountSection.append(
-    createElement("h3", {}, "Gestionar Cuenta"),
+    createElement('h3', {}, 'Gestionar Cuenta'),
     changePasswordForm,
     deleteButton
-  );
+  )
 
-  return accountSection;
+  return accountSection
 }

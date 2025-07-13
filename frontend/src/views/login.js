@@ -2,8 +2,8 @@
  * @file login.js
  * @description La vista para iniciar sesión.
  */
-import { authService } from "../services/auth.js";
-import { createElement } from "../spa.js";
+import { authService } from '../services/auth.js'
+import { createElement } from '../spa.js'
 
 /**
  * Crea la vista para iniciar sesión.
@@ -13,40 +13,40 @@ import { createElement } from "../spa.js";
 export function LoginView(router) {
   return function () {
     return createElement(
-      "div",
-      { className: "auth-container" },
+      'div',
+      { className: 'auth-container' },
       createElement(
-        "form",
+        'form',
         {
-          className: "auth-form",
+          className: 'auth-form',
           onsubmit: async (e) => {
-            e.preventDefault();
-            const email = e.target.email.value;
-            const password = e.target.password.value;
+            e.preventDefault()
+            const email = e.target.email.value
+            const password = e.target.password.value
 
             try {
-              await authService.signIn(email, password);
-              router.navigateTo("/");
+              await authService.signIn(email, password)
+              router.navigateTo('/')
             } catch (error) {
-              alert(error.message);
+              alert(error.message)
             }
           },
         },
-        createElement("h2", {}, "Iniciar Sesión"),
-        createElement("input", {
-          type: "email",
-          name: "email",
-          placeholder: "Correo electrónico",
+        createElement('h2', {}, 'Iniciar Sesión'),
+        createElement('input', {
+          type: 'email',
+          name: 'email',
+          placeholder: 'Correo electrónico',
           required: true,
         }),
-        createElement("input", {
-          type: "password",
-          name: "password",
-          placeholder: "Contraseña",
+        createElement('input', {
+          type: 'password',
+          name: 'password',
+          placeholder: 'Contraseña',
           required: true,
         }),
-        createElement("button", { type: "submit" }, "Ingresar")
+        createElement('button', { type: 'submit' }, 'Ingresar')
       )
-    );
-  };
+    )
+  }
 }

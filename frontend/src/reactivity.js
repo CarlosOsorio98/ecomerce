@@ -20,11 +20,11 @@ export class Observable {
    * @param {*} value - El valor inicial que será observado.
    */
   constructor(value) {
-    this._value = value;
+    this._value = value
     // Usamos un `Set` para almacenar los suscriptores. Un Set es como un array
     // pero solo permite valores únicos, lo que evita que un mismo suscriptor
     // se registre varias veces.
-    this._subscribers = new Set();
+    this._subscribers = new Set()
   }
 
   /**
@@ -32,7 +32,7 @@ export class Observable {
    * como si fuera una propiedad normal.
    */
   get value() {
-    return this._value;
+    return this._value
   }
 
   /**
@@ -43,8 +43,8 @@ export class Observable {
   set value(newValue) {
     // Solo notificamos si el valor realmente ha cambiado.
     if (!this._deepEqual(this._value, newValue)) {
-      this._value = newValue;
-      this._notify();
+      this._value = newValue
+      this._notify()
     }
   }
 
@@ -53,26 +53,26 @@ export class Observable {
    * Para arrays y objetos, compara su contenido, no solo la referencia.
    */
   _deepEqual(a, b) {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
+    if (a === b) return true
+    if (a == null || b == null) return false
     if (Array.isArray(a) && Array.isArray(b)) {
-      if (a.length !== b.length) return false;
+      if (a.length !== b.length) return false
       for (let i = 0; i < a.length; i++) {
-        if (!this._deepEqual(a[i], b[i])) return false;
+        if (!this._deepEqual(a[i], b[i])) return false
       }
-      return true;
+      return true
     }
     if (typeof a === 'object' && typeof b === 'object') {
-      const keysA = Object.keys(a);
-      const keysB = Object.keys(b);
-      if (keysA.length !== keysB.length) return false;
+      const keysA = Object.keys(a)
+      const keysB = Object.keys(b)
+      if (keysA.length !== keysB.length) return false
       for (let key of keysA) {
-        if (!keysB.includes(key)) return false;
-        if (!this._deepEqual(a[key], b[key])) return false;
+        if (!keysB.includes(key)) return false
+        if (!this._deepEqual(a[key], b[key])) return false
       }
-      return true;
+      return true
     }
-    return false;
+    return false
   }
 
   /**
@@ -82,16 +82,16 @@ export class Observable {
    * @returns {Function} Una función que, al ser llamada, desuscribe al suscriptor.
    */
   subscribe(subscriber) {
-    this._subscribers.add(subscriber);
+    this._subscribers.add(subscriber)
     // Opcional pero útil: Al suscribirse, ejecutamos inmediatamente el callback
     // con el valor actual, para que el suscriptor tenga el estado inicial.
-    subscriber(this._value);
+    subscriber(this._value)
 
     // Devolvemos una función que permite "limpiar" la suscripción.
     // Esto es muy importante para evitar fugas de memoria (memory leaks).
     return () => {
-      this._subscribers.delete(subscriber);
-    };
+      this._subscribers.delete(subscriber)
+    }
   }
 
   /**
@@ -100,7 +100,7 @@ export class Observable {
    */
   _notify() {
     for (const subscriber of this._subscribers) {
-      subscriber(this._value);
+      subscriber(this._value)
     }
   }
 }
@@ -112,13 +112,13 @@ export class Observable {
  * @returns {object} El objeto `store` con métodos para interactuar con el estado.
  */
 export function createStore(initialState = {}) {
-  const state = {};
+  const state = {}
 
   // Convertimos cada propiedad del estado inicial en un `Observable`.
   // Así, en lugar de tener `state = { user: null }`, tendremos
   // `state = { user: new Observable(null) }`.
   for (const [key, value] of Object.entries(initialState)) {
-    state[key] = new Observable(value);
+    state[key] = new Observable(value)
   }
 
   // Devolvemos la interfaz pública de nuestro store.
@@ -130,11 +130,11 @@ export function createStore(initialState = {}) {
      * Desenvuelve los valores de los Observables.
      */
     getState() {
-      const currentState = {};
+      const currentState = {}
       for (const [key, observable] of Object.entries(state)) {
-        currentState[key] = observable.value;
+        currentState[key] = observable.value
       }
-      return currentState;
+      return currentState
     },
 
     /**
@@ -146,10 +146,10 @@ export function createStore(initialState = {}) {
         if (state[key]) {
           // Si la propiedad ya existe, simplemente actualizamos su valor.
           // Esto disparará el setter del Observable y notificará a los suscriptores.
-          state[key].value = value;
+          state[key].value = value
         } else {
           // Si es una nueva propiedad, creamos un nuevo Observable para ella.
-          state[key] = new Observable(value);
+          state[key] = new Observable(value)
         }
       }
     },
@@ -161,10 +161,10 @@ export function createStore(initialState = {}) {
      */
     subscribe(key, callback) {
       if (state[key]) {
-        return state[key].subscribe(callback);
+        return state[key].subscribe(callback)
       }
       // Si la clave no existe, devolvemos una función vacía para evitar errores.
-      return () => {};
+      return () => {}
     },
-  };
+  }
 }

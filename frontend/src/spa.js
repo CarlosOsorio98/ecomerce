@@ -9,7 +9,7 @@
  * 2. Un Creador de Elementos (`createElement`): Una función de ayuda para construir HTML
  *    con JavaScript de una forma más limpia y segura que escribiendo strings de HTML.
  */
-import { setCurrentRoute } from "./state.js";
+import { setCurrentRoute } from './state.js'
 
 /**
  * La clase Router maneja toda la navegación del lado del cliente.
@@ -20,32 +20,32 @@ class Router {
    * @param {Array<object>} routes - Un array de objetos de ruta. Cada objeto debe tener `path` y `component`.
    */
   constructor(routes) {
-    this.routes = routes;
+    this.routes = routes
     // El elemento `#app` es donde se inyectará todo el contenido de nuestras vistas.
-    this.rootElement = document.getElementById("app");
-    this.basePath = this.getBasePath();
+    this.rootElement = document.getElementById('app')
+    this.basePath = this.getBasePath()
 
     // --- MANEJO DE EVENTOS DE NAVEGACIÓN ---
 
     // 1. Escuchar el evento 'popstate':
     // Se dispara cuando el usuario usa los botones de "atrás" o "adelante" del navegador.
-    window.addEventListener("popstate", () => this.handleRoute());
+    window.addEventListener('popstate', () => this.handleRoute())
 
     // 2. Escuchar clics en todo el documento:
     // En lugar de añadir un listener a cada enlace, usamos la "delegación de eventos".
     // Escuchamos en un elemento padre (el `document`) y luego comprobamos si el clic
     // ocurrió en un elemento que nos interesa (un enlace con `data-link`).
-    document.addEventListener("click", (e) => {
+    document.addEventListener('click', (e) => {
       // `e.target.closest('[data-link]')` busca el enlace `[data-link]` más cercano
       // al elemento donde se hizo clic. Esto funciona incluso si hacemos clic en un
       // ícono o texto dentro del enlace.
-      const link = e.target.closest("[data-link]");
+      const link = e.target.closest('[data-link]')
       if (link) {
-        e.preventDefault(); // Evitamos que el enlace recargue la página.
-        const href = link.getAttribute("href");
-        this.navigateTo(href); // Usamos nuestro método para navegar.
+        e.preventDefault() // Evitamos que el enlace recargue la página.
+        const href = link.getAttribute('href')
+        this.navigateTo(href) // Usamos nuestro método para navegar.
       }
-    });
+    })
   }
 
   /**
@@ -55,8 +55,8 @@ class Router {
   getBasePath() {
     const scriptPath = document
       .querySelector('script[src*="main.js"]')
-      .getAttribute("src");
-    return scriptPath.substring(0, scriptPath.indexOf("src/"));
+      .getAttribute('src')
+    return scriptPath.substring(0, scriptPath.indexOf('src/'))
   }
 
   /**
@@ -67,9 +67,9 @@ class Router {
   getRelativePath(path) {
     const relative = path.startsWith(this.basePath)
       ? path.slice(this.basePath.length)
-      : path;
+      : path
     // Nos aseguramos de que la ruta siempre empiece con un "/" y no tenga duplicados.
-    return `/${relative}`.replace(/\/+/g, "/");
+    return `/${relative}`.replace(/\/+/g, '/')
   }
 
   /**
@@ -77,39 +77,39 @@ class Router {
    * Determina qué componente/vista mostrar basado en la URL actual.
    */
   async handleRoute() {
-    let path = window.location.pathname;
+    let path = window.location.pathname
     // Normalizamos la ruta para quitar el slash final si existe (ej. /about/ -> /about)
-    if (path.endsWith("/") && path.length > 1) {
-      path = path.slice(0, -1);
+    if (path.endsWith('/') && path.length > 1) {
+      path = path.slice(0, -1)
     }
 
-    const relativePath = this.getRelativePath(path);
+    const relativePath = this.getRelativePath(path)
     // Buscamos en nuestro array de rutas una que coincida con la ruta actual.
     // Si no encuentra una, busca la ruta "comodín" (*).
     const route =
       this.routes.find((r) => r.path === relativePath) ||
-      this.routes.find((r) => r.path === "*");
+      this.routes.find((r) => r.path === '*')
 
     if (!route) {
-      console.error("Ruta no encontrada:", relativePath);
-      return;
+      console.error('Ruta no encontrada:', relativePath)
+      return
     }
 
     // Actualizamos el estado global con la nueva ruta.
-    setCurrentRoute(relativePath);
+    setCurrentRoute(relativePath)
 
     try {
       // Las vistas son funciones (algunas asíncronas), así que las llamamos para
       // obtener el elemento del DOM que representan.
-      const view = await route.component();
+      const view = await route.component()
       if (this.rootElement) {
-        this.rootElement.innerHTML = ""; // Limpiamos el contenido anterior.
-        this.rootElement.appendChild(view); // Añadimos la nueva vista.
+        this.rootElement.innerHTML = '' // Limpiamos el contenido anterior.
+        this.rootElement.appendChild(view) // Añadimos la nueva vista.
       } else {
-        console.error("Elemento raíz no encontrado");
+        console.error('Elemento raíz no encontrado')
       }
     } catch (error) {
-      console.error("Error al renderizar la vista:", error);
+      console.error('Error al renderizar la vista:', error)
     }
   }
 
@@ -119,24 +119,24 @@ class Router {
    */
   navigateTo(path) {
     // Si la ruta ya es absoluta, no anteponer basePath
-    let fullPath;
-    if (path.startsWith("/")) {
-      fullPath = path;
+    let fullPath
+    if (path.startsWith('/')) {
+      fullPath = path
     } else {
       // Solo para rutas relativas (no debería ocurrir en tu app)
       const separator =
-        this.basePath.endsWith("/") || this.basePath.length === 1 ? "" : "/";
-      fullPath = this.basePath + separator + path;
+        this.basePath.endsWith('/') || this.basePath.length === 1 ? '' : '/'
+      fullPath = this.basePath + separator + path
     }
-    window.history.pushState(null, null, fullPath);
-    this.handleRoute();
+    window.history.pushState(null, null, fullPath)
+    this.handleRoute()
   }
 
   /**
    * Inicializa el enrutador al cargar la página por primera vez.
    */
   init() {
-    this.handleRoute();
+    this.handleRoute()
   }
 }
 
@@ -151,33 +151,33 @@ class Router {
  * @returns {HTMLElement} El elemento del DOM creado.
  */
 export function createElement(tag, props = {}, ...children) {
-  const element = document.createElement(tag);
+  const element = document.createElement(tag)
 
   // Asignamos las propiedades y atributos.
   Object.entries(props).forEach(([key, value]) => {
-    if (key === "className") {
-      element.className = value;
-    } else if (key.startsWith("on") && typeof value === "function") {
+    if (key === 'className') {
+      element.className = value
+    } else if (key.startsWith('on') && typeof value === 'function') {
       // Si la propiedad empieza con "on" (como "onclick"), la tratamos como un evento.
-      element.addEventListener(key.toLowerCase().slice(2), value);
+      element.addEventListener(key.toLowerCase().slice(2), value)
     } else {
-      element.setAttribute(key, value);
+      element.setAttribute(key, value)
     }
-  });
+  })
 
   // Añadimos los elementos hijos.
   // `children.flat()` aplana el array por si pasamos un array de hijos.
   children.flat().forEach((child) => {
     if (child instanceof Node) {
       // Si el hijo ya es un nodo del DOM, lo añadimos directamente.
-      element.appendChild(child);
+      element.appendChild(child)
     } else if (child !== null && child !== undefined) {
       // Si es texto, número, etc., creamos un nodo de texto y lo añadimos.
-      element.appendChild(document.createTextNode(child));
+      element.appendChild(document.createTextNode(child))
     }
-  });
+  })
 
-  return element;
+  return element
 }
 
 /**
@@ -187,5 +187,5 @@ export function createElement(tag, props = {}, ...children) {
  * @returns {Router} Una nueva instancia del enrutador.
  */
 export function createRouter(routes) {
-  return new Router(routes);
+  return new Router(routes)
 }

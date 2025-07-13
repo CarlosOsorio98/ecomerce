@@ -7,7 +7,9 @@
     "migrate": "bun run scripts/migrate.js"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "eslint": "^9.31.0",
+    "neostandard": "^0.12.2"
   },
   "peerDependencies": {
     "typescript": "^5"

@@ -113,47 +113,47 @@
     </div>
 
     <script>
-      let adminToken = "";
+      let adminToken = ''
 
       async function login() {
-        const key = document.getElementById("adminKey").value.trim();
-        adminToken = key;
-        console.log("Intentando login con key:", key);
+        const key = document.getElementById('adminKey').value.trim()
+        adminToken = key
+        console.log('Intentando login con key:', key)
 
         try {
-          const response = await fetch("/api/admin/products", {
+          const response = await fetch('/api/admin/assets', {
             headers: {
               Authorization: `Bearer ${key}`,
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
-          });
+          })
 
           if (response.ok) {
-            console.log("Login exitoso");
-            document.getElementById("loginForm").style.display = "none";
-            document.getElementById("adminPanel").style.display = "block";
-            loadProducts();
+            console.log('Login exitoso')
+            document.getElementById('loginForm').style.display = 'none'
+            document.getElementById('adminPanel').style.display = 'block'
+            loadProducts()
           } else {
-            const error = await response.json();
-            console.error("Error de login:", error);
-            alert("Contraseña incorrecta");
+            const error = await response.json()
+            console.error('Error de login:', error)
+            alert('Contraseña incorrecta')
           }
         } catch (error) {
-          console.error("Error en login:", error);
-          alert("Error al iniciar sesión");
+          console.error('Error en login:', error)
+          alert('Error al iniciar sesión')
         }
       }
 
       async function loadProducts() {
         try {
-          const response = await fetch("/api/admin/products", {
+          const response = await fetch('/api/admin/assets', {
             headers: {
               Authorization: `Bearer ${adminToken}`,
             },
-          });
-          const products = await response.json();
+          })
+          const products = await response.json()
 
-          const grid = document.getElementById("productGrid");
+          const grid = document.getElementById('productGrid')
           grid.innerHTML = products
             .map(
               (product) => `
@@ -165,63 +165,63 @@
                     </div>
                 `
             )
-            .join("");
+            .join('')
         } catch (error) {
-          alert("Error al cargar productos");
+          alert('Error al cargar productos')
         }
       }
 
       async function addProduct(event) {
-        event.preventDefault();
+        event.preventDefault()
 
-        const formData = new FormData();
-        formData.append("name", document.getElementById("productName").value);
-        formData.append("price", document.getElementById("productPrice").value);
+        const formData = new FormData()
+        formData.append('name', document.getElementById('productName').value)
+        formData.append('price', document.getElementById('productPrice').value)
         formData.append(
-          "image",
-          document.getElementById("productImage").files[0]
-        );
+          'file',
+          document.getElementById('productImage').files[0]
+        )
 
         try {
-          const response = await fetch("/api/admin/products", {
-            method: "POST",
+          const response = await fetch('/api/admin/assets', {
+            method: 'POST',
             headers: {
               Authorization: `Bearer ${adminToken}`,
             },
             body: formData,
-          });
+          })
 
           if (response.ok) {
-            document.getElementById("addProductForm").reset();
-            loadProducts();
+            document.getElementById('addProductForm').reset()
+            loadProducts()
           } else {
-            alert("Error al añadir producto");
+            alert('Error al añadir producto')
           }
         } catch (error) {
-          alert("Error al añadir producto");
+          alert('Error al añadir producto')
         }
       }
 
       async function deleteProduct(id) {
-        if (!confirm("¿Estás seguro de que quieres eliminar este producto?")) {
-          return;
+        if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+          return
         }
 
         try {
-          const response = await fetch(`/api/admin/products/${id}`, {
-            method: "DELETE",
+          const response = await fetch(`/api/admin/assets/${id}`, {
+            method: 'DELETE',
             headers: {
               Authorization: `Bearer ${adminToken}`,
             },
-          });
+          })
 
           if (response.ok) {
-            loadProducts();
+            loadProducts()
           } else {
-            alert("Error al eliminar producto");
+            alert('Error al eliminar producto')
           }
         } catch (error) {
-          alert("Error al eliminar producto");
+          alert('Error al eliminar producto')
         }
       }
     </script>

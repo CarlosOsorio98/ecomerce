@@ -10,12 +10,12 @@
  * estos métodos harían llamadas a una API REST para realizar estas operaciones
  * de forma segura en un servidor.
  */
-import { setUser } from "../state.js";
+import { setUser } from '../state.js'
 
 export class UserService {
   constructor() {
     // La clave para nuestra "tabla" de usuarios en localStorage.
-    this.USERS_KEY = "users";
+    this.USERS_KEY = 'users'
   }
 
   /**
@@ -26,16 +26,16 @@ export class UserService {
    * @throws {Error} Si el usuario no se encuentra.
    */
   async updateProfile(userId, updateData) {
-    const users = JSON.parse(localStorage.getItem(this.USERS_KEY) || "[]");
-    const userIndex = users.findIndex((u) => u.id === userId);
+    const users = JSON.parse(localStorage.getItem(this.USERS_KEY) || '[]')
+    const userIndex = users.findIndex((u) => u.id === userId)
 
     if (userIndex === -1) {
-      throw new Error("Usuario no encontrado");
+      throw new Error('Usuario no encontrado')
     }
 
     // Medida de seguridad: nos aseguramos de que datos sensibles como el email,
     // la contraseña o el ID no puedan ser modificados a través de esta función.
-    const { email, password, id, ...allowedUpdates } = updateData;
+    const { email, password, id, ...allowedUpdates } = updateData
 
     // Creamos el objeto del usuario actualizado combinando los datos antiguos
     // con los nuevos permitidos, usando el spread operator (`...`).
@@ -43,25 +43,25 @@ export class UserService {
       ...users[userIndex],
       ...allowedUpdates,
       updatedAt: new Date().toISOString(),
-    };
+    }
 
     // Guardamos la lista de usuarios actualizada en localStorage.
-    localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+    localStorage.setItem(this.USERS_KEY, JSON.stringify(users))
 
     // Si el usuario que se actualizó es el que tiene la sesión iniciada,
     // también debemos actualizar la información de la sesión.
-    const currentUser = JSON.parse(localStorage.getItem("auth_user") || "null");
+    const currentUser = JSON.parse(localStorage.getItem('auth_user') || 'null')
     if (currentUser && currentUser.id === userId) {
       const updatedUser = {
         ...currentUser,
         ...allowedUpdates,
-      };
-      localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+      }
+      localStorage.setItem('auth_user', JSON.stringify(updatedUser))
       // Y actualizamos el estado global para que la UI reaccione (ej. mostrar el nuevo nombre).
-      setUser(updatedUser);
+      setUser(updatedUser)
     }
 
-    return users[userIndex];
+    return users[userIndex]
   }
 
   /**
@@ -73,25 +73,25 @@ export class UserService {
    * @throws {Error} Si el usuario no se encuentra o la contraseña actual es incorrecta.
    */
   async changePassword(userId, oldPassword, newPassword) {
-    const users = JSON.parse(localStorage.getItem(this.USERS_KEY) || "[]");
-    const userIndex = users.findIndex((u) => u.id === userId);
+    const users = JSON.parse(localStorage.getItem(this.USERS_KEY) || '[]')
+    const userIndex = users.findIndex((u) => u.id === userId)
 
     if (userIndex === -1) {
-      throw new Error("Usuario no encontrado");
+      throw new Error('Usuario no encontrado')
     }
 
     // Verificación de seguridad: nos aseguramos de que el usuario conoce su contraseña actual.
     if (users[userIndex].password !== oldPassword) {
-      throw new Error("Contraseña actual incorrecta");
+      throw new Error('Contraseña actual incorrecta')
     }
 
     // Actualizamos la contraseña y la fecha de modificación.
-    users[userIndex].password = newPassword;
-    users[userIndex].updatedAt = new Date().toISOString();
+    users[userIndex].password = newPassword
+    users[userIndex].updatedAt = new Date().toISOString()
 
-    localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+    localStorage.setItem(this.USERS_KEY, JSON.stringify(users))
 
-    return { message: "Contraseña actualizada exitosamente" };
+    return { message: 'Contraseña actualizada exitosamente' }
   }
 
   /**
@@ -102,60 +102,60 @@ export class UserService {
    * @throws {Error} Si el usuario no se encuentra o la contraseña es incorrecta.
    */
   async deleteAccount(userId, password) {
-    const users = JSON.parse(localStorage.getItem(this.USERS_KEY) || "[]");
-    const userIndex = users.findIndex((u) => u.id === userId);
+    const users = JSON.parse(localStorage.getItem(this.USERS_KEY) || '[]')
+    const userIndex = users.findIndex((u) => u.id === userId)
 
     if (userIndex === -1) {
-      throw new Error("Usuario no encontrado");
+      throw new Error('Usuario no encontrado')
     }
 
     // Verificación de seguridad final antes de una acción destructiva.
     if (users[userIndex].password !== password) {
-      throw new Error("Contraseña incorrecta");
+      throw new Error('Contraseña incorrecta')
     }
 
     // `splice` modifica el array, eliminando el usuario en la posición encontrada.
-    users.splice(userIndex, 1);
-    localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+    users.splice(userIndex, 1)
+    localStorage.setItem(this.USERS_KEY, JSON.stringify(users))
 
     // Si el usuario que se elimina es el que tenía la sesión activa,
     // debemos limpiar completamente su sesión.
-    const currentUser = JSON.parse(localStorage.getItem("auth_user") || "null");
+    const currentUser = JSON.parse(localStorage.getItem('auth_user') || 'null')
     if (currentUser && currentUser.id === userId) {
-      localStorage.removeItem("auth_user");
+      localStorage.removeItem('auth_user')
       // Ponemos el usuario en el estado a `null` para que la app reaccione (logout).
-      setUser(null);
+      setUser(null)
     }
 
-    return { message: "Cuenta eliminada exitosamente" };
+    return { message: 'Cuenta eliminada exitosamente' }
   }
 }
 
 // Exportamos una instancia única (Singleton) para mantener la consistencia en toda la app.
-export const userService = new UserService();
+export const userService = new UserService()
 
 // Servicio para consumir la API de usuarios
-const API_BASE = "/api";
+const API_BASE = '/api'
 
 export const userApi = {
   async register({ name, email, password }) {
     const res = await fetch(`${API_BASE}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
-    });
+    })
     if (!res.ok)
-      throw new Error((await res.json()).error || "Error en registro");
-    return res.json();
+      throw new Error((await res.json()).error || 'Error en registro')
+    return res.json()
   },
   async login({ email, password }) {
     const res = await fetch(`${API_BASE}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error((await res.json()).error || "Error en login");
-    return res.json();
+      credentials: 'include',
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Error en login')
+    return res.json()
   },
-};
+}
