@@ -1,4 +1,4 @@
-import { createNotFoundError, createValidationError } from '../errors/index.js'
+import { createNotFoundError, createValidationError } from '../errors.js'
 import { getCORSHeaders } from '../middleware/cors.js'
 import {
   createAsset,
