@@ -1,7 +1,3 @@
-/**
- * @file profile.js
- * @description La vista del perfil de usuario.
- */
 import { userService } from '../services/user.js'
 import { createElement } from '../spa.js'
 import {
@@ -12,15 +8,9 @@ import {
   syncCart,
 } from '../state.js'
 
-/**
- * Crea la vista del perfil de usuario.
- * @param {object} router - La instancia del enrutador.
- * @returns {Function} La función de la vista real.
- */
 export function ProfileView(router) {
   return async function () {
     const user = getUser()
-    // Sincronizar el carrito con la API
     await syncCart()
     const cart = getCart()
 
@@ -121,7 +111,6 @@ function createAccountSection(user, router) {
     className: 'account-section auth-form',
   })
 
-  // --- Formulario para cambiar contraseña ---
   const changePasswordForm = createElement('form', {
     className: 'change-password-form',
     onsubmit: async (e) => {
@@ -142,7 +131,7 @@ function createAccountSection(user, router) {
       try {
         await userService.changePassword(user.id, currentPassword, newPassword)
         alert('¡Contraseña actualizada exitosamente!')
-        e.target.reset() // Limpiar el formulario
+        e.target.reset()
       } catch (error) {
         alert(`Error: ${error.message}`)
       }
@@ -172,7 +161,6 @@ function createAccountSection(user, router) {
     createElement('button', { type: 'submit' }, 'Actualizar Contraseña')
   )
 
-  // --- Botón para eliminar cuenta ---
   const deleteButton = createElement(
     'button',
     {

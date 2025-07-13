@@ -1,15 +1,5 @@
-/**
- * @file modal.js
- * @description
- * Componente que contiene la lógica para mostrar un modal de selección de cantidad.
- */
 import { createElement } from '../spa.js'
 import { addToCart } from '../state.js'
-
-/**
- * Muestra un modal para que el usuario elija la cantidad de un producto.
- * @param {object} product - El objeto del producto que se va a agregar.
- */
 
 const plusAndMinus = (quantityInput) => {
   return createElement('div', { className: 'plus-and-minus' }, [
@@ -19,7 +9,7 @@ const plusAndMinus = (quantityInput) => {
         className: 'minus-button',
         onclick: () => {
           const input = document.getElementById('quantity-input')
-          let currentValue = parseInt(input.value, 10)
+          const currentValue = parseInt(input.value, 10)
           if (currentValue > 1) {
             input.value = currentValue - 1
             input.dispatchEvent(new Event('input', { bubbles: true }))
@@ -35,7 +25,7 @@ const plusAndMinus = (quantityInput) => {
         className: 'plus-button',
         onclick: () => {
           const input = document.getElementById('quantity-input')
-          let currentValue = parseInt(input.value, 10)
+          const currentValue = parseInt(input.value, 10)
           input.value = currentValue + 1
           input.dispatchEvent(new Event('input', { bubbles: true }))
         },
@@ -83,7 +73,6 @@ export function showQuantityModal(product) {
       onclick: async () => {
         try {
           await addToCart(product.id, quantity)
-          // Opcional: mostrar feedback
         } catch (e) {
           alert('Error al agregar al carrito')
         }

@@ -1,27 +1,15 @@
-/**
- * @file home.js
- * @description La vista de la página de inicio.
- */
-
 import { showQuantityModal } from '../components/modal.js'
 import { createElement } from '../spa.js'
 
-/**
- * Crea la vista de la página de inicio.
- * @param {string} basePath - La ruta base del proyecto para cargar assets.
- * @returns {Function} La función de la vista real.
- */
 export function HomeView() {
   return async function () {
     const container = createElement('div', { className: 'products-grid' })
 
     try {
-      // Consumir la API de productos
       const response = await fetch('/api/assets')
       const products = await response.json()
 
       products.forEach((product) => {
-        // Si la url ya empieza con /assets o http, no anteponer nada
         const imgSrc =
           product.url.startsWith('/') || product.url.startsWith('http')
             ? product.url

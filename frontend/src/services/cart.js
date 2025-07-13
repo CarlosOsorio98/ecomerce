@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 // Servicio para consumir la API del carrito
 const API_BASE = '/api'
 

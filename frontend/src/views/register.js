@@ -1,15 +1,6 @@
-/**
- * @file register.js
- * @description La vista para registrar un nuevo usuario.
- */
 import { authService } from '../services/auth.js'
 import { createElement } from '../spa.js'
 
-/**
- * Crea la vista de registro.
- * @param {object} router - La instancia del enrutador para navegar.
- * @returns {Function} La función de la vista real.
- */
 export function RegisterView(router) {
   return function () {
     return createElement(

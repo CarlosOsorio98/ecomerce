@@ -1,35 +1,17 @@
-/**
- * @file main.js
- * @description
- * Este es el archivo principal y el punto de entrada de toda la aplicación.
- * Ahora, con el código refactorizado, su responsabilidad principal es:
- * 1. Importar todas las piezas modulares (vistas, componentes, servicios).
- * 2. Crear las instancias de los objetos principales (Router, Servicios).
- * 3. Configurar el enrutador con las vistas, inyectando las dependencias necesarias.
- * 4. Inicializar la aplicación.
- */
-
+import { initFloatingCart } from './components/floatingCart.js'
 import { authService } from './services/auth.js'
 import { createElement, createRouter } from './spa.js'
 import { store } from './state.js'
-
-// Importar las Vistas (factorías que crean las vistas)
-import { initFloatingCart } from './components/floatingCart.js'
 import { HomeView } from './views/home.js'
 import { LoginView } from './views/login.js'
 import { ProfileView } from './views/profile.js'
 import { RegisterView } from './views/register.js'
 
-// --- OBTENER RUTA BASE ---
 const basePath = document
   .querySelector('script[src*="main.js"]')
   .getAttribute('src')
   .replace('src/main.js', '')
 
-/**
- * Renderiza la barra de navegación.
- * Su contenido cambia dependiendo de si el usuario está autenticado o no.
- */
 function renderNavbar() {
   const navLinks = document.getElementById('main-nav-links')
   const isAuthenticated = store.getState().isAuthenticated
@@ -87,9 +69,6 @@ function renderNavbar() {
   }
 }
 
-// --- CONFIGURACIÓN E INICIALIZACIÓN ---
-
-// Definimos un array de rutas base. Aún no son los componentes finales.
 const routeDefinitions = [
   { path: '/', componentFactory: HomeView },
   { path: '/login', componentFactory: LoginView },
@@ -98,52 +77,34 @@ const routeDefinitions = [
   { path: '*', componentFactory: HomeView },
 ]
 
-// Creamos una instancia del enrutador. Todavía no tiene las rutas finales.
 const router = createRouter([])
 
-// Ahora, procesamos las definiciones de ruta para crear los componentes finales,
-// inyectando las dependencias necesarias (como el propio router o la basePath).
 const routes = routeDefinitions.map((routeDef) => {
   let component
-  // La vista de inicio necesita `basePath`.
   if (routeDef.componentFactory === HomeView) {
     component = routeDef.componentFactory(basePath)
   } else {
-    // Las otras vistas necesitan la instancia del `router`.
     component = routeDef.componentFactory(router)
   }
   return { path: routeDef.path, component }
 })
 
-// Asignamos las rutas procesadas al enrutador.
 router.routes = routes
 
 async function initializeApp() {
   const loadingIndicator = document.getElementById('loading-indicator')
 
   try {
-    console.log('[App] Iniciando aplicación...')
-
     if (loadingIndicator) {
       loadingIndicator.style.display = 'block'
     }
 
-    console.log('[App] Verificando sesión...')
     await authService.checkSession()
-
-    console.log('[App] Inicializando router...')
     router.init()
-
-    console.log('[App] Renderizando navbar...')
     renderNavbar()
-
-    console.log('[App] Inicializando carrito flotante...')
     initFloatingCart()
-
-    console.log('[App] Aplicación inicializada correctamente')
   } catch (error) {
-    console.error('[App] Error al inicializar la aplicación:', error)
-
+    console.error('Error al inicializar la aplicación:', error)
     router.init()
     renderNavbar()
   } finally {
