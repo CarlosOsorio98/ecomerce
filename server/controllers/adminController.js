@@ -1,11 +1,11 @@
-import { createNotFoundError, createValidationError } from '../errors.js'
+import { createNotFoundError, createValidationError } from '../errors/index.js'
 import { getCORSHeaders } from '../middleware/cors.js'
 import {
   createAsset,
   deleteAsset,
   getAssetsFromFile,
 } from '../services/assetService.js'
-import { deleteImage, processAndSaveImage } from '../services/imageService.js'
+import { processAndSaveImage } from '../services/imageService.js'
 
 export const getAdminPanel = async (req) => {
   const file = Bun.file('./server/templates/admin.html')
@@ -50,8 +50,6 @@ export const removeAsset = async (req) => {
   if (!asset) {
     throw createNotFoundError('Asset not found')
   }
-
-  deleteImage(asset.url)
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

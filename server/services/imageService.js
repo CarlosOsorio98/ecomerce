@@ -22,10 +22,3 @@ export const processAndSaveImage = async (file, filename) => {
 
   return `assets/${webpFilename}`
 }
-
-export const deleteImage = (imagePath) => {
-  const fullPath = path.join('frontend', imagePath)
-  if (fs.existsSync(fullPath)) {
-    fs.unlinkSync(fullPath)
-  }
-}
