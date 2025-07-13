@@ -9,7 +9,7 @@ import {
   validateUserLogin,
   hashPassword, // <-- Importar la función de hash
 } from "./data/setup.js";
-import { handleAdminRoutes } from "./secret.route.js";
+import { handleAdminRoutes } from "./routes/secret/route.js";
 import {
   signJWT,
   verifyJWT,
@@ -20,23 +20,12 @@ import {
   revokeJWTToken,
   isJWTRevoked,
 } from "./jwt.js";
-
-// Cargar variables de entorno desde .env
-await import("dotenv/config");
-// También podemos usar Bun.env para acceder a las variables de entorno
-const adminKey = process.env.ADMIN_KEY || Bun.env.ADMIN_KEY;
-
-if (!adminKey) {
-  console.error(
-    "ERROR: ADMIN_KEY no está definida en las variables de entorno"
-  );
-  process.exit(1);
-}
-
-console.log("Variables de entorno cargadas. ADMIN_KEY presente:", !!adminKey);
+import { z } from "zod";
+import { localData } from "./data/local.js";
 
 // Inicializar la base de datos y poblarla
 setupDatabase();
+localData().syncAssets();
 
 // Esquema para agregar al carrito
 const addToCartSchema = z.object({

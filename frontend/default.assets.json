@@ -22,5 +22,11 @@
     "name": "camisa personaje fresa",
     "url": "assets/camisadfresa.webp",
     "price": 34.99
+  },
+  {
+    "id": "4",
+    "name": "sadas",
+    "url": "assets/camisa.webp",
+    "price": 88
   }
 ]

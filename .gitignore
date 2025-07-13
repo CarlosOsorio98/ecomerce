@@ -6,6 +6,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# assets
+frontend/assets.json
+
 # SQLite database
 server/data/db.sqlite
 server/data/db.sqlite-shm

@@ -6,33 +6,31 @@
 //Cuando el trabajo este echo modifica assets.json
 
 import { Database } from "bun:sqlite";
-import { getCORSHeaders } from "./cors.js";
+import { getCORSHeaders } from "../../cors.js";
 import sharp from "sharp";
 import fs from "node:fs";
 import path from "node:path";
+import { getAdminKey, requireAdmin } from "../../session.js";
+import { localData } from "../../data/local.js";
 
 const db = new Database("server/data/db.sqlite");
 const ASSETS_JSON_PATH = "frontend/assets.json";
 const ASSETS_DIR = "frontend/assets";
 
-// Middleware para verificar la contraseña de admin
-function requireAdmin(req) {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.log("[Auth] No authorization header");
-    return false;
-  }
-  const token = authHeader.split(" ")[1];
-  const adminKey = process.env.ADMIN_KEY || Bun.env.ADMIN_KEY;
-  console.log("[Auth] Token recibido:", token);
-  console.log("[Auth] ADMIN_KEY:", adminKey);
-  return token === adminKey;
-}
-
 // Función para procesar y guardar imagen en WebP
 async function processAndSaveImage(file, filename) {
   const webpFilename = filename.replace(/\.[^/.]+$/, "") + ".webp";
   const outputPath = path.join(ASSETS_DIR, webpFilename);
+
+  // Si ya existe una imagen con ese nombre, renombrar a old-
+  if (fs.existsSync(outputPath)) {
+    const oldPath = path.join(ASSETS_DIR, "old-" + webpFilename);
+    // Si ya existe un old- previo, eliminarlo para evitar acumulación
+    if (fs.existsSync(oldPath)) {
+      fs.unlinkSync(oldPath);
+    }
+    fs.renameSync(outputPath, oldPath);
+  }
 
   await sharp(await file.arrayBuffer())
     .webp({ quality: 80 })
@@ -93,7 +91,10 @@ export async function handleAdminRoutes(req) {
       const assets = JSON.parse(fs.readFileSync(ASSETS_JSON_PATH, "utf-8"));
 
       // Generar nuevo ID
-      const newId = Math.max(...assets.map((a) => parseInt(a.id))) + 1;
+      const newId =
+        assets.length > 0
+          ? Math.max(...assets.map((a) => parseInt(a.id))) + 1
+          : 0;
 
       // Añadir nuevo producto
       const newProduct = {
@@ -103,8 +104,8 @@ export async function handleAdminRoutes(req) {
         price,
       };
 
-      assets.push(newProduct);
-      updateAssetsJson(assets);
+      // Guardar en assets.json y base de datos usando local.js
+      localData().addProduct(newProduct);
 
       return new Response(JSON.stringify(newProduct), {
         status: 201,
@@ -138,9 +139,8 @@ export async function handleAdminRoutes(req) {
         fs.unlinkSync(imagePath);
       }
 
-      // Actualizar assets.json
-      const newAssets = assets.filter((p) => p.id !== id);
-      updateAssetsJson(newAssets);
+      // Eliminar de assets.json y base de datos usando local.js
+      localData().deleteProduct(id);
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...getCORSHeaders(), "Content-Type": "application/json" },
