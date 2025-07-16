@@ -1,4 +1,4 @@
-// Inicializa la base de datos y carga los assets desde assets.json
+// Esquemas de validación para la aplicación
 import { z } from 'zod'
 
 // Esquema de validación para un asset

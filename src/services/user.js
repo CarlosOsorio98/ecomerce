@@ -1,4 +1,4 @@
-import { setUser } from '../state.js'
+import { setUser } from '~/lib/state.js'
 
 const USERS_KEY = 'users'
 
@@ -87,7 +87,7 @@ const API_BASE = '/api'
 
 export const userApi = {
   async register({ name, email, password }) {
-    const res = await fetch(`${API_BASE}/register`, {
+    const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
@@ -98,7 +98,7 @@ export const userApi = {
     return res.json()
   },
   async login({ email, password }) {
-    const res = await fetch(`${API_BASE}/login`, {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),

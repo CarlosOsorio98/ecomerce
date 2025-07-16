@@ -13,13 +13,13 @@ import {
 import { getCORSHeaders } from '@/middleware/cors.js'
 import { asyncHandler } from '@/middleware/errorHandler.js'
 import { staticMiddleware } from '@/middleware/static.js'
+import { handleAdminRoutes } from '@/routes/admin.js'
 import {
   applyMiddleware,
   createRoute,
   enhanceRequest,
   findMatchingRoute,
 } from '@/services/routerService.js'
-import { handleAdminRoutes } from './admin.js'
 
 const createMainRouter = () => {
   const routes = [

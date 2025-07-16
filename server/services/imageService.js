@@ -1,5 +1,5 @@
-import fs from 'node:fs'
-import path from 'node:path'
+import fs from 'fs'
+import path from 'path'
 import sharp from 'sharp'
 
 const ASSETS_DIR = 'frontend/assets'

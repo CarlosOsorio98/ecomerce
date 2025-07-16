@@ -3,14 +3,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "bun run server/app.js",
-    "dev": "bun run --hot server/app.js",
-    "migrate": "bun run scripts/migrate.js"
+    "start": "NODE_ENV=production bun src/server.js",
+    "dev": "bun --hot src/server.js",
+    "migrate": "bun run scripts/migrate.js",
+    "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"'",
+    "preview": "bun run build && bun run start",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "eslint": "^9.31.0",
+    "eslint-import-resolver-alias": "^1.1.2",
     "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-no-relative-import-paths": "^1.6.1",
     "neostandard": "^0.12.2"
   },
   "peerDependencies": {

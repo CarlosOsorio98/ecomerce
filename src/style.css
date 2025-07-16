@@ -1,10 +1,9 @@
-@import url('src/components/floatingCart.css');
-@import url('src/components/loading.css');
-@import url('src/components/loading.css');
-@import url('src/components/modal.css');
-@import url('src/views/profile.css');
-@import url('src/views/home.css');
-@import url('src/views/auth.css');
+@import url('./components/floatingCart.css');
+@import url('./components/loading.css');
+@import url('./components/modal.css');
+@import url('./views/profile.css');
+@import url('./views/home.css');
+@import url('./views/auth.css');
 
 * {
   margin: 0;

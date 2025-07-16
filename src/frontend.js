@@ -1,16 +1,19 @@
 import { initFloatingCart } from './components/floatingCart.js'
 import { authService } from './services/auth.js'
-import { createElement, createRouter } from './spa.js'
-import { store } from './state.js'
+import { createElement, createRouter } from './lib/spa.js'
+import { store } from './lib/state.js'
 import { HomeView } from './views/home.js'
 import { LoginView } from './views/login.js'
 import { ProfileView } from './views/profile.js'
 import { RegisterView } from './views/register.js'
 
-const basePath = document
-  .querySelector('script[src*="main.js"]')
-  .getAttribute('src')
-  .replace('src/main.js', '')
+const basePath = (() => {
+  const script = document.querySelector('script[src*="frontend.js"]')
+  if (script) {
+    return script.getAttribute('src').replace('frontend.js', '')
+  }
+  return './'
+})()
 
 function renderNavbar() {
   const navLinks = document.getElementById('main-nav-links')
@@ -93,10 +96,11 @@ router.routes = routes
 
 async function initializeApp() {
   const loadingIndicator = document.getElementById('loading-indicator')
+  const startTime = Date.now()
 
   try {
     if (loadingIndicator) {
-      loadingIndicator.style.display = 'block'
+      loadingIndicator.style.display = 'flex'
     }
 
     await authService.checkSession()
@@ -109,7 +113,14 @@ async function initializeApp() {
     renderNavbar()
   } finally {
     if (loadingIndicator) {
-      loadingIndicator.style.display = 'none'
+      // Ensure loader is visible for at least 300ms
+      const elapsed = Date.now() - startTime
+      const minDisplayTime = 300
+      const remainingTime = Math.max(0, minDisplayTime - elapsed)
+      
+      setTimeout(() => {
+        loadingIndicator.style.display = 'none'
+      }, remainingTime)
     }
   }
 }

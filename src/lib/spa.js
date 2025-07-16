@@ -32,10 +32,15 @@ export function createRouter(routes) {
   let _basePath = ''
 
   const getBasePath = () => {
-    const scriptPath = document
-      .querySelector('script[src*="main.js"]')
-      .getAttribute('src')
-    return scriptPath.substring(0, scriptPath.indexOf('src/'))
+    const script = document.querySelector('script[src*="frontend.js"]')
+    if (script) {
+      const scriptPath = script.getAttribute('src')
+      const srcIndex = scriptPath.indexOf('src/')
+      if (srcIndex !== -1) {
+        return scriptPath.substring(0, srcIndex)
+      }
+    }
+    return './'
   }
 
   const getRelativePath = (path) => {

@@ -1,10 +1,9 @@
-import {
-  addAsset,
-  getAssets,
-  removeAsset,
-  updateAsset,
-} from '@/controllers/adminController.js'
-import { adminMiddleware } from '@/middleware/auth.js'
+import { 
+  getCart, 
+  addToCart, 
+  removeFromCart
+} from '@/controllers/cartController.js'
+import { authMiddleware } from '@/middleware/auth.js'
 import { asyncHandler } from '@/middleware/errorHandler.js'
 import {
   createRoute,
@@ -13,20 +12,15 @@ import {
 } from '@/services/routerService.js'
 
 const withAuth = (handler) => async (req) => {
-  adminMiddleware(req)
+  await authMiddleware(req)
   return handler(req)
 }
 
-const createAdminRouter = () => {
+const createCartRouter = () => {
   const routes = [
-    createRoute('GET', '/api/admin/assets', getAssets, { requiresAuth: true }),
-    createRoute('POST', '/api/admin/assets', addAsset, { requiresAuth: true }),
-    createRoute('PUT', '/api/admin/assets/:id', updateAsset, {
-      requiresAuth: true,
-    }),
-    createRoute('DELETE', '/api/admin/assets/:id', removeAsset, {
-      requiresAuth: true,
-    }),
+    createRoute('GET', '/api/cart', getCart, { requiresAuth: true }),
+    createRoute('POST', '/api/cart', addToCart, { requiresAuth: true }),
+    createRoute('DELETE', '/api/cart/:id', removeFromCart, { requiresAuth: true }),
   ]
 
   return {
@@ -52,6 +46,6 @@ const createAdminRouter = () => {
   }
 }
 
-const adminRouter = createAdminRouter()
+const cartRouter = createCartRouter()
 
-export const handleAdminRoutes = (req) => adminRouter.handle(req)
+export const handleCartRoutes = (req) => cartRouter.handle(req)

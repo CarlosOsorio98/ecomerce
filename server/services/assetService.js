@@ -1,70 +1,20 @@
-import { localData } from '@/data/local.js'
-import { getAllAssets } from '@/repositories/assetRepository.js'
-import { randomUUID } from 'crypto'
-import fs from 'node:fs'
-
-const ASSETS_JSON_PATH = 'frontend/assets.json'
+import { 
+  getAllAssets, 
+  createAsset as createAssetDB, 
+  updateAsset as updateAssetDB, 
+  deleteAsset as deleteAssetDB 
+} from '@/repositories/assetRepository.js'
 
 export const getAssets = async () => await getAllAssets()
 
-export const getAssetsFromFile = () => {
-  return JSON.parse(fs.readFileSync(ASSETS_JSON_PATH, 'utf-8'))
+export const createAsset = async (name, price, imageUrl) => {
+  return await createAssetDB(name, price, imageUrl)
 }
 
-export const saveAssetsToFile = (assets) => {
-  fs.writeFileSync(ASSETS_JSON_PATH, JSON.stringify(assets, null, 2))
+export const updateAssetData = async (assetId, name, price, imageUrl) => {
+  return await updateAssetDB(assetId, name, price, imageUrl)
 }
 
-export const createAsset = (name, price, imageUrl) => {
-  const assets = getAssetsFromFile()
-  const newAsset = {
-    id: randomUUID(),
-    name,
-    price,
-    url: imageUrl,
-  }
-
-  assets.push(newAsset)
-  saveAssetsToFile(assets)
-  localData().syncAssets()
-
-  return newAsset
-}
-
-export const updateAssetData = (assetId, name, price, imageUrl) => {
-  const assets = getAssetsFromFile()
-  const assetIndex = assets.findIndex((a) => a.id === assetId)
-
-  if (assetIndex === -1) {
-    return null
-  }
-
-  const asset = assets[assetIndex]
-  asset.name = name
-  asset.price = price
-  if (imageUrl) {
-    asset.url = imageUrl
-  }
-
-  assets[assetIndex] = asset
-  saveAssetsToFile(assets)
-  localData().syncAssets()
-
-  return asset
-}
-
-export const deleteAsset = (assetId) => {
-  const assets = getAssetsFromFile()
-  const assetIndex = assets.findIndex((a) => a.id === assetId)
-
-  if (assetIndex === -1) {
-    return null
-  }
-
-  const asset = assets[assetIndex]
-  assets.splice(assetIndex, 1)
-  saveAssetsToFile(assets)
-  localData().syncAssets()
-
-  return asset
+export const deleteAsset = async (assetId) => {
+  return await deleteAssetDB(assetId)
 }

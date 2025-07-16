@@ -3,7 +3,7 @@ import { db } from "../server/data/schema.js";
 import { readdirSync } from "fs";
 import path from "path";
 
-const migrationsDir = path.resolve("./server/data/migrations");
+const migrationsDir = path.resolve("./data/migrations");
 
 // Asegura la tabla de migraciones
 async function ensureMigrationsTable() {

@@ -1,2 +1,8 @@
 [resolve.alias]
 "@" = "./server"
+"~" = "./src"
+
+[dev]
+port = 3000
+hot = true
+watch = true

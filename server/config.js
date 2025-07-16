@@ -17,6 +17,6 @@ export const config = {
     key: process.env.ADMIN_KEY || 'admin',
   },
   database: {
-    path: './server/data/db.sqlite',
+    path: './data/db.sqlite',
   },
 }

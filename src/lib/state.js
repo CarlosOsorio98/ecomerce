@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { createStore } from './reactivity.js'
-import { cartService } from './services/cart.js'
+import { cartService } from '~/services/cart.js'
 
 const initialState = {
   user: null,

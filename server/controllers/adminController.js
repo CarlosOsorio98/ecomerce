@@ -3,20 +3,14 @@ import { getCORSHeaders } from '@/middleware/cors.js'
 import {
   createAsset,
   deleteAsset,
-  getAssetsFromFile,
+  getAssets as getAssetsFromDB,
   updateAssetData,
 } from '@/services/assetService.js'
 import { processAndSaveImage } from '@/services/imageService.js'
 
-export const getAdminPanel = async (req) => {
-  const file = globalThis.Bun.file('./server/templates/admin.html')
-  return new Response(file, {
-    headers: { ...getCORSHeaders(), 'Content-Type': 'text/html' },
-  })
-}
 
 export const getAssets = async (req) => {
-  const assets = getAssetsFromFile()
+  const assets = await getAssetsFromDB()
   return new Response(JSON.stringify(assets), {
     status: 200,
     headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
@@ -34,7 +28,7 @@ export const addAsset = async (req) => {
   }
 
   const imageUrl = await processAndSaveImage(file, file.name)
-  const newAsset = createAsset(name, price, imageUrl)
+  const newAsset = await createAsset(name, price, imageUrl)
 
   return new Response(JSON.stringify(newAsset), {
     status: 201,
@@ -60,7 +54,7 @@ export const updateAsset = async (req) => {
     imageUrl = await processAndSaveImage(file, file.name)
   }
 
-  const updatedAsset = updateAssetData(assetId, name, price, imageUrl)
+  const updatedAsset = await updateAssetData(assetId, name, price, imageUrl)
 
   if (!updatedAsset) {
     throw createNotFoundError('Asset not found')
@@ -76,7 +70,7 @@ export const removeAsset = async (req) => {
   const url = new URL(req.url)
   const assetId = url.pathname.split('/').pop()
 
-  const asset = deleteAsset(assetId)
+  const asset = await deleteAsset(assetId)
 
   if (!asset) {
     throw createNotFoundError('Asset not found')

@@ -1,5 +1,5 @@
-import { showQuantityModal } from '../components/modal.js'
-import { createElement } from '../spa.js'
+import { showQuantityModal } from '~/components/modal.js'
+import { createElement } from '~/lib/spa.js'
 
 export function HomeView() {
   return async function () {
@@ -13,7 +13,7 @@ export function HomeView() {
         const imgSrc =
           product.url.startsWith('/') || product.url.startsWith('http')
             ? product.url
-            : '/frontend/' + product.url
+            : '/src/' + product.url
         const card = createElement(
           'div',
           { className: 'product-card' },

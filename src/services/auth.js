@@ -1,4 +1,4 @@
-import { logout, setUser } from '../state.js'
+import { logout, setUser } from '~/lib/state.js'
 import { userApi } from './user.js'
 
 const clearLocalData = () => {
@@ -10,7 +10,7 @@ const clearLocalData = () => {
 const checkSession = async (retries = 2) => {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch('/api/session', {
+      const res = await fetch('/api/auth/session', {
         credentials: 'include',
         method: 'GET',
         headers: {
@@ -99,7 +99,7 @@ const signUp = async (userData) => {
 
 const signOut = async () => {
   try {
-    const res = await fetch('/api/logout', {
+    const res = await fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include',
       headers: {

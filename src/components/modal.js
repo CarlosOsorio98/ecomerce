@@ -1,5 +1,5 @@
-import { createElement } from '../spa.js'
-import { addToCart } from '../state.js'
+import { createElement } from '~/lib/spa.js'
+import { addToCart } from '~/lib/state.js'
 
 const plusAndMinus = (quantityInput) => {
   return createElement('div', { className: 'plus-and-minus' }, [

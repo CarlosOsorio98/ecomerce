@@ -1,10 +1,10 @@
-import {
-  addAsset,
-  getAssets,
-  removeAsset,
-  updateAsset,
-} from '@/controllers/adminController.js'
-import { adminMiddleware } from '@/middleware/auth.js'
+import { 
+  login, 
+  register, 
+  logout,
+  getSession
+} from '@/controllers/authController.js'
+import { authMiddleware } from '@/middleware/auth.js'
 import { asyncHandler } from '@/middleware/errorHandler.js'
 import {
   createRoute,
@@ -13,20 +13,16 @@ import {
 } from '@/services/routerService.js'
 
 const withAuth = (handler) => async (req) => {
-  adminMiddleware(req)
+  await authMiddleware(req)
   return handler(req)
 }
 
-const createAdminRouter = () => {
+const createAuthRouter = () => {
   const routes = [
-    createRoute('GET', '/api/admin/assets', getAssets, { requiresAuth: true }),
-    createRoute('POST', '/api/admin/assets', addAsset, { requiresAuth: true }),
-    createRoute('PUT', '/api/admin/assets/:id', updateAsset, {
-      requiresAuth: true,
-    }),
-    createRoute('DELETE', '/api/admin/assets/:id', removeAsset, {
-      requiresAuth: true,
-    }),
+    createRoute('POST', '/api/auth/login', login, { requiresAuth: false }),
+    createRoute('POST', '/api/auth/register', register, { requiresAuth: false }),
+    createRoute('POST', '/api/auth/logout', logout, { requiresAuth: true }),
+    createRoute('GET', '/api/auth/session', getSession, { requiresAuth: true }),
   ]
 
   return {
@@ -52,6 +48,6 @@ const createAdminRouter = () => {
   }
 }
 
-const adminRouter = createAdminRouter()
+const authRouter = createAuthRouter()
 
-export const handleAdminRoutes = (req) => adminRouter.handle(req)
+export const handleAuthRoutes = (req) => authRouter.handle(req)

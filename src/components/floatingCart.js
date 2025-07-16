@@ -3,14 +3,14 @@
  * @description
  * Componente de carrito flotante que muestra el número de items y permite ver/gestionar el carrito.
  */
-import { createElement } from '../spa.js'
+import { createElement } from '~/lib/spa.js'
 import {
   addToCart,
   getCart,
   removeFromCart,
   store,
   syncCart,
-} from '../state.js'
+} from '~/lib/state.js'
 
 let isCartOpen = false
 let cartOverlay = null
@@ -105,7 +105,7 @@ function renderCartItems(container, cart = null) {
     const imgSrc =
       item.url.startsWith('/') || item.url.startsWith('http')
         ? item.url
-        : '/frontend/' + item.url
+        : '/src/' + item.url
 
     const itemElement = createElement(
       'div',

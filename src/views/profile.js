@@ -1,12 +1,12 @@
-import { userService } from '../services/user.js'
-import { createElement } from '../spa.js'
+import { userService } from '~/services/user.js'
+import { createElement } from '~/lib/spa.js'
 import {
   addToCart,
   getCart,
   getUser,
   removeFromCart,
   syncCart,
-} from '../state.js'
+} from '~/lib/state.js'
 
 export function ProfileView(router) {
   return async function () {

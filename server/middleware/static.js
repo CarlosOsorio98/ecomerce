@@ -1,4 +1,4 @@
-import { getCORSHeaders } from './cors.js'
+import { getCORSHeaders } from '@/middleware/cors.js'
 
 export const staticMiddleware = async (req) => {
   const url = new URL(req.url)
