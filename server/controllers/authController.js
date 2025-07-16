@@ -1,6 +1,6 @@
 import { userLoginSchema, userRegisterSchema } from '@/dto/auth.js'
-import { createNotFoundError, createValidationError } from '@/errors.js'
-import { authMiddleware, getCookie } from '@/middleware/auth.js'
+import { createValidationError } from '@/errors.js'
+import { getCookie } from '@/middleware/auth.js'
 import { getCORSHeaders } from '@/middleware/cors.js'
 import { getUserById } from '@/repositories/userRepository.js'
 import {
@@ -51,11 +51,19 @@ export const login = async (req) => {
 }
 
 export const getSession = async (req) => {
-  const payload = await authMiddleware(req)
-  const user = await getUserById(payload.id)
+  if (!req.user) {
+    return new Response(JSON.stringify({ error: 'No active session' }), {
+      status: 401,
+      headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
+    })
+  }
 
+  const user = await getUserById(req.user.id)
   if (!user) {
-    throw createNotFoundError('User not found')
+    return new Response(JSON.stringify({ error: 'User not found' }), {
+      status: 404,
+      headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
+    })
   }
 
   return new Response(JSON.stringify(user), {

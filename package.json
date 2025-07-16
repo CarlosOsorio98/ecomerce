@@ -1,10 +1,10 @@
 {
-  "name": "proyecto",
+  "name": "e-commerce",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "NODE_ENV=production bun src/server.js",
-    "dev": "bun --hot src/server.js",
+    "dev": "bun --hot src/app.js",
     "migrate": "bun run scripts/migrate.js",
     "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"'",
     "preview": "bun run build && bun run start",

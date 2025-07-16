@@ -28,7 +28,7 @@ export const verifyJWT = (token) => {
 export const isJWTRevoked = async (token) => {
   const result = await db.execute({
     sql: 'SELECT revoked FROM jwt_tokens WHERE token = ?',
-    args: [token]
+    args: [token],
   })
   return result.rows.length > 0 ? !!result.rows[0].revoked : false
 }
@@ -36,15 +36,23 @@ export const isJWTRevoked = async (token) => {
 export const authMiddleware = async (req) => {
   const token = getCookie(req, 'session')
   if (!token) {
-    throw createAuthError('Token not provided')
+    return new Response(JSON.stringify({ error: 'Token not provided' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   const payload = verifyJWT(token)
-  if (!payload || await isJWTRevoked(token)) {
-    throw createAuthError('Invalid or revoked token')
+  if (!payload || (await isJWTRevoked(token))) {
+    return new Response(JSON.stringify({ error: 'Invalid or revoked token' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
-  return payload
+  // Attach the payload to the request
+  req.user = payload
+  return null
 }
 
 export const adminMiddleware = (req) => {

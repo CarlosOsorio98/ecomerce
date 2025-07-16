@@ -7,15 +7,11 @@ export const getCORSHeaders = () => ({
   'Access-Control-Allow-Credentials': config.cors.credentials.toString(),
 })
 
-export const corsMiddleware = (req, res, next) => {
+export const corsMiddleware = (req) => {
   const headers = getCORSHeaders()
-  Object.entries(headers).forEach(([key, value]) => {
-    res.headers.set(key, value)
-  })
-
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers })
   }
-
-  return next()
+  // For non-OPTIONS, just signal to continue
+  return null
 }
