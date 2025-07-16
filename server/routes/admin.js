@@ -3,50 +3,57 @@ import {
   getAdminPanel,
   getAssets,
   removeAsset,
+  updateAsset,
 } from '@/controllers/adminController.js'
 import { adminMiddleware } from '@/middleware/auth.js'
 import { asyncHandler } from '@/middleware/errorHandler.js'
+import {
+  createRoute,
+  enhanceRequest,
+  findMatchingRoute,
+} from '@/services/routerService.js'
 
-const adminRoutes = [
-  ['/admin', 'GET', getAdminPanel],
-  ['/api/admin/assets', 'GET', getAssets],
-  ['/api/admin/assets', 'POST', addAsset],
-  ['/api/admin/assets/:id', 'DELETE', removeAsset],
-]
-
-const matchAdminRoute = (pathname, method) => {
-  for (const [routePath, routeMethod, handler] of adminRoutes) {
-    if (routeMethod === method) {
-      if (routePath.includes(':')) {
-        const pathPattern = routePath.replace(/:[^/]+/g, '([^/]+)')
-        const regex = new RegExp(`^${pathPattern}$`)
-        if (regex.test(pathname)) {
-          return handler
-        }
-      } else if (routePath === pathname) {
-        return handler
-      }
-    }
-  }
-  return null
-}
-
-const requireAuth = (handler) => async (req) => {
+const withAuth = (handler) => async (req) => {
   adminMiddleware(req)
   return handler(req)
 }
 
-export const handleAdminRoutes = async (req) => {
-  const url = new URL(req.url)
-  const { pathname } = url
-  const { method } = req
+const createAdminRouter = () => {
+  const routes = [
+    createRoute('GET', '/admin', getAdminPanel, { requiresAuth: false }),
+    createRoute('GET', '/api/admin/assets', getAssets, { requiresAuth: true }),
+    createRoute('POST', '/api/admin/assets', addAsset, { requiresAuth: true }),
+    createRoute('PUT', '/api/admin/assets/:id', updateAsset, {
+      requiresAuth: true,
+    }),
+    createRoute('DELETE', '/api/admin/assets/:id', removeAsset, {
+      requiresAuth: true,
+    }),
+  ]
 
-  const handler = matchAdminRoute(pathname, method)
-  if (!handler) return null
+  return {
+    handle: async (req) => {
+      const url = new URL(req.url)
+      const { pathname, searchParams } = url
+      const method = req.method
 
-  if (pathname === '/admin') {
-    return asyncHandler(handler)(req)
+      const match = findMatchingRoute(routes, method, pathname)
+      if (!match) return null
+
+      const { route, params } = match
+
+      // Enhance request with params and query
+      enhanceRequest(req, params, searchParams)
+
+      const handler = route.requiresAuth
+        ? withAuth(route.handler)
+        : route.handler
+
+      return asyncHandler(handler)(req)
+    },
   }
-
-  return asyncHandler(requireAuth(handler))(req)
 }
+
+const adminRouter = createAdminRouter()
+
+export const handleAdminRoutes = (req) => adminRouter.handle(req)

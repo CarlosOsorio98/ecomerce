@@ -4,6 +4,7 @@ import {
   createAsset,
   deleteAsset,
   getAssetsFromFile,
+  updateAssetData,
 } from '@/services/assetService.js'
 import { processAndSaveImage } from '@/services/imageService.js'
 
@@ -37,6 +38,36 @@ export const addAsset = async (req) => {
 
   return new Response(JSON.stringify(newAsset), {
     status: 201,
+    headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
+  })
+}
+
+export const updateAsset = async (req) => {
+  const url = new URL(req.url)
+  const assetId = url.pathname.split('/').pop()
+  const formData = await req.formData()
+  
+  const name = formData.get('name')
+  const price = parseFloat(formData.get('price'))
+  const file = formData.get('file')
+
+  if (!name || !price) {
+    throw createValidationError('Missing required data')
+  }
+
+  let imageUrl
+  if (file && file.size > 0) {
+    imageUrl = await processAndSaveImage(file, file.name)
+  }
+
+  const updatedAsset = updateAssetData(assetId, name, price, imageUrl)
+
+  if (!updatedAsset) {
+    throw createNotFoundError('Asset not found')
+  }
+
+  return new Response(JSON.stringify(updatedAsset), {
+    status: 200,
     headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
   })
 }

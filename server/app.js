@@ -1,8 +1,8 @@
 import { config } from './config.js'
 import { localData } from './data/local.js'
-import { router } from './router.js'
+import { router } from './routes/setup.js'
 
-localData().syncAssets()
+await localData().syncAssets()
 
 export const server = globalThis.Bun.serve({
   port: config.server.port,

@@ -9,31 +9,31 @@ import {
   updateCartQuantity,
 } from '@/repositories/cartRepository.js'
 
-export const getCartItems = () => getCart()
+export const getCartItems = async () => await getCart()
 
-export const addItemToCart = (assetId, quantity) => {
-  const asset = getAssetById(assetId)
+export const addItemToCart = async (assetId, quantity) => {
+  const asset = await getAssetById(assetId)
   if (!asset) {
     throw createNotFoundError('Product does not exist')
   }
 
-  const existingItem = getCartItemByAssetId(assetId)
+  const existingItem = await getCartItemByAssetId(assetId)
 
   if (existingItem) {
     const newQuantity = existingItem.quantity + quantity
     if (newQuantity <= 0) {
-      removeFromCart(assetId)
+      await removeFromCart(assetId)
     } else {
-      updateCartQuantity(assetId, newQuantity)
+      await updateCartQuantity(assetId, newQuantity)
     }
   } else if (quantity > 0) {
-    addToCart(assetId, quantity)
+    await addToCart(assetId, quantity)
   }
 
   return { success: true }
 }
 
-export const removeItemFromCart = (id) => {
-  removeCartItem(id)
+export const removeItemFromCart = async (id) => {
+  await removeCartItem(id)
   return { success: true }
 }

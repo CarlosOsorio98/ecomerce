@@ -23,46 +23,88 @@ function getProduct(id) {
   return getProducts().find((product) => product.id === id)
 }
 
-function addProduct(product) {
+async function addProduct(product) {
   const products = getProducts()
   products.push(product)
   fs.writeFileSync(ASSETS_PATH, JSON.stringify(products, null, 2))
   console.log('Guardando producto', product)
   try {
-    db.run(`INSERT INTO assets (id, name, url, price) VALUES (?, ?, ?, ?)`, [
-      product.id,
-      product.name,
-      product.url,
-      product.price,
-    ])
+    await db.execute({
+      sql: `INSERT INTO assets (id, name, url, price) VALUES (?, ?, ?, ?)`,
+      args: [product.id, product.name, product.url, product.price]
+    })
   } catch (error) {
     console.error('Error inserting into database', error)
   }
 }
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
   const products = getProducts()
   const index = products.findIndex((product) => product.id === id)
   if (index !== -1) {
     products.splice(index, 1)
     fs.writeFileSync(ASSETS_PATH, JSON.stringify(products, null, 2))
-    db.run(`DELETE FROM assets WHERE id = ?`, [id])
+    await db.execute({
+      sql: `DELETE FROM assets WHERE id = ?`,
+      args: [id]
+    })
   }
 }
 
-function syncAssets() {
+async function syncAssets() {
   ensureAssetsFile()
-  const products = getProducts()
-  // Limpiar la tabla assets
-  db.run('DELETE FROM assets')
-  // Insertar todos los productos de assets.json
-  for (const product of products) {
-    db.run(`INSERT INTO assets (id, name, url, price) VALUES (?, ?, ?, ?)`, [
-      product.id,
-      product.name,
-      product.url,
-      product.price,
-    ])
+  const fileProducts = getProducts()
+  
+  // Get existing assets from database
+  const dbResult = await db.execute('SELECT * FROM assets')
+  const dbProducts = dbResult.rows || []
+  
+  // Create maps for efficient lookup
+  const fileProductsMap = new Map(fileProducts.map(p => [p.id, p]))
+  const dbProductsMap = new Map(dbProducts.map(p => [p.id, p]))
+  
+  // Insert new products (exist in file but not in DB)
+  for (const [id, product] of fileProductsMap) {
+    if (!dbProductsMap.has(id)) {
+      await db.execute({
+        sql: `INSERT INTO assets (id, name, url, price) VALUES (?, ?, ?, ?)`,
+        args: [product.id, product.name, product.url, product.price]
+      })
+      console.log(`Added new asset: ${product.name}`)
+    }
+  }
+  
+  // Update existing products if they've changed
+  for (const [id, product] of fileProductsMap) {
+    const dbProduct = dbProductsMap.get(id)
+    if (dbProduct && (
+      dbProduct.name !== product.name ||
+      dbProduct.price !== product.price ||
+      dbProduct.url !== product.url
+    )) {
+      await db.execute({
+        sql: `UPDATE assets SET name = ?, price = ?, url = ? WHERE id = ?`,
+        args: [product.name, product.price, product.url, product.id]
+      })
+      console.log(`Updated asset: ${product.name}`)
+    }
+  }
+  
+  // Remove products that no longer exist in file
+  for (const [id, dbProduct] of dbProductsMap) {
+    if (!fileProductsMap.has(id)) {
+      // First remove any cart items referencing this asset
+      await db.execute({
+        sql: `DELETE FROM cart WHERE asset_id = ?`,
+        args: [id]
+      })
+      // Then remove the asset
+      await db.execute({
+        sql: `DELETE FROM assets WHERE id = ?`,
+        args: [id]
+      })
+      console.log(`Removed asset: ${dbProduct.name}`)
+    }
   }
 }
 

@@ -70,11 +70,47 @@
       button:hover {
         background: #0056b3;
       }
+      .edit-btn {
+        background: #28a745;
+        margin-right: 5px;
+      }
+      .edit-btn:hover {
+        background: #218838;
+      }
       .delete-btn {
         background: #dc3545;
       }
       .delete-btn:hover {
         background: #c82333;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+      }
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .close:hover {
+        color: black;
       }
     </style>
   </head>
@@ -110,6 +146,31 @@
 
       <h3>Productos Existentes</h3>
       <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h3>Editar Producto</h3>
+        <form id="editProductForm" onsubmit="return updateProduct(event)">
+          <input type="hidden" id="editProductId" />
+          <div class="form-group">
+            <label for="editProductName">Nombre:</label>
+            <input type="text" id="editProductName" required />
+          </div>
+          <div class="form-group">
+            <label for="editProductPrice">Precio:</label>
+            <input type="number" id="editProductPrice" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="editProductImage">Nueva Imagen (opcional):</label>
+            <input type="file" id="editProductImage" accept="image/*" />
+          </div>
+          <button type="submit">Actualizar Producto</button>
+          <button type="button" onclick="closeEditModal()">Cancelar</button>
+        </form>
+      </div>
     </div>
 
     <script>
@@ -161,6 +222,7 @@
                         <img src="/frontend/${product.url}" alt="${product.name}">
                         <h3>${product.name}</h3>
                         <p>$${product.price}</p>
+                        <button class="edit-btn" onclick="openEditModal('${product.id}', '${product.name}', '${product.price}', '${product.url}')">Editar</button>
                         <button class="delete-btn" onclick="deleteProduct('${product.id}')">Eliminar</button>
                     </div>
                 `
@@ -222,6 +284,61 @@
           }
         } catch (error) {
           alert('Error al eliminar producto')
+        }
+      }
+
+      function openEditModal(id, name, price, url) {
+        document.getElementById('editProductId').value = id
+        document.getElementById('editProductName').value = name
+        document.getElementById('editProductPrice').value = price
+        document.getElementById('editModal').style.display = 'block'
+      }
+
+      function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none'
+        document.getElementById('editProductForm').reset()
+      }
+
+      async function updateProduct(event) {
+        event.preventDefault()
+
+        const formData = new FormData()
+        formData.append('name', document.getElementById('editProductName').value)
+        formData.append('price', document.getElementById('editProductPrice').value)
+        
+        const fileInput = document.getElementById('editProductImage')
+        if (fileInput.files[0]) {
+          formData.append('file', fileInput.files[0])
+        }
+
+        const productId = document.getElementById('editProductId').value
+
+        try {
+          const response = await fetch(`/api/admin/assets/${productId}`, {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${adminToken}`,
+            },
+            body: formData,
+          })
+
+          if (response.ok) {
+            closeEditModal()
+            loadProducts()
+            alert('Producto actualizado exitosamente')
+          } else {
+            alert('Error al actualizar producto')
+          }
+        } catch (error) {
+          alert('Error al actualizar producto')
+        }
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function(event) {
+        const modal = document.getElementById('editModal')
+        if (event.target === modal) {
+          closeEditModal()
         }
       }
     </script>

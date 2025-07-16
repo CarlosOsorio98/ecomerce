@@ -25,21 +25,22 @@ export const verifyJWT = (token) => {
   }
 }
 
-export const isJWTRevoked = (token) => {
-  const row = db
-    .query('SELECT revoked FROM jwt_tokens WHERE token = ?')
-    .get(token)
-  return row ? !!row.revoked : false
+export const isJWTRevoked = async (token) => {
+  const result = await db.execute({
+    sql: 'SELECT revoked FROM jwt_tokens WHERE token = ?',
+    args: [token]
+  })
+  return result.rows.length > 0 ? !!result.rows[0].revoked : false
 }
 
-export const authMiddleware = (req) => {
+export const authMiddleware = async (req) => {
   const token = getCookie(req, 'session')
   if (!token) {
     throw createAuthError('Token not provided')
   }
 
   const payload = verifyJWT(token)
-  if (!payload || isJWTRevoked(token)) {
+  if (!payload || await isJWTRevoked(token)) {
     throw createAuthError('Invalid or revoked token')
   }
 

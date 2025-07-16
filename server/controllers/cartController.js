@@ -8,7 +8,7 @@ import {
 } from '@/services/cartService.js'
 
 export const getCart = async (req) => {
-  const cart = getCartItems()
+  const cart = await getCartItems()
 
   return new Response(JSON.stringify(cart), {
     status: 200,
@@ -24,7 +24,7 @@ export const addToCart = async (req) => {
     throw createValidationError('Invalid data', parsed.error.errors)
   }
 
-  const result = addItemToCart(body.asset_id, body.quantity)
+  const result = await addItemToCart(body.asset_id, body.quantity)
 
   return new Response(JSON.stringify(result), {
     status: 200,
@@ -36,7 +36,7 @@ export const removeFromCart = async (req) => {
   const url = new URL(req.url)
   const id = url.pathname.split('/').pop()
 
-  const result = removeItemFromCart(id)
+  const result = await removeItemFromCart(id)
 
   return new Response(JSON.stringify(result), {
     status: 200,

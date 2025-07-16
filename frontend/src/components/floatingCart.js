@@ -52,7 +52,7 @@ function createFloatingCartButton() {
       className: 'floating-cart-button',
       onclick: toggleCartView,
     },
-    createElement('span', { className: 'cart-icon' }, '🛒'),
+    createElement('span', { className: 'cart-icon' }),
     createElement('span', { id: 'cart-count', className: 'cart-count' }, '0')
   )
 

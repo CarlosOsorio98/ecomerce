@@ -19,29 +19,29 @@ export const setSessionCookie = (token) => {
 export const clearSessionCookie = () =>
   'session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'
 
-export const registerUser = (userData) => {
-  const existingUser = getUserByEmail(userData.email)
+export const registerUser = async (userData) => {
+  const existingUser = await getUserByEmail(userData.email)
   if (existingUser) {
     throw createConflictError('Email already registered')
   }
 
-  return createUser(userData)
+  return await createUser(userData)
 }
 
-export const loginUser = (email, password) => {
-  const user = validateUserCredentials(email, password)
+export const loginUser = async (email, password) => {
+  const user = await validateUserCredentials(email, password)
   if (!user) {
     throw createAuthError('Invalid credentials')
   }
 
   const token = signJWT({ id: user.id, email: user.email })
-  saveJWTToken(user.id, token)
+  await saveJWTToken(user.id, token)
 
   return { user, token }
 }
 
-export const logoutUser = (token) => {
+export const logoutUser = async (token) => {
   if (token) {
-    revokeJWTToken(token)
+    await revokeJWTToken(token)
   }
 }

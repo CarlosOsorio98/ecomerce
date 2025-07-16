@@ -5,7 +5,7 @@ import fs from 'node:fs'
 
 const ASSETS_JSON_PATH = 'frontend/assets.json'
 
-export const getAssets = () => getAllAssets()
+export const getAssets = async () => await getAllAssets()
 
 export const getAssetsFromFile = () => {
   return JSON.parse(fs.readFileSync(ASSETS_JSON_PATH, 'utf-8'))
@@ -29,6 +29,28 @@ export const createAsset = (name, price, imageUrl) => {
   localData().syncAssets()
 
   return newAsset
+}
+
+export const updateAssetData = (assetId, name, price, imageUrl) => {
+  const assets = getAssetsFromFile()
+  const assetIndex = assets.findIndex((a) => a.id === assetId)
+
+  if (assetIndex === -1) {
+    return null
+  }
+
+  const asset = assets[assetIndex]
+  asset.name = name
+  asset.price = price
+  if (imageUrl) {
+    asset.url = imageUrl
+  }
+
+  assets[assetIndex] = asset
+  saveAssetsToFile(assets)
+  localData().syncAssets()
+
+  return asset
 }
 
 export const deleteAsset = (assetId) => {

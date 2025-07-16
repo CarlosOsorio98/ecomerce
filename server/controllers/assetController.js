@@ -2,7 +2,7 @@ import { getCORSHeaders } from '@/middleware/cors.js'
 import { getAssets } from '@/services/assetService.js'
 
 export const getAssetsList = async (req) => {
-  const assets = getAssets()
+  const assets = await getAssets()
 
   return new Response(JSON.stringify(assets), {
     status: 200,

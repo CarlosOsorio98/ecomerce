@@ -20,7 +20,7 @@ export const register = async (req) => {
     throw createValidationError(errorMsg, parsed.error.errors)
   }
 
-  const user = registerUser(body)
+  const user = await registerUser(body)
 
   return new Response(JSON.stringify(user), {
     status: 201,
@@ -37,7 +37,7 @@ export const login = async (req) => {
     throw createValidationError(errorMsg, parsed.error.errors)
   }
 
-  const { user, token } = loginUser(body.email, body.password)
+  const { user, token } = await loginUser(body.email, body.password)
   const cookieValue = setSessionCookie(token)
 
   return new Response(JSON.stringify(user), {
@@ -51,8 +51,8 @@ export const login = async (req) => {
 }
 
 export const getSession = async (req) => {
-  const payload = authMiddleware(req)
-  const user = getUserById(payload.id)
+  const payload = await authMiddleware(req)
+  const user = await getUserById(payload.id)
 
   if (!user) {
     throw createNotFoundError('User not found')
@@ -66,7 +66,7 @@ export const getSession = async (req) => {
 
 export const logout = async (req) => {
   const token = getCookie(req, 'session')
-  logoutUser(token)
+  await logoutUser(token)
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
