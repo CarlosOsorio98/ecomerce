@@ -5,11 +5,137 @@
 }
 
 .cart-section,
-.account-section {
+.account-section,
+.favorites-section {
   background: white;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.favorite-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.favorite-card:hover {
+  transform: translateY(-2px);
+}
+
+.favorite-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.favorite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+}
+
+.favorite-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  flex-grow: 1;
+}
+
+.favorite-price {
+  padding: 0 0.75rem;
+  font-weight: bold;
+  color: #2e5258;
+  margin: 0.5rem 0;
+}
+
+.add-to-cart-from-favorites {
+  width: 100%;
+  padding: 0.75rem;
+  background: #2e5258;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+.add-to-cart-from-favorites:hover {
+  background: #041629;
+}
+
+.empty-favorites {
+  text-align: center;
+  color: #666;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+/* Heart button styles - shared with home.css */
+.heart-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.heart-button:hover {
+  transform: scale(1.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.heart-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.heart-svg {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heart-path {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heart-button.heart-animating .heart-svg {
+  animation: heartBeat 0.3s ease-in-out;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heart-button.favorite .heart-path {
+  filter: drop-shadow(0 0 3px rgba(231, 76, 60, 0.3));
 }
 
 .cart-list {

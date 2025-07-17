@@ -6,6 +6,7 @@ import { handleAdminRoutes } from '@/routes/admin.js'
 import { handleAssetRoutes } from '@/routes/assets.js'
 import { handleAuthRoutes } from '@/routes/auth.js'
 import { handleCartRoutes } from '@/routes/cart.js'
+import { handleFavoritesRoutes } from '@/routes/favorites.js'
 
 // Factory function to create API route handler
 const createAPIRouteHandler = () => {
@@ -32,6 +33,8 @@ const createAPIRouteHandler = () => {
         response = await handleAssetRoutes(req)
       } else if (pathname.startsWith('/api/cart')) {
         response = await handleCartRoutes(req)
+      } else if (pathname.startsWith('/api/favorites')) {
+        response = await handleFavoritesRoutes(req)
       }
 
       // Always add CORS headers to API responses

@@ -55,6 +55,20 @@ export const authMiddleware = async (req) => {
   return null
 }
 
+export const requireAuth = async (req) => {
+  const token = getCookie(req, 'session')
+  if (!token) {
+    throw createAuthError('Authentication required')
+  }
+
+  const payload = verifyJWT(token)
+  if (!payload || (await isJWTRevoked(token))) {
+    throw createAuthError('Invalid or expired session')
+  }
+
+  return payload
+}
+
 export const adminMiddleware = (req) => {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

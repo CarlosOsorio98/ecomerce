@@ -1,24 +1,35 @@
 import { userService } from '~/services/user.js'
 import { createElement } from '~/lib/spa.js'
+import { createHeartButton } from '~/components/heartButton.js'
 import {
   addToCart,
   getCart,
   getUser,
   removeFromCart,
   syncCart,
+  syncFavorites,
+  getFavorites,
 } from '~/lib/state.js'
 
 export function ProfileView(router) {
   return async function () {
     const user = getUser()
     await syncCart()
+    await syncFavorites()
     const cart = getCart()
+    const favorites = getFavorites()
 
     const container = createElement('div', { className: 'profile-container' })
+    
+    const favoritesSection = createFavoritesSection(favorites)
+    container.appendChild(favoritesSection)
+    
     const cartSection = await createCartSection(cart, user, router)
     container.appendChild(cartSection)
+    
     const accountSection = createAccountSection(user, router)
     container.appendChild(accountSection)
+    
     return container
   }
 }
@@ -190,4 +201,67 @@ function createAccountSection(user, router) {
   )
 
   return accountSection
+}
+
+function createFavoritesSection(favorites) {
+  const favoritesSection = createElement(
+    'div',
+    { className: 'favorites-section' },
+    createElement('h2', {}, 'Mis Favoritos')
+  )
+
+  if (!favorites || favorites.length === 0) {
+    favoritesSection.appendChild(
+      createElement('p', { className: 'empty-favorites' }, 'No tienes productos favoritos aún.')
+    )
+  } else {
+    const favoritesList = createElement('div', { className: 'favorites-grid' })
+    
+    favorites.forEach((favorite) => {
+      const imgSrc =
+        favorite.url.startsWith('/') || favorite.url.startsWith('http')
+          ? favorite.url
+          : '/src/' + favorite.url
+      
+      const favoriteHeader = createElement(
+        'div',
+        { className: 'favorite-header' },
+        createElement('h4', {}, favorite.name),
+        createHeartButton(favorite.asset_id, { size: '18' })
+      )
+      
+      const favoriteCard = createElement(
+        'div',
+        { className: 'favorite-card' },
+        createElement('img', {
+          src: imgSrc,
+          alt: favorite.name,
+        }),
+        favoriteHeader,
+        createElement('p', { className: 'favorite-price' }, `$${favorite.price}`),
+        createElement(
+          'button',
+          {
+            className: 'add-to-cart-from-favorites',
+            onclick: async () => {
+              try {
+                await addToCart(favorite.asset_id, 1)
+                alert('Producto agregado al carrito')
+                window.location.reload()
+              } catch (error) {
+                alert('Error al agregar al carrito')
+              }
+            }
+          },
+          'Agregar al carrito'
+        )
+      )
+      
+      favoritesList.appendChild(favoriteCard)
+    })
+    
+    favoritesSection.appendChild(favoritesList)
+  }
+
+  return favoritesSection
 }

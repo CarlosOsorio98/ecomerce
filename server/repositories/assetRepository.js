@@ -16,7 +16,7 @@ export const getAssetById = async (id) => {
 
 export const createAsset = async (name, price, imageUrl) => {
   const id = randomUUID()
-  const result = await db.execute({
+  await db.execute({
     sql: 'INSERT INTO assets (id, name, price, url) VALUES (?, ?, ?, ?)',
     args: [id, name, price, imageUrl]
   })
@@ -42,7 +42,7 @@ export const updateAsset = async (id, name, price, imageUrl) => {
   
   args.push(id)
   
-  const result = await db.execute({
+  await db.execute({
     sql: `UPDATE assets SET ${updateFields.join(', ')} WHERE id = ?`,
     args
   })
