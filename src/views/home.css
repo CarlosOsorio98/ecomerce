@@ -36,21 +36,21 @@
   font-size: 1.2rem;
 }
 
-.heart-button {
+.card-header .heart-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: white;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: transparent;
+  padding: 0;
+  width: auto;
+  height: auto;
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.heart-button:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .heart-button:disabled {
@@ -110,20 +110,6 @@
 
 .product-card button:hover {
   background: #041629;
-}
-.card-header .heart-button {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: transparent !important;
-  padding: 0 !important;
-  width: auto !important;
-  height: auto !important;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: none !important;
 }
 
 .card-header .heart-button .heart-svg {
