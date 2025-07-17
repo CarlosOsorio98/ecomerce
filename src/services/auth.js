@@ -73,23 +73,7 @@ const clearLocalData = async (forceReload = false) => {
 }
 
 const checkSession = async (retries = 2) => {
-  // First check if we have any session cookie at all with actual value
-  const hasSessionCookie = document.cookie
-    .split(';')
-    .some(cookie => {
-      const trimmed = cookie.trim()
-      return trimmed.startsWith('session=') && trimmed.length > 'session='.length
-    })
-  
-  if (!hasSessionCookie) {
-    console.log('No valid session cookie found, user not authenticated')
-    // Only clear data if we're currently showing as authenticated
-    if (isAuthenticated()) {
-      await clearLocalData(false)
-      logout()
-    }
-    return null
-  }
+  console.log('🔍 Checking session with server...')
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
