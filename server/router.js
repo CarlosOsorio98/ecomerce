@@ -16,10 +16,10 @@ const createAPIRouteHandler = () => {
       const corsResult = await corsMiddleware(req)
       if (corsResult) return corsResult
 
-      // Auth (except for /api/auth)
+      // Auth (except for /api/auth and /api/admin)
       const url = new URL(req.url)
       const pathname = url.pathname
-      if (!pathname.startsWith('/api/auth')) {
+      if (!pathname.startsWith('/api/auth') && !pathname.startsWith('/api/admin')) {
         const authResult = await authMiddleware(req)
         if (authResult) return authResult
       }
