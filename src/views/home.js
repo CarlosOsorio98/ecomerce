@@ -14,7 +14,16 @@ export function HomeView() {
 
     try {
       const response = await fetch('/api/assets')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const products = await response.json()
+
+      if (!Array.isArray(products)) {
+        throw new Error('Invalid response format: expected array')
+      }
 
       products.forEach((product) => {
         const imgSrc =

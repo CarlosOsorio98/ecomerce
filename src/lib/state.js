@@ -31,6 +31,11 @@ export const setCurrentRoute = (route) => {
 }
 
 export const syncCart = async () => {
+  if (!isAuthenticated()) {
+    store.setState({ cart: [] })
+    return
+  }
+  
   try {
     const cart = await cartService.getCart()
     store.setState({ cart })
