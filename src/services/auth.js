@@ -1,12 +1,24 @@
 import { logout, setUser } from '~/lib/state.js'
 import { userApi } from './user.js'
 
-const clearLocalData = () => {
+const clearLocalData = async () => {
   localStorage.removeItem('user_session')
   localStorage.removeItem('debug_session')
   localStorage.removeItem('debug_login')
-  // Clear the session cookie by setting it to expire
-  document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+  
+  // Clear session cookie using Cookie Store API if available
+  if ('cookieStore' in window) {
+    try {
+      await cookieStore.delete('session')
+    } catch (error) {
+      console.warn('Failed to clear cookie via Cookie Store API:', error)
+      // Fallback to document.cookie
+      document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    }
+  } else {
+    // Fallback for browsers without Cookie Store API
+    document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+  }
 }
 
 const checkSession = async (retries = 2) => {
@@ -21,8 +33,11 @@ const checkSession = async (retries = 2) => {
       })
 
       if (!res.ok) {
-        if (res.status === 401) {
-          clearLocalData()
+        if (res.status === 401 || res.status === 403) {
+          // Token inválido, expirado o revocado
+          console.log('Token de sesión inválido, limpiando datos...')
+          await clearLocalData()
+          logout()
           return null
         }
         throw new Error(`HTTP ${res.status}: ${res.statusText}`)
@@ -47,7 +62,7 @@ const checkSession = async (retries = 2) => {
       console.error(`Error en intento ${attempt + 1}:`, error)
 
       if (attempt === retries) {
-        clearLocalData()
+        await clearLocalData()
         localStorage.setItem(
           'debug_session',
           JSON.stringify({
@@ -115,7 +130,7 @@ const signOut = async () => {
   } catch (error) {
     console.error('Error al cerrar sesión:', error)
   } finally {
-    clearLocalData()
+    await clearLocalData()
     logout()
   }
 }

@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import sharp from 'sharp'
 
-const ASSETS_DIR = 'frontend/assets'
+const ASSETS_DIR = 'src/assets'
 
 export const processAndSaveImage = async (file, filename) => {
   const webpFilename = filename.replace(/\.[^/.]+$/, '') + '.webp'
