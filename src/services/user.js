@@ -93,7 +93,14 @@ export const userApi = {
       body: JSON.stringify({ name, email, password }),
     })
     if (!res.ok) {
-      throw new Error((await res.json()).error || 'Error en registro')
+      let errorMsg = 'Error en registro'
+      try {
+        const errorData = await res.json()
+        errorMsg = errorData.error || errorData.message || `HTTP ${res.status}: ${res.statusText}`
+      } catch {
+        errorMsg = `HTTP ${res.status}: ${res.statusText}`
+      }
+      throw new Error(errorMsg)
     }
     return res.json()
   },
@@ -104,7 +111,16 @@ export const userApi = {
       body: JSON.stringify({ email, password }),
       credentials: 'include',
     })
-    if (!res.ok) throw new Error((await res.json()).error || 'Error en login')
+    if (!res.ok) {
+      let errorMsg = 'Error en login'
+      try {
+        const errorData = await res.json()
+        errorMsg = errorData.error || errorData.message || `HTTP ${res.status}: ${res.statusText}`
+      } catch {
+        errorMsg = `HTTP ${res.status}: ${res.statusText}`
+      }
+      throw new Error(errorMsg)
+    }
     return res.json()
   },
 }

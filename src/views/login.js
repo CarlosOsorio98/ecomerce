@@ -19,7 +19,13 @@ export function LoginView(router) {
               await authService.signIn(email, password)
               router.navigateTo('/')
             } catch (error) {
-              alert(error.message)
+              let msg = error
+              if (msg && typeof msg === 'object') {
+                if (msg.error) msg = msg.error
+                else if (msg.message) msg = msg.message
+                else msg = JSON.stringify(msg)
+              }
+              alert(msg)
             }
           },
         },
