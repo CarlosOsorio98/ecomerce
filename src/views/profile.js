@@ -9,6 +9,7 @@ import {
   syncCart,
   syncFavorites,
   getFavorites,
+  store,
 } from '~/lib/state.js'
 
 export function ProfileView(router) {
@@ -21,14 +22,34 @@ export function ProfileView(router) {
 
     const container = createElement('div', { className: 'profile-container' })
     
-    const favoritesSection = createFavoritesSection(favorites)
+    let favoritesSection = createFavoritesSection(favorites)
     container.appendChild(favoritesSection)
     
-    const cartSection = await createCartSection(cart, user, router)
+    let cartSection = await createCartSection(cart, user, router)
     container.appendChild(cartSection)
     
     const accountSection = createAccountSection(user, router)
     container.appendChild(accountSection)
+    
+    // Add reactive updates for cart changes
+    const unsubscribeCart = store.subscribe('cart', async (newCart) => {
+      const newCartSection = await createCartSection(newCart, user, router)
+      container.replaceChild(newCartSection, cartSection)
+      cartSection = newCartSection
+    })
+    
+    // Add reactive updates for favorites changes  
+    const unsubscribeFavorites = store.subscribe('favorites', (newFavorites) => {
+      const newFavoritesSection = createFavoritesSection(newFavorites)
+      container.replaceChild(newFavoritesSection, favoritesSection)
+      favoritesSection = newFavoritesSection
+    })
+    
+    // Cleanup function (not used in this app but good practice)
+    container._cleanup = () => {
+      unsubscribeCart()
+      unsubscribeFavorites()
+    }
     
     return container
   }
@@ -56,9 +77,8 @@ async function createCartSection(cart, user, router) {
         createElement(
           'button',
           {
-            onclick: async () => {
-              await addToCart(item.asset_id, -1)
-              window.location.reload()
+            onclick: () => {
+              addToCart(item.asset_id, -1)
             },
           },
           '-'
@@ -67,9 +87,8 @@ async function createCartSection(cart, user, router) {
         createElement(
           'button',
           {
-            onclick: async () => {
-              await addToCart(item.asset_id, 1)
-              window.location.reload()
+            onclick: () => {
+              addToCart(item.asset_id, 1)
             },
           },
           '+'
@@ -89,9 +108,8 @@ async function createCartSection(cart, user, router) {
         'button',
         {
           className: 'remove-item',
-          onclick: async () => {
-            await removeFromCart(item.id)
-            window.location.reload()
+          onclick: () => {
+            removeFromCart(item.id)
           },
         },
         '×'
