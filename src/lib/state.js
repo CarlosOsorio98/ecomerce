@@ -124,4 +124,14 @@ export const logout = () => {
     cart: [],
     favorites: [],
   })
+  
+  // Additional cleanup to ensure state is completely reset
+  try {
+    localStorage.removeItem('user_session')
+    localStorage.removeItem('auth_user')
+    sessionStorage.removeItem('user_session')
+    sessionStorage.removeItem('auth_user')
+  } catch (e) {
+    console.warn('Failed to clear storage during logout:', e)
+  }
 }

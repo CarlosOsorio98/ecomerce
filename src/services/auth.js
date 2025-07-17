@@ -2,26 +2,89 @@ import { logout, setUser } from '~/lib/state.js'
 import { userApi } from './user.js'
 
 const clearLocalData = async () => {
+  // Clear all localStorage items
   localStorage.removeItem('user_session')
   localStorage.removeItem('debug_session')
   localStorage.removeItem('debug_login')
+  localStorage.removeItem('auth_user')
   
-  // Clear session cookie using Cookie Store API if available
-  if ('cookieStore' in window) {
-    try {
-      await cookieStore.delete('session')
-    } catch (error) {
-      console.warn('Failed to clear cookie via Cookie Store API:', error)
-      // Fallback to document.cookie
-      document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+  // Clear sessionStorage as well
+  sessionStorage.removeItem('user_session')
+  sessionStorage.removeItem('debug_session')
+  sessionStorage.removeItem('debug_login')
+  sessionStorage.removeItem('auth_user')
+  
+  // Multiple methods to clear the session cookie
+  const cookieClearMethods = [
+    // Method 1: Cookie Store API (modern browsers)
+    async () => {
+      if ('cookieStore' in window) {
+        try {
+          await cookieStore.delete('session')
+          await cookieStore.delete({name: 'session', path: '/'})
+          await cookieStore.delete({name: 'session', path: '/', domain: window.location.hostname})
+          console.log('Cleared cookie via Cookie Store API')
+          return true
+        } catch (error) {
+          console.warn('Cookie Store API failed:', error)
+          return false
+        }
+      }
+      return false
+    },
+    
+    // Method 2: Multiple document.cookie attempts with different configurations
+    () => {
+      const configs = [
+        'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;',
+        'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname + ';',
+        'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + window.location.hostname + ';',
+        'session=; max-age=0; path=/;',
+        'session=; max-age=0; path=/; domain=' + window.location.hostname + ';',
+        'session=; max-age=0; path=/; domain=.' + window.location.hostname + ';',
+        'session=deleted; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;',
+        'session=deleted; max-age=0; path=/;'
+      ]
+      
+      configs.forEach(config => {
+        document.cookie = config
+      })
+      
+      console.log('Cleared cookie via document.cookie')
+      return true
     }
-  } else {
-    // Fallback for browsers without Cookie Store API
-    document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+  ]
+  
+  // Try all methods
+  for (const method of cookieClearMethods) {
+    try {
+      const success = await method()
+      if (success) break
+    } catch (error) {
+      console.warn('Cookie clear method failed:', error)
+    }
   }
+  
+  // Force reload the page as last resort to clear any cached state
+  setTimeout(() => {
+    if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+      console.log('Forcing page reload to clear session state')
+      window.location.reload()
+    }
+  }, 100)
 }
 
 const checkSession = async (retries = 2) => {
+  // First check if we have any session cookie at all
+  const hasSessionCookie = document.cookie.split(';').some(cookie => cookie.trim().startsWith('session='))
+  
+  if (!hasSessionCookie) {
+    console.log('No session cookie found, user not authenticated')
+    await clearLocalData()
+    logout()
+    return null
+  }
+
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch('/api/auth/session', {
@@ -135,10 +198,56 @@ const signOut = async () => {
   }
 }
 
+// Utility function to force clear all possible session data
+const forceSessionClear = async () => {
+  console.log('Force clearing all session data...')
+  
+  // Clear all localStorage
+  try {
+    localStorage.clear()
+  } catch (e) {
+    console.warn('Failed to clear localStorage:', e)
+  }
+  
+  // Clear all sessionStorage
+  try {
+    sessionStorage.clear()
+  } catch (e) {
+    console.warn('Failed to clear sessionStorage:', e)
+  }
+  
+  // Clear all cookies from current domain
+  const cookies = document.cookie.split(';')
+  for (let cookie of cookies) {
+    const [name] = cookie.split('=')
+    const cookieName = name.trim()
+    if (cookieName) {
+      // Try multiple deletion strategies
+      const deletionStrategies = [
+        `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`,
+        `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`,
+        `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`,
+        `${cookieName}=; max-age=0; path=/;`,
+        `${cookieName}=; max-age=0; path=/; domain=${window.location.hostname};`,
+      ]
+      
+      deletionStrategies.forEach(strategy => {
+        document.cookie = strategy
+      })
+    }
+  }
+  
+  // Update app state
+  logout()
+  
+  console.log('Force session clear completed')
+}
+
 export const authService = {
   checkSession,
   signIn,
   signUp,
   signOut,
   clearLocalData,
+  forceSessionClear,
 }
