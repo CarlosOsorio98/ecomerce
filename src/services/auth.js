@@ -1,7 +1,7 @@
-import { logout, setUser } from '~/lib/state.js'
+import { logout, setUser, isAuthenticated } from '~/lib/state.js'
 import { userApi } from './user.js'
 
-const clearLocalData = async () => {
+const clearLocalData = async (forceReload = false) => {
   // Clear all localStorage items
   localStorage.removeItem('user_session')
   localStorage.removeItem('debug_session')
@@ -65,23 +65,29 @@ const clearLocalData = async () => {
     }
   }
   
-  // Force reload the page as last resort to clear any cached state
-  setTimeout(() => {
-    if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-      console.log('Forcing page reload to clear session state')
-      window.location.reload()
-    }
-  }, 100)
+  // Only force reload if explicitly requested (for invalid sessions)
+  if (forceReload && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+    console.log('Forcing page reload to clear invalid session state')
+    setTimeout(() => window.location.reload(), 100)
+  }
 }
 
 const checkSession = async (retries = 2) => {
-  // First check if we have any session cookie at all
-  const hasSessionCookie = document.cookie.split(';').some(cookie => cookie.trim().startsWith('session='))
+  // First check if we have any session cookie at all with actual value
+  const hasSessionCookie = document.cookie
+    .split(';')
+    .some(cookie => {
+      const trimmed = cookie.trim()
+      return trimmed.startsWith('session=') && trimmed.length > 'session='.length
+    })
   
   if (!hasSessionCookie) {
-    console.log('No session cookie found, user not authenticated')
-    await clearLocalData()
-    logout()
+    console.log('No valid session cookie found, user not authenticated')
+    // Only clear data if we're currently showing as authenticated
+    if (isAuthenticated()) {
+      await clearLocalData(false)
+      logout()
+    }
     return null
   }
 
@@ -99,7 +105,7 @@ const checkSession = async (retries = 2) => {
         if (res.status === 401 || res.status === 403) {
           // Token inválido, expirado o revocado
           console.log('Token de sesión inválido, limpiando datos...')
-          await clearLocalData()
+          await clearLocalData(true) // Force reload for invalid sessions
           logout()
           return null
         }
@@ -107,6 +113,7 @@ const checkSession = async (retries = 2) => {
       }
 
       const user = await res.json()
+      console.log('✅ Session valid, user authenticated:', user.email)
       localStorage.setItem('user_session', JSON.stringify(user))
       localStorage.setItem(
         'debug_session',
@@ -125,7 +132,7 @@ const checkSession = async (retries = 2) => {
       console.error(`Error en intento ${attempt + 1}:`, error)
 
       if (attempt === retries) {
-        await clearLocalData()
+        await clearLocalData(false) // Don't force reload on network errors
         localStorage.setItem(
           'debug_session',
           JSON.stringify({
@@ -193,7 +200,7 @@ const signOut = async () => {
   } catch (error) {
     console.error('Error al cerrar sesión:', error)
   } finally {
-    await clearLocalData()
+    await clearLocalData(false) // Normal logout, don't force reload
     logout()
   }
 }
