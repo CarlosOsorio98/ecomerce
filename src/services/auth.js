@@ -5,6 +5,8 @@ const clearLocalData = () => {
   localStorage.removeItem('user_session')
   localStorage.removeItem('debug_session')
   localStorage.removeItem('debug_login')
+  // Clear the session cookie by setting it to expire
+  document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 }
 
 const checkSession = async (retries = 2) => {
