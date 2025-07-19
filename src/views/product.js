@@ -1,5 +1,6 @@
 import { createElement } from '../lib/spa.js'
 import { cartService } from '../services/cart.js'
+import { showQuantityModal } from '../components/modal.js'
 
 export const ProductView = (router) => {
   return async () => {
@@ -78,29 +79,13 @@ export const ProductView = (router) => {
         'button',
         {
           className: 'add-to-cart-btn',
-          onclick: async (e) => {
-            e.preventDefault()
-            try {
-              await cartService.addToCart(product.id, 1)
-              // Show success message
-              const successMsg = createElement(
-                'div',
-                { className: 'success-message' },
-                'Product added to cart!'
-              )
-              infoContainer.appendChild(successMsg)
-              setTimeout(() => {
-                if (successMsg.parentNode) {
-                  successMsg.parentNode.removeChild(successMsg)
-                }
-              }, 3000)
-            } catch (error) {
-              console.error('Error adding to cart:', error)
-            }
+          onclick: (e) => {
+            e.preventDefault();
+            showQuantityModal(product);
           },
         },
         'Add to Cart'
-      )
+      );
 
       // Back button
       const backButton = createElement(

@@ -1,3 +1,4 @@
+import { showQuantityModal } from '../components/modal.js'
 import { userService } from '../services/user.js'
 import { createElement } from '../lib/spa.js'
 import { createHeartButton } from '../components/heartButton.js'
@@ -247,7 +248,7 @@ function createFavoritesSection(favorites, router) {
         'div',
         { className: 'favorite-header' },
         createElement('h4', {}, favorite.name),
-        createHeartButton(favorite.asset_id, { size: '18', className: 'profile-heart' })
+        createHeartButton(favorite.product_id, { size: '18', className: 'profile-heart' })
       )
       
       const favoriteCard = createElement(
@@ -273,14 +274,17 @@ function createFavoritesSection(favorites, router) {
           'button',
           {
             className: 'add-to-cart-from-favorites',
-            onclick: async (e) => {
+            onclick: (e) => {
               e.stopPropagation(); // Prevent navigation
-              try {
-                await addToCart(favorite.asset_id, 1)
-                alert('Producto agregado al carrito')
-              } catch (error) {
-                alert('Error al agregar al carrito')
-              }
+              // The favorite object has a similar structure to the product object,
+              // but the ID is `product_id`. We create a new object to match
+              // the structure expected by `showQuantityModal`.
+              const productForModal = {
+                id: favorite.product_id,
+                name: favorite.name,
+                price: favorite.price
+              };
+              showQuantityModal(productForModal);
             }
           },
           'Agregar al carrito'
