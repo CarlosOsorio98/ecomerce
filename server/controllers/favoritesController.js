@@ -1,6 +1,6 @@
-import { getCORSHeaders } from '@/middleware/cors.js'
-import { requireAuth } from '@/middleware/auth.js'
-import { getUserFavorites, toggleFavorite, checkIsFavorite } from '@/services/favoritesService.js'
+import { getCORSHeaders } from '../middleware/cors.js'
+import { requireAuth } from '../middleware/auth.js'
+import { getUserFavorites, toggleFavorite, checkIsFavorite } from '../services/favoritesService.js'
 
 export const getFavorites = async (req) => {
   const user = await requireAuth(req)

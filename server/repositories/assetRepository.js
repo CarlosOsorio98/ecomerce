@@ -1,51 +1,54 @@
-import { db } from '@/data/schema.js'
 import { randomUUID } from 'crypto'
+import { eq } from 'drizzle-orm'
+import { db, assets } from '../data/schema.drizzle.js'
 
 export const getAllAssets = async () => {
-  const result = await db.execute('SELECT * FROM assets')
-  return result.rows
+  const result = await db.select().from(assets)
+  return result
 }
 
 export const getAssetById = async (id) => {
-  const result = await db.execute({
-    sql: 'SELECT * FROM assets WHERE id = ?',
-    args: [id]
-  })
-  return result.rows[0]
+  const result = await db
+    .select()
+    .from(assets)
+    .where(eq(assets.id, id))
+    .limit(1)
+  
+  return result[0] || null
 }
 
-export const createAsset = async (name, price, imageUrl) => {
+export const getAssetsByProductId = async (productId) => {
+  const result = await db
+    .select()
+    .from(assets)
+    .where(eq(assets.productId, productId))
+  
+  return result
+}
+
+export const createAsset = async (productId, url, urlLocal) => {
   const id = randomUUID()
-  await db.execute({
-    sql: 'INSERT INTO assets (id, name, price, url) VALUES (?, ?, ?, ?)',
-    args: [id, name, price, imageUrl]
+  
+  await db.insert(assets).values({
+    id,
+    url,
+    urlLocal,
+    productId
   })
-  return { id, name, price, url: imageUrl }
+  
+  return { id, url, url_local: urlLocal, product_id: productId }
 }
 
-export const updateAsset = async (id, name, price, imageUrl) => {
-  const updateFields = []
-  const args = []
+export const updateAsset = async (id, url, urlLocal) => {
+  const updateData = {}
   
-  if (name !== undefined) {
-    updateFields.push('name = ?')
-    args.push(name)
-  }
-  if (price !== undefined) {
-    updateFields.push('price = ?')
-    args.push(price)
-  }
-  if (imageUrl !== undefined) {
-    updateFields.push('url = ?')
-    args.push(imageUrl)
-  }
+  if (url !== undefined) updateData.url = url
+  if (urlLocal !== undefined) updateData.urlLocal = urlLocal
   
-  args.push(id)
-  
-  await db.execute({
-    sql: `UPDATE assets SET ${updateFields.join(', ')} WHERE id = ?`,
-    args
-  })
+  await db
+    .update(assets)
+    .set(updateData)
+    .where(eq(assets.id, id))
   
   return getAssetById(id)
 }
@@ -54,10 +57,9 @@ export const deleteAsset = async (id) => {
   const asset = await getAssetById(id)
   if (!asset) return null
   
-  await db.execute({
-    sql: 'DELETE FROM assets WHERE id = ?',
-    args: [id]
-  })
+  await db
+    .delete(assets)
+    .where(eq(assets.id, id))
   
   return asset
 }

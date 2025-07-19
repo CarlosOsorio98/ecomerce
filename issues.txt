@@ -8,3 +8,35 @@ una de ofertas y descuentos
 carrito desplegable que este en la barra de navegacion ---------
 Agregar un administrador de contenido con permisos de agregar nuevos items
 seccion de productos favoritos 
+
+
+--tech
+
+Implement Connection Pooling: Add connection pooling to manage database connections efficiently.
+Add Indexes: Ensure proper indexing on frequently queried columns (e.g., email in users table, asset_id in cart table).
+
+. Caching Layer
+Implement Redis: Add Redis for:
+Session storage
+Product catalog caching
+Shopping cart data
+Rate limiting
+
+. Microservices Architecture
+Decompose Monolith:
+User Service (authentication, profiles)
+Product Service (catalog, inventory)
+Order Service (checkout, order processing)
+Payment Service (payment processing)
+Recommendation Service (product recommendations)
+
+API Gateway
+Implement API Gateway:
+Request routing
+Rate limiting
+Authentication/Authorization
+Request/Response transformation
+
+Add Timestamps: Add created_at and updated_at to all tables
+Soft Deletes: Implement soft deletes instead of hard deletes
+Normalization: Review and normalize the database schema

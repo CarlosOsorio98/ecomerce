@@ -3,14 +3,14 @@ import {
   register, 
   logout,
   getSession
-} from '@/controllers/authController.js'
-import { authMiddleware } from '@/middleware/auth.js'
-import { asyncHandler } from '@/middleware/errorHandler.js'
+} from '../controllers/authController.js'
+import { authMiddleware } from '../middleware/auth.js'
+import { asyncHandler } from '../middleware/errorHandler.js'
 import {
   createRoute,
   enhanceRequest,
   findMatchingRoute,
-} from '@/services/routerService.js'
+} from '../services/routerService.js'
 
 const withAuth = (handler) => async (req) => {
   await authMiddleware(req)
@@ -22,7 +22,7 @@ const createAuthRouter = () => {
     createRoute('POST', '/api/auth/login', login, { requiresAuth: false }),
     createRoute('POST', '/api/auth/register', register, { requiresAuth: false }),
     createRoute('POST', '/api/auth/logout', logout, { requiresAuth: true }),
-    createRoute('GET', '/api/auth/session', getSession, { requiresAuth: true }),
+    createRoute('GET', '/api/auth/session', getSession, { requiresAuth: false }),
   ]
 
   return {

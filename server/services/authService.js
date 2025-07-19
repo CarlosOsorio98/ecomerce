@@ -1,11 +1,11 @@
-import { config } from '@/config.js'
-import { createAuthError, createConflictError } from '@/errors.js'
-import { revokeJWTToken, saveJWTToken } from '@/repositories/jwtRepository.js'
+import { config } from '../config.js'
+import { createAuthError, createConflictError } from '../errors.js'
+import { removeJWTToken, saveJWTToken } from '../repositories/jwtRepository.js'
 import {
   createUser,
   getUserByEmail,
   validateUserCredentials,
-} from '@/repositories/userRepository.js'
+} from '../repositories/userRepository.js'
 import jwt from 'jsonwebtoken'
 
 export const signJWT = (payload) =>
@@ -35,13 +35,17 @@ export const loginUser = async (email, password) => {
   }
 
   const token = signJWT({ id: user.id, email: user.email })
-  await saveJWTToken(user.id, token)
+  
+  // Calculate expiration time (7 days from now)
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+  await saveJWTToken(user.id, token, expiresAt)
 
   return { user, token }
 }
 
 export const logoutUser = async (token) => {
   if (token) {
-    await revokeJWTToken(token)
+    await removeJWTToken(token)
   }
 }
+

@@ -1,7 +1,7 @@
-import { createElement } from '~/lib/spa.js'
-import { toggleFavorite, isFavorite, isAuthenticated } from '~/lib/state.js'
+import { createElement } from '../lib/spa.js'
+import { toggleFavorite, isFavorite, isAuthenticated } from '../lib/state.js'
 
-export function createHeartButton(assetId, options = {}) {
+export function createHeartButton(productId, options = {}) {
   const { size = '24', className = '' } = options
   
   const createHeartSVG = (isFav) => {
@@ -55,9 +55,9 @@ export function createHeartButton(assetId, options = {}) {
 
       try {
         heartButton.disabled = true
-        await toggleFavorite(assetId)
+        await toggleFavorite(productId)
         // State is updated optimistically, just update UI
-        const newIsFavorite = isFavorite(assetId)
+        const newIsFavorite = isFavorite(productId)
         updateHeartButton(heartButton, newIsFavorite)
       } catch (error) {
         console.error('Error toggling favorite:', error)
@@ -69,7 +69,7 @@ export function createHeartButton(assetId, options = {}) {
   })
 
   // Initial state
-  const initialIsFavorite = isFavorite(assetId)
+  const initialIsFavorite = isFavorite(productId)
   const svg = createHeartSVG(initialIsFavorite)
   heartButton.appendChild(svg)
   heartButton.setAttribute('aria-label', initialIsFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos')

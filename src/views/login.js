@@ -1,5 +1,5 @@
-import { authService } from '~/services/auth.js'
-import { createElement } from '~/lib/spa.js'
+import { authService } from '../services/auth.js'
+import { createElement } from '../lib/spa.js'
 
 export function LoginView(router) {
   return function () {
@@ -19,12 +19,19 @@ export function LoginView(router) {
               await authService.signIn(email, password)
               router.navigateTo('/')
             } catch (error) {
-              let msg = error
-              if (msg && typeof msg === 'object') {
-                if (msg.error) msg = msg.error
-                else if (msg.message) msg = msg.message
-                else msg = JSON.stringify(msg)
+              console.error('Login error:', error)
+              let msg = 'Error al iniciar sesión'
+              
+              if (error instanceof Error) {
+                msg = error.message
+              } else if (error && typeof error === 'object') {
+                if (error.error) msg = error.error
+                else if (error.message) msg = error.message
+                else msg = 'Error desconocido al iniciar sesión'
+              } else if (typeof error === 'string') {
+                msg = error
               }
+              
               alert(msg)
             }
           },
@@ -42,7 +49,18 @@ export function LoginView(router) {
           placeholder: 'Contraseña',
           required: true,
         }),
-        createElement('button', { type: 'submit' }, 'Ingresar')
+        createElement('button', { type: 'submit' }, 'Ingresar'),
+        createElement('div', { className: 'auth-footer' },
+          createElement('p', {}, '¿No tienes cuenta? '),
+          createElement('a', {
+            href: '/register',
+            'data-link': true,
+            onclick: (e) => {
+              e.preventDefault()
+              router.navigateTo('/register')
+            }
+          }, 'Regístrate')
+        )
       )
     )
   }

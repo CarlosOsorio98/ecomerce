@@ -1,0 +1,7 @@
+{
+  "local": {
+    "enable": true,
+    "path": "./assets/cdn/",
+    "log_path": "./assets/logs/"
+  }
+}

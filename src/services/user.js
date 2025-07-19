@@ -1,4 +1,4 @@
-import { setUser } from '~/lib/state.js'
+import { setUser } from '../lib/state.js'
 
 const USERS_KEY = 'users'
 

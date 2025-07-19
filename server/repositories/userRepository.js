@@ -1,4 +1,5 @@
-import { db } from '@/data/schema.js'
+import { eq } from 'drizzle-orm'
+import { db, users } from '../data/schema.drizzle.js'
 import { createHash } from 'crypto'
 
 export const hashPassword = (password) =>
@@ -7,34 +8,43 @@ export const hashPassword = (password) =>
 export const createUser = async ({ name, email, password }) => {
   const hashedPassword = hashPassword(password)
 
-  const result = await db.execute({
-    sql: 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-    args: [name, email, hashedPassword]
+  const result = await db.insert(users).values({
+    name,
+    email,
+    password: hashedPassword
+  }).returning({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    created_at: users.createdAt
   })
 
-  // Get the created user
-  const newUser = await db.execute({
-    sql: 'SELECT id, name, email, created_at FROM users WHERE id = ?',
-    args: [result.lastInsertRowid]
-  })
-
-  return newUser.rows[0]
+  return result[0]
 }
 
 export const getUserByEmail = async (email) => {
-  const result = await db.execute({
-    sql: 'SELECT * FROM users WHERE email = ?',
-    args: [email]
-  })
-  return result.rows[0]
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1)
+  
+  return result[0] || null
 }
 
 export const getUserById = async (id) => {
-  const result = await db.execute({
-    sql: 'SELECT id, name, email, created_at FROM users WHERE id = ?',
-    args: [id]
-  })
-  return result.rows[0]
+  const result = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      created_at: users.createdAt
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1)
+  
+  return result[0] || null
 }
 
 export const validateUserCredentials = async (email, password) => {

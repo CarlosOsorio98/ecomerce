@@ -3,14 +3,18 @@ import {
   getAssets,
   removeAsset,
   updateAsset,
-} from '@/controllers/adminController.js'
-import { adminMiddleware } from '@/middleware/auth.js'
-import { asyncHandler } from '@/middleware/errorHandler.js'
+  addProduct,
+  getProducts,
+  removeProduct,
+  updateProduct,
+} from '../controllers/adminController.js'
+import { adminMiddleware } from '../middleware/auth.js'
+import { asyncHandler } from '../middleware/errorHandler.js'
 import {
   createRoute,
   enhanceRequest,
   findMatchingRoute,
-} from '@/services/routerService.js'
+} from '../services/routerService.js'
 
 const withAuth = (handler) => async (req) => {
   adminMiddleware(req)
@@ -25,6 +29,14 @@ const createAdminRouter = () => {
       requiresAuth: true,
     }),
     createRoute('DELETE', '/api/admin/assets/:id', removeAsset, {
+      requiresAuth: true,
+    }),
+    createRoute('GET', '/api/admin/products', getProducts, { requiresAuth: true }),
+    createRoute('POST', '/api/admin/products', addProduct, { requiresAuth: true }),
+    createRoute('PUT', '/api/admin/products/:id', updateProduct, {
+      requiresAuth: true,
+    }),
+    createRoute('DELETE', '/api/admin/products/:id', removeProduct, {
       requiresAuth: true,
     }),
   ]

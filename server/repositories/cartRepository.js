@@ -1,41 +1,64 @@
-import { db } from '@/data/schema.js'
+import { eq, and } from 'drizzle-orm'
+import { db, cart, products, assets } from '../data/schema.drizzle.js'
 
-export const getCart = async () => {
-  const result = await db.execute(`
-    SELECT cart.id, cart.asset_id, cart.quantity, assets.name, assets.price, assets.url
-    FROM cart JOIN assets ON cart.asset_id = assets.id
-  `)
-  return result.rows
+export const getCart = async (userId) => {
+  const result = await db
+    .select({
+      id: cart.id,
+      product_id: cart.productId,
+      quantity: cart.quantity,
+      name: products.name,
+      price: products.price,
+      description: products.description,
+      url: assets.url
+    })
+    .from(cart)
+    .innerJoin(products, eq(cart.productId, products.id))
+    .leftJoin(assets, eq(products.id, assets.productId))
+    .where(eq(cart.userId, userId))
+  
+  return result
 }
 
-export const getCartItemByAssetId = async (assetId) => {
-  const result = await db.execute({
-    sql: 'SELECT * FROM cart WHERE asset_id = ?',
-    args: [assetId]
-  })
-  return result.rows[0]
+export const getCartItemByProductId = async (productId, userId) => {
+  const result = await db
+    .select()
+    .from(cart)
+    .where(and(eq(cart.productId, productId), eq(cart.userId, userId)))
+    .limit(1)
+  
+  return result[0] || null
 }
 
-export const addToCart = async (assetId, quantity) =>
-  await db.execute({
-    sql: 'INSERT INTO cart (asset_id, quantity) VALUES (?, ?)',
-    args: [assetId, quantity]
+export const addToCart = async (productId, userId, quantity) => {
+  await db.insert(cart).values({
+    productId,
+    userId,
+    quantity
   })
+}
 
-export const updateCartQuantity = async (assetId, quantity) =>
-  await db.execute({
-    sql: 'UPDATE cart SET quantity = ? WHERE asset_id = ?',
-    args: [quantity, assetId]
-  })
+export const updateCartQuantity = async (productId, userId, quantity) => {
+  await db
+    .update(cart)
+    .set({ quantity })
+    .where(and(eq(cart.productId, productId), eq(cart.userId, userId)))
+}
 
-export const removeFromCart = async (assetId) =>
-  await db.execute({
-    sql: 'DELETE FROM cart WHERE asset_id = ?',
-    args: [assetId]
-  })
+export const removeFromCart = async (productId, userId) => {
+  await db
+    .delete(cart)
+    .where(and(eq(cart.productId, productId), eq(cart.userId, userId)))
+}
 
-export const removeCartItem = async (id) =>
-  await db.execute({
-    sql: 'DELETE FROM cart WHERE id = ?',
-    args: [id]
-  })
+export const removeCartItem = async (id) => {
+  await db
+    .delete(cart)
+    .where(eq(cart.id, id))
+}
+
+export const clearCart = async (userId) => {
+  await db
+    .delete(cart)
+    .where(eq(cart.userId, userId))
+}

@@ -1,4 +1,4 @@
-import { config } from '@/config.js'
+import { config } from '../config.js'
 import { z } from 'zod'
 
 export const adminPasswordSchema = z.object({

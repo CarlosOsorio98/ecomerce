@@ -4,6 +4,7 @@
 @import url('./views/profile.css');
 @import url('./views/home.css');
 @import url('./views/auth.css');
+@import url('./views/product.css');
 
 * {
   margin: 0;
@@ -178,5 +179,32 @@ footer {
   .footer-content {
     grid-template-columns: 1fr;
     text-align: center;
+  }
+}
+
+/* Simple and smooth page transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: fade-in;
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
   }
 }

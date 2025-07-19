@@ -24,14 +24,14 @@ export default [
       },
     },
     rules: {
-      'no-relative-import-paths/no-relative-import-paths': [
-        'error',
-        {
-          allowSameFolder: false,
-          rootDir: 'server',
-          prefix: '@',
-        },
-      ],
+      // 'no-relative-import-paths/no-relative-import-paths': [
+      //   'error',
+      //   {
+      //     allowSameFolder: false,
+      //     rootDir: 'server',
+      //     prefix: '@',
+      //   },
+      // ],
       'import/no-unresolved': 'error',
     },
     files: ['server/**/*'],
@@ -54,14 +54,14 @@ export default [
     },
     files: ['src/**/*'],
     rules: {
-      'no-relative-import-paths/no-relative-import-paths': [
-        'error',
-        {
-          allowSameFolder: false,
-          rootDir: 'src',
-          prefix: '~',
-        },
-      ],
+      // 'no-relative-import-paths/no-relative-import-paths': [
+      //   'error',
+      //   {
+      //     allowSameFolder: false,
+      //     rootDir: 'src',
+      //     prefix: '~',
+      //   },
+      // ],
       'import/no-unresolved': 'error',
     },
   },

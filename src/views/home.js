@@ -1,7 +1,7 @@
-import { showQuantityModal } from '~/components/modal.js'
-import { createElement } from '~/lib/spa.js'
-import { createHeartButton } from '~/components/heartButton.js'
-import { syncFavorites, isAuthenticated } from '~/lib/state.js'
+import { showQuantityModal } from '../components/modal.js'
+import { createElement } from '../lib/spa.js'
+import { createHeartButton } from '../components/heartButton.js'
+import { syncFavorites, isAuthenticated } from '../lib/state.js'
 
 export function HomeView() {
   return async function () {
@@ -13,7 +13,7 @@ export function HomeView() {
     }
 
     try {
-      const response = await fetch('/api/assets')
+      const response = await fetch('/api/products')
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -26,18 +26,42 @@ export function HomeView() {
       }
 
       products.forEach((product) => {
-        const imgSrc =
-          product.url.startsWith('/') || product.url.startsWith('http')
-            ? product.url
-            : '/src/' + product.url
+        // Get the first asset's image or placeholder
+        let imgSrc = product.assets && product.assets.length > 0 
+          ? (product.assets[0].url || product.assets[0].url_local || '/placeholder.jpg')
+          : '/placeholder.jpg'
+        
+        // Ensure URL starts with / for absolute path
+        if (imgSrc && !imgSrc.startsWith('/') && !imgSrc.startsWith('http')) {
+          imgSrc = '/' + imgSrc
+        }
+
+        const navigateToProduct = () => {
+          // The key is to give the image and title a unique transition name
+          // based on the product ID. This allows the browser to connect this
+          // element with the corresponding one on the next page.
+          const img = card.querySelector('img');
+          const title = card.querySelector('h3');
+          if (img) img.style.viewTransitionName = `product-image-${product.id}`;
+          if (title) title.style.viewTransitionName = `product-title-${product.id}`;
+
+          // Use the router to navigate. The spa.js router already handles
+          // wrapping this in a document.startViewTransition.
+          window.history.pushState(null, null, `/product/${product.id}`);
+          window.dispatchEvent(new Event('popstate'));
+        };
         
         const card = createElement(
           'div',
-          { className: 'product-card' },
+          { 
+            className: 'product-card',
+            style: `cursor: pointer;`,
+            onclick: navigateToProduct
+          },
           createElement('div', { className: 'card-header' },
             createElement('img', {
               src: imgSrc,
-              alt: product.name,
+              alt: product.name
             }),
             createHeartButton(product.id)
           ),
@@ -48,7 +72,10 @@ export function HomeView() {
               'button',
               {
                 className: 'add-to-cart',
-                onclick: () => showQuantityModal(product),
+                onclick: (e) => {
+                  e.stopPropagation()
+                  showQuantityModal(product)
+                },
               },
               'Agregar al carrito'
             )

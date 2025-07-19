@@ -1,12 +1,20 @@
 // Esquemas de validación para la aplicación
 import { z } from 'zod'
 
+// Esquema de validación para un producto
+export const productSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  price: z.number(),
+})
+
 // Esquema de validación para un asset
 export const assetSchema = z.object({
   id: z.string(),
-  name: z.string(),
-  url: z.string(),
-  price: z.number(),
+  url: z.string().optional(),
+  url_local: z.string().optional(),
+  product_id: z.string(),
 })
 
 // Esquema de validación para registro de usuario

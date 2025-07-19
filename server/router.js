@@ -1,12 +1,13 @@
-import { authMiddleware } from '@/middleware/auth.js'
-import { corsMiddleware } from '@/middleware/cors.js'
-import { errorHandler } from '@/middleware/errorHandler.js'
-import { staticMiddleware } from '@/middleware/static.js'
-import { handleAdminRoutes } from '@/routes/admin.js'
-import { handleAssetRoutes } from '@/routes/assets.js'
-import { handleAuthRoutes } from '@/routes/auth.js'
-import { handleCartRoutes } from '@/routes/cart.js'
-import { handleFavoritesRoutes } from '@/routes/favorites.js'
+import { authMiddleware } from './middleware/auth.js'
+import { corsMiddleware } from './middleware/cors.js'
+import { errorHandler } from './middleware/errorHandler.js'
+import { staticMiddleware } from './middleware/static.js'
+import { handleAdminRoutes } from './routes/admin.js'
+import { handleAssetRoutes } from './routes/assets.js'
+import { handleAuthRoutes } from './routes/auth.js'
+import { handleCartRoutes } from './routes/cart.js'
+import { handleFavoritesRoutes } from './routes/favorites.js'
+import { handleProductRoutes } from './routes/products.js'
 
 // Factory function to create API route handler
 const createAPIRouteHandler = () => {
@@ -16,10 +17,10 @@ const createAPIRouteHandler = () => {
       const corsResult = await corsMiddleware(req)
       if (corsResult) return corsResult
 
-      // Auth (except for /api/auth, /api/admin, and /api/assets)
+      // Auth (except for /api/auth, /api/admin, /api/assets, and /api/products)
       const url = new URL(req.url)
       const pathname = url.pathname
-      if (!pathname.startsWith('/api/auth') && !pathname.startsWith('/api/admin') && !pathname.startsWith('/api/assets')) {
+      if (!pathname.startsWith('/api/auth') && !pathname.startsWith('/api/admin') && !pathname.startsWith('/api/assets') && !pathname.startsWith('/api/products')) {
         const authResult = await authMiddleware(req)
         if (authResult) return authResult
       }
@@ -31,6 +32,8 @@ const createAPIRouteHandler = () => {
         response = await handleAdminRoutes(req)
       } else if (pathname.startsWith('/api/assets')) {
         response = await handleAssetRoutes(req)
+      } else if (pathname.startsWith('/api/products')) {
+        response = await handleProductRoutes(req)
       } else if (pathname.startsWith('/api/cart')) {
         response = await handleCartRoutes(req)
       } else if (pathname.startsWith('/api/favorites')) {
@@ -38,7 +41,7 @@ const createAPIRouteHandler = () => {
       }
 
       // Always add CORS headers to API responses
-      const { getCORSHeaders } = await import('@/middleware/cors.js')
+      const { getCORSHeaders } = await import('./middleware/cors.js')
       const corsHeaders = getCORSHeaders()
 
       if (!response) {
@@ -105,6 +108,7 @@ const createRouter = (adminHTML, indexHTML) => {
       '/api/*': createAPIRouteHandler(),
       // Static files
       '/src/*': createStaticFileHandler(),
+      '/assets/*': createStaticFileHandler(),
       // SPA fallback - serve main app for all other routes
       '/*': indexHTML,
     },

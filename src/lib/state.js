@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { createStore } from './reactivity.js'
-import { cartService } from '~/services/cart.js'
-import { favoritesService } from '~/services/favorites.js'
+import { cartService } from '../services/cart.js'
+import { favoritesService } from '../services/favorites.js'
 
 const initialState = {
   user: null,
@@ -83,25 +83,25 @@ export const syncFavorites = async () => {
   }
 }
 
-export const toggleFavorite = async (assetId) => {
+export const toggleFavorite = async (productId) => {
   if (!isAuthenticated()) {
     throw new Error('Debes iniciar sesión para usar favoritos')
   }
 
   // Optimistic update
   const currentFavorites = store.getState().favorites
-  const isCurrentlyFavorite = currentFavorites.some(fav => fav.asset_id === assetId)
+  const isCurrentlyFavorite = currentFavorites.some(fav => fav.product_id === productId)
   
   if (isCurrentlyFavorite) {
     // Remove from favorites optimistically
-    const newFavorites = currentFavorites.filter(fav => fav.asset_id !== assetId)
+    const newFavorites = currentFavorites.filter(fav => fav.product_id !== productId)
     store.setState({ favorites: newFavorites })
   } else {
     // We don't have full asset data for optimistic add, so we'll just sync after API call
   }
 
   try {
-    const result = await favoritesService.toggleFavorite(assetId)
+    const result = await favoritesService.toggleFavorite(productId)
     // Always sync after API call to ensure consistency
     await syncFavorites()
     return result
@@ -112,9 +112,9 @@ export const toggleFavorite = async (assetId) => {
   }
 }
 
-export const isFavorite = (assetId) => {
+export const isFavorite = (productId) => {
   const favorites = store.getState().favorites
-  return favorites.some(fav => fav.asset_id === assetId)
+  return favorites.some(fav => fav.product_id === productId)
 }
 
 export const logout = () => {

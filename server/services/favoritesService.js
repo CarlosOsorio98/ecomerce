@@ -3,7 +3,7 @@ import {
   addToFavorites as addToFavoritesDB,
   removeFromFavorites as removeFromFavoritesDB,
   isFavorite as isFavoriteDB
-} from '@/repositories/favoritesRepository.js'
+} from '../repositories/favoritesRepository.js'
 
 export const getUserFavorites = async (userId) => {
   return await getUserFavoritesDB(userId)

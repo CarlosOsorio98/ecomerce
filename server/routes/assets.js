@@ -1,14 +1,15 @@
-import { getAssetsList } from '@/controllers/assetController.js'
-import { asyncHandler } from '@/middleware/errorHandler.js'
+import { getProductsList, uploadProductWithImage } from '../controllers/assetController.js'
+import { asyncHandler } from '../middleware/errorHandler.js'
 import {
   createRoute,
   enhanceRequest,
   findMatchingRoute,
-} from '@/services/routerService.js'
+} from '../services/routerService.js'
 
 const createAssetRouter = () => {
   const routes = [
-    createRoute('GET', '/api/assets', getAssetsList, { requiresAuth: false }),
+    createRoute('GET', '/api/assets', getProductsList, { requiresAuth: false }),
+    createRoute('POST', '/api/assets/upload', uploadProductWithImage, { requiresAuth: true }),
   ]
 
   return {

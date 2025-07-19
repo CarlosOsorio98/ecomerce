@@ -56,8 +56,17 @@ export function createRouter(routes) {
     try {
       const view = await route.component()
       if (_rootElement) {
+        // Clear previous content
         _rootElement.innerHTML = ''
+
+        // Add new view
         _rootElement.appendChild(view)
+
+        // Add transition attribute for CSS
+        _rootElement.setAttribute('data-transition', 'active')
+        setTimeout(() => {
+          _rootElement.removeAttribute('data-transition')
+        }, 300) // Duration of the transition
       } else {
         console.error('Elemento raíz no encontrado')
       }
@@ -73,9 +82,33 @@ export function createRouter(routes) {
     }
 
     const relativePath = getRelativePath(path)
-    const route =
-      _routes.find((r) => r.path === relativePath) ||
-      _routes.find((r) => r.path === '*')
+    
+    // Check for exact match first
+    let route = _routes.find((r) => r.path === relativePath)
+    
+    // If no exact match, check for dynamic routes
+    if (!route) {
+      route = _routes.find((r) => {
+        if (r.path.includes(':')) {
+          const pathParts = r.path.split('/')
+          const relativeParts = relativePath.split('/')
+          
+          if (pathParts.length !== relativeParts.length) {
+            return false
+          }
+          
+          return pathParts.every((part, index) => {
+            return part.startsWith(':') || part === relativeParts[index]
+          })
+        }
+        return false
+      })
+    }
+    
+    // Fallback to wildcard route
+    if (!route) {
+      route = _routes.find((r) => r.path === '*')
+    }
 
     if (!route) {
       console.error('Ruta no encontrada:', relativePath)

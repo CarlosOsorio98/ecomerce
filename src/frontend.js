@@ -6,6 +6,7 @@ import { HomeView } from './views/home.js'
 import { LoginView } from './views/login.js'
 import { ProfileView } from './views/profile.js'
 import { RegisterView } from './views/register.js'
+import { ProductView } from './views/product.js'
 
 const basePath = (() => {
   const script = document.querySelector('script[src*="frontend.js"]')
@@ -77,6 +78,7 @@ const routeDefinitions = [
   { path: '/login', componentFactory: LoginView },
   { path: '/register', componentFactory: RegisterView },
   { path: '/profile', componentFactory: ProfileView },
+  { path: '/product/:id', componentFactory: ProductView },
   { path: '*', componentFactory: HomeView },
 ]
 

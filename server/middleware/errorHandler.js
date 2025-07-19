@@ -1,5 +1,5 @@
-import { formatErrorResponse, isAppError } from '@/errors.js'
-import { getCORSHeaders } from '@/middleware/cors.js'
+import { formatErrorResponse, isAppError } from '../errors.js'
+import { getCORSHeaders } from './cors.js'
 
 export const errorHandler = (error, req) => {
   console.error('[ERROR]', error)

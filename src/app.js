@@ -1,8 +1,8 @@
-import { config } from '@/config.js'
-import { createRouter } from '@/router.js'
+import { config } from '../server/config.js'
+import { createRouter } from '../server/router.js'
 
-import adminHTML from '~/admin.html'
-import indexHTML from '~/index.html'
+import adminHTML from './admin.html'
+import indexHTML from './index.html'
 
 const server = globalThis.Bun.serve({
   port: config.server.port,

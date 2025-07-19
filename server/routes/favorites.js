@@ -2,7 +2,7 @@ import {
   getFavorites, 
   toggleFavoriteAsset, 
   checkFavoriteStatus
-} from '@/controllers/favoritesController.js'
+} from '../controllers/favoritesController.js'
 
 export const handleFavoritesRoutes = async (req) => {
   const url = new URL(req.url)

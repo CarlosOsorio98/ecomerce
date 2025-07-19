@@ -1,6 +1,6 @@
-import { userService } from '~/services/user.js'
-import { createElement } from '~/lib/spa.js'
-import { createHeartButton } from '~/components/heartButton.js'
+import { userService } from '../services/user.js'
+import { createElement } from '../lib/spa.js'
+import { createHeartButton } from '../components/heartButton.js'
 import {
   addToCart,
   getCart,
@@ -10,19 +10,22 @@ import {
   syncFavorites,
   getFavorites,
   store,
-} from '~/lib/state.js'
+} from '../lib/state.js'
 
 export function ProfileView(router) {
   return async function () {
     const user = getUser()
     await syncCart()
     await syncFavorites()
+    // Force a second sync to ensure UI consistency
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await syncFavorites()
     const cart = getCart()
     const favorites = getFavorites()
 
     const container = createElement('div', { className: 'profile-container' })
     
-    let favoritesSection = createFavoritesSection(favorites)
+    let favoritesSection = createFavoritesSection(favorites, router)
     container.appendChild(favoritesSection)
     
     let cartSection = await createCartSection(cart, user, router)
@@ -40,7 +43,7 @@ export function ProfileView(router) {
     
     // Add reactive updates for favorites changes  
     const unsubscribeFavorites = store.subscribe('favorites', (newFavorites) => {
-      const newFavoritesSection = createFavoritesSection(newFavorites)
+      const newFavoritesSection = createFavoritesSection(newFavorites, router)
       container.replaceChild(newFavoritesSection, favoritesSection)
       favoritesSection = newFavoritesSection
     })
@@ -221,7 +224,7 @@ function createAccountSection(user, router) {
   return accountSection
 }
 
-function createFavoritesSection(favorites) {
+function createFavoritesSection(favorites, router) {
   const favoritesSection = createElement(
     'div',
     { className: 'favorites-section' },
@@ -236,36 +239,45 @@ function createFavoritesSection(favorites) {
     const favoritesList = createElement('div', { className: 'favorites-grid' })
     
     favorites.forEach((favorite) => {
-      const imgSrc =
-        favorite.url.startsWith('/') || favorite.url.startsWith('http')
+      let imgSrc = favorite.url.startsWith('/') || favorite.url.startsWith('http')
           ? favorite.url
-          : '/src/' + favorite.url
+          : '/' + favorite.url
       
       const favoriteHeader = createElement(
         'div',
         { className: 'favorite-header' },
         createElement('h4', {}, favorite.name),
-        createHeartButton(favorite.asset_id, { size: '18' })
+        createHeartButton(favorite.asset_id, { size: '18', className: 'profile-heart' })
       )
       
       const favoriteCard = createElement(
         'div',
-        { className: 'favorite-card' },
+        {
+          className: 'favorite-card',
+          onclick: () => {
+            const img = favoriteCard.querySelector('img');
+            const title = favoriteCard.querySelector('h4');
+            if (img) img.style.viewTransitionName = `product-image-${favorite.product_id}`;
+            if (title) title.style.viewTransitionName = `product-title-${favorite.product_id}`;
+            
+            router.navigateTo(`/product/${favorite.product_id}`);
+          },
+        },
         createElement('img', {
           src: imgSrc,
           alt: favorite.name,
         }),
         favoriteHeader,
-        createElement('p', { className: 'favorite-price' }, `$${favorite.price}`),
+        createElement('p', { className: 'favorite-price' }, `${favorite.price}`),
         createElement(
           'button',
           {
             className: 'add-to-cart-from-favorites',
-            onclick: async () => {
+            onclick: async (e) => {
+              e.stopPropagation(); // Prevent navigation
               try {
                 await addToCart(favorite.asset_id, 1)
                 alert('Producto agregado al carrito')
-                window.location.reload()
               } catch (error) {
                 alert('Error al agregar al carrito')
               }

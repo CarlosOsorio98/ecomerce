@@ -2,14 +2,14 @@ import {
   getCart, 
   addToCart, 
   removeFromCart
-} from '@/controllers/cartController.js'
-import { authMiddleware } from '@/middleware/auth.js'
-import { asyncHandler } from '@/middleware/errorHandler.js'
+} from '../controllers/cartController.js'
+import { authMiddleware } from '../middleware/auth.js'
+import { asyncHandler } from '../middleware/errorHandler.js'
 import {
   createRoute,
   enhanceRequest,
   findMatchingRoute,
-} from '@/services/routerService.js'
+} from '../services/routerService.js'
 
 const withAuth = (handler) => async (req) => {
   await authMiddleware(req)

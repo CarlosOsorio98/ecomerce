@@ -9,8 +9,8 @@ export const favoritesService = {
     return response.json()
   },
 
-  async toggleFavorite(assetId) {
-    const response = await fetch(`/api/favorites/${assetId}`, {
+  async toggleFavorite(productId) {
+    const response = await fetch(`/api/favorites/${productId}`, {
       method: 'POST',
       credentials: 'include'
     })
@@ -20,8 +20,8 @@ export const favoritesService = {
     return response.json()
   },
 
-  async checkIsFavorite(assetId) {
-    const response = await fetch(`/api/favorites/check?assetId=${assetId}`, {
+  async checkIsFavorite(productId) {
+    const response = await fetch(`/api/favorites/check?productId=${productId}`, {
       credentials: 'include'
     })
     if (!response.ok) {

@@ -1,7 +1,6 @@
-import { config } from '@/config.js'
-import { db } from '@/data/schema.js'
-import { validateAdminPassword } from '@/dto/admin.js'
-import { createAuthError, createValidationError } from '@/errors.js'
+import { config } from '../config.js'
+import { getJWTToken } from '../repositories/jwtRepository.js'
+import { createAuthError } from '../errors.js'
 import jwt from 'jsonwebtoken'
 
 export const getCookie = (req, name) => {
@@ -11,7 +10,9 @@ export const getCookie = (req, name) => {
   const cookies = Object.fromEntries(
     cookie.split(';').map((c) => {
       const [k, ...v] = c.trim().split('=')
-      return [k, decodeURIComponent(v.join('='))]
+      // Handle malformed cookies that include "Set-Cookie:" prefix
+      const key = k.replace(/^Set-Cookie:\s*/, '')
+      return [key, decodeURIComponent(v.join('='))]
     })
   )
   return cookies[name] || null
@@ -26,11 +27,13 @@ export const verifyJWT = (token) => {
 }
 
 export const isJWTRevoked = async (token) => {
-  const result = await db.execute({
-    sql: 'SELECT revoked FROM jwt_tokens WHERE token = ?',
-    args: [token],
-  })
-  return result.rows.length > 0 ? !!result.rows[0].revoked : false
+  const tokenData = await getJWTToken(token)
+  if (!tokenData) return false
+  
+  // Check if token is expired
+  const now = new Date()
+  const expiresAt = new Date(tokenData.expiresAt)
+  return now > expiresAt
 }
 
 export const authMiddleware = async (req) => {
@@ -76,17 +79,6 @@ export const adminMiddleware = (req) => {
   }
 
   const token = authHeader.split(' ')[1]
-
-  try {
-    validateAdminPassword(token)
-  } catch (error) {
-    if (error.name === 'ZodError') {
-      throw createValidationError(
-        `Invalid admin password: ${error.errors[0].message}`
-      )
-    }
-    throw createAuthError('Invalid admin token format')
-  }
 
   if (token !== config.admin.key) {
     throw createAuthError('Invalid admin token')

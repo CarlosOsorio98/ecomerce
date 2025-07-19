@@ -1,5 +1,5 @@
-import { authService } from '~/services/auth.js'
-import { createElement } from '~/lib/spa.js'
+import { authService } from '../services/auth.js'
+import { createElement } from '../lib/spa.js'
 
 export function RegisterView(router) {
   return function () {

@@ -1,33 +1,34 @@
-import { createNotFoundError } from '@/errors.js'
-import { getAssetById } from '@/repositories/assetRepository.js'
+import { createNotFoundError } from '../errors.js'
+import { getProductById } from '../repositories/productRepository.js'
 import {
   addToCart,
   getCart,
-  getCartItemByAssetId,
+  getCartItemByProductId,
   removeCartItem,
   removeFromCart,
   updateCartQuantity,
-} from '@/repositories/cartRepository.js'
+  clearCart,
+} from '../repositories/cartRepository.js'
 
-export const getCartItems = async () => await getCart()
+export const getCartItems = async (userId) => await getCart(userId)
 
-export const addItemToCart = async (assetId, quantity) => {
-  const asset = await getAssetById(assetId)
-  if (!asset) {
+export const addItemToCart = async (productId, userId, quantity) => {
+  const product = await getProductById(productId)
+  if (!product) {
     throw createNotFoundError('Product does not exist')
   }
 
-  const existingItem = await getCartItemByAssetId(assetId)
+  const existingItem = await getCartItemByProductId(productId, userId)
 
   if (existingItem) {
     const newQuantity = existingItem.quantity + quantity
     if (newQuantity <= 0) {
-      await removeFromCart(assetId)
+      await removeFromCart(productId, userId)
     } else {
-      await updateCartQuantity(assetId, newQuantity)
+      await updateCartQuantity(productId, userId, newQuantity)
     }
   } else if (quantity > 0) {
-    await addToCart(assetId, quantity)
+    await addToCart(productId, userId, quantity)
   }
 
   return { success: true }
@@ -35,5 +36,10 @@ export const addItemToCart = async (assetId, quantity) => {
 
 export const removeItemFromCart = async (id) => {
   await removeCartItem(id)
+  return { success: true }
+}
+
+export const clearUserCart = async (userId) => {
+  await clearCart(userId)
   return { success: true }
 }

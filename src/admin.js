@@ -9,7 +9,7 @@ async function login() {
   console.log('Intentando login con key:', key)
 
   try {
-    const response = await fetch('/api/admin/assets', {
+    const response = await fetch('/api/admin/products', {
       headers: {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ async function login() {
 
 async function loadProducts() {
   try {
-    const response = await fetch('/api/admin/assets', {
+    const response = await fetch('/api/admin/products', {
       headers: {
         Authorization: `Bearer ${adminToken}`,
       },
@@ -44,15 +44,22 @@ async function loadProducts() {
     const grid = document.getElementById('productGrid')
     grid.innerHTML = products
       .map(
-        (product) => `
+        (product) => {
+          const imageUrl = product.assets && product.assets.length > 0 
+            ? (product.assets[0].url || product.assets[0].url_local || '/placeholder.jpg')
+            : '/placeholder.jpg'
+          
+          return `
               <div class="product-card">
-                  <img src="/src/${product.url}" alt="${product.name}">
+                  <img src="${imageUrl}" alt="${product.name}">
                   <h3>${product.name}</h3>
-                  <p>$${product.price}</p>
-                  <button class="edit-btn" onclick="openEditModal('${product.id}', '${product.name}', '${product.price}', '${product.url}')">Editar</button>
+                  <p class="description">${product.description || 'Sin descripción'}</p>
+                  <p class="price">$${product.price}</p>
+                  <button class="edit-btn" onclick="openEditModal('${product.id}', '${product.name}', '${product.price}', '${product.description || ''}')">Editar</button>
                   <button class="delete-btn" onclick="deleteProduct('${product.id}')">Eliminar</button>
               </div>
           `
+        }
       )
       .join('')
   } catch (error) {
@@ -65,6 +72,7 @@ async function addProduct(event) {
 
   const formData = new FormData()
   formData.append('name', document.getElementById('productName').value)
+  formData.append('description', document.getElementById('productDescription').value)
   formData.append('price', document.getElementById('productPrice').value)
   formData.append(
     'file',
@@ -72,7 +80,7 @@ async function addProduct(event) {
   )
 
   try {
-    const response = await fetch('/api/admin/assets', {
+    const response = await fetch('/api/admin/products', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${adminToken}`,
@@ -97,7 +105,7 @@ async function deleteProduct(id) {
   }
 
   try {
-    const response = await fetch(`/api/admin/assets/${id}`, {
+    const response = await fetch(`/api/admin/products/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${adminToken}`,
@@ -114,9 +122,10 @@ async function deleteProduct(id) {
   }
 }
 
-function openEditModal(id, name, price, url) {
+function openEditModal(id, name, price, description) {
   document.getElementById('editProductId').value = id
   document.getElementById('editProductName').value = name
+  document.getElementById('editProductDescription').value = description
   document.getElementById('editProductPrice').value = price
   document.getElementById('editModal').style.display = 'block'
 }
@@ -131,6 +140,7 @@ async function updateProduct(event) {
 
   const formData = new FormData()
   formData.append('name', document.getElementById('editProductName').value)
+  formData.append('description', document.getElementById('editProductDescription').value)
   formData.append('price', document.getElementById('editProductPrice').value)
   
   const fileInput = document.getElementById('editProductImage')
@@ -141,7 +151,7 @@ async function updateProduct(event) {
   const productId = document.getElementById('editProductId').value
 
   try {
-    const response = await fetch(`/api/admin/assets/${productId}`, {
+    const response = await fetch(`/api/admin/products/${productId}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${adminToken}`,

@@ -1,22 +1,30 @@
-import { db } from '@/data/schema.js'
+import { eq, and, desc } from 'drizzle-orm'
+import { db, favorites, products, assets } from '../data/schema.drizzle.js'
 
 export const getUserFavorites = async (userId) => {
-  const result = await db.execute({
-    sql: `SELECT f.*, a.name, a.price, a.url 
-          FROM favorites f 
-          JOIN assets a ON f.asset_id = a.id 
-          WHERE f.user_id = ? 
-          ORDER BY f.created_at DESC`,
-    args: [userId]
-  })
-  return result.rows
+  const result = await db
+    .select({
+      id: favorites.id,
+      product_id: favorites.productId,
+      created_at: favorites.createdAt,
+      name: products.name,
+      price: products.price,
+      url: assets.url
+    })
+    .from(favorites)
+    .innerJoin(products, eq(favorites.productId, products.id))
+    .leftJoin(assets, eq(products.id, assets.productId))
+    .where(eq(favorites.userId, userId))
+    .orderBy(desc(favorites.createdAt))
+  
+  return result
 }
 
-export const addToFavorites = async (userId, assetId) => {
+export const addToFavorites = async (userId, productId) => {
   try {
-    await db.execute({
-      sql: 'INSERT INTO favorites (user_id, asset_id) VALUES (?, ?)',
-      args: [userId, assetId]
+    await db.insert(favorites).values({
+      userId,
+      productId
     })
     return true
   } catch (error) {
@@ -28,18 +36,20 @@ export const addToFavorites = async (userId, assetId) => {
   }
 }
 
-export const removeFromFavorites = async (userId, assetId) => {
-  const result = await db.execute({
-    sql: 'DELETE FROM favorites WHERE user_id = ? AND asset_id = ?',
-    args: [userId, assetId]
-  })
-  return result.rowsAffected > 0
+export const removeFromFavorites = async (userId, productId) => {
+  const result = await db
+    .delete(favorites)
+    .where(and(eq(favorites.userId, userId), eq(favorites.productId, productId)))
+  
+  return result.changes > 0
 }
 
-export const isFavorite = async (userId, assetId) => {
-  const result = await db.execute({
-    sql: 'SELECT 1 FROM favorites WHERE user_id = ? AND asset_id = ?',
-    args: [userId, assetId]
-  })
-  return result.rows.length > 0
+export const isFavorite = async (userId, productId) => {
+  const result = await db
+    .select({ id: favorites.id })
+    .from(favorites)
+    .where(and(eq(favorites.userId, userId), eq(favorites.productId, productId)))
+    .limit(1)
+  
+  return result.length > 0
 }
