@@ -1,6 +1,7 @@
 import { createElement } from '../lib/spa.js'
 import { cartService } from '../services/cart.js'
 import { showQuantityModal } from '../components/modal.js'
+import { viewTransitions } from '../lib/viewTransitions.js'
 
 export const ProductView = (router) => {
   return async () => {
@@ -39,8 +40,11 @@ export const ProductView = (router) => {
             src: imgSrc,
             alt: product.name,
             className: 'product-image',
-            style: `view-transition-name: product-image-${product.id};`,
           });
+          
+          // Set transition name for smooth navigation from home
+          viewTransitions.setTransitionName(img, `product-image-${product.id}`)
+          
           imageContainer.appendChild(img);
         });
       } else {
@@ -59,10 +63,12 @@ export const ProductView = (router) => {
         'h1',
         {
           className: 'product-title',
-          style: `view-transition-name: product-title-${product.id};`,
         },
         product.name
       );
+      
+      // Set transition name for smooth navigation from home and favorites
+      viewTransitions.setTransitionName(title, `product-title-${product.id}`)
       const price = createElement(
         'p',
         { className: 'product-price' },

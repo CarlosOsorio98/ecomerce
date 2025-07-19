@@ -2,6 +2,7 @@ import { showQuantityModal } from '../components/modal.js'
 import { createElement } from '../lib/spa.js'
 import { createHeartButton } from '../components/heartButton.js'
 import { syncFavorites, isAuthenticated } from '../lib/state.js'
+import { viewTransitions } from '../lib/viewTransitions.js'
 
 export function HomeView() {
   return async function () {
@@ -37,18 +38,14 @@ export function HomeView() {
         }
 
         const navigateToProduct = () => {
-          // The key is to give the image and title a unique transition name
-          // based on the product ID. This allows the browser to connect this
-          // element with the corresponding one on the next page.
-          const img = card.querySelector('img');
-          const title = card.querySelector('h3');
-          if (img) img.style.viewTransitionName = `product-image-${product.id}`;
-          if (title) title.style.viewTransitionName = `product-title-${product.id}`;
-
-          // Use the router to navigate. The spa.js router already handles
-          // wrapping this in a document.startViewTransition.
-          window.history.pushState(null, null, `/product/${product.id}`);
-          window.dispatchEvent(new Event('popstate'));
+          // Set transition names for smooth navigation
+          viewTransitions.setProductTransition(card, product.id)
+          
+          // Navigate to product page with transition
+          viewTransitions.navigateWithTransition(`/product/${product.id}`, () => {
+            window.history.pushState(null, null, `/product/${product.id}`);
+            window.dispatchEvent(new Event('popstate'));
+          })
         };
         
         const card = createElement(

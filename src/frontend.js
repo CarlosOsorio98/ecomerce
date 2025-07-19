@@ -1,4 +1,6 @@
 import { initFloatingCart } from './components/floatingCart.js'
+import { createNavbar } from './components/navbar.js'
+import { createFooter } from './components/footer.js'
 import { authService } from './services/auth.js'
 import { createElement, createRouter } from './lib/spa.js'
 import { store } from './lib/state.js'
@@ -16,62 +18,6 @@ const basePath = (() => {
   return './'
 })()
 
-function renderNavbar() {
-  const navLinks = document.getElementById('main-nav-links')
-  const isAuthenticated = store.getState().isAuthenticated
-  const user = store.getState().user
-
-  navLinks.innerHTML = ''
-
-  const homeLink = createElement(
-    'li',
-    {},
-    createElement('a', { href: '/', 'data-link': true }, 'Inicio')
-  )
-  navLinks.appendChild(homeLink)
-
-  if (isAuthenticated && user) {
-    const profileLink = createElement(
-      'li',
-      {},
-      createElement('a', { href: '/profile', 'data-link': true }, user.name)
-    )
-    const logoutButtonLi = createElement('li', {})
-    const logoutButton = createElement(
-      'button',
-      {
-        className: 'logout-button',
-        onclick: async (e) => {
-          e.preventDefault()
-          await authService.signOut()
-          router.navigateTo('/')
-        },
-      },
-      'Cerrar sesión'
-    )
-
-    logoutButtonLi.appendChild(logoutButton)
-    navLinks.appendChild(profileLink)
-    navLinks.appendChild(logoutButtonLi)
-  } else {
-    const loginLink = createElement(
-      'li',
-      {},
-      createElement(
-        'a',
-        { href: '/login', 'data-link': true },
-        'Iniciar Sesión'
-      )
-    )
-    const registerLink = createElement(
-      'li',
-      {},
-      createElement('a', { href: '/register', 'data-link': true }, 'Registro')
-    )
-    navLinks.appendChild(loginLink)
-    navLinks.appendChild(registerLink)
-  }
-}
 
 const routeDefinitions = [
   { path: '/', componentFactory: HomeView },
@@ -85,11 +31,13 @@ const routeDefinitions = [
 const router = createRouter([])
 
 const routes = routeDefinitions.map((routeDef) => {
-  let component
-  if (routeDef.componentFactory === HomeView) {
-    component = routeDef.componentFactory(basePath)
-  } else {
-    component = routeDef.componentFactory(router)
+  // Don't pre-instantiate components, keep them as factories
+  const component = () => {
+    if (routeDef.componentFactory === HomeView) {
+      return routeDef.componentFactory(basePath)()
+    } else {
+      return routeDef.componentFactory(router)()
+    }
   }
   return { path: routeDef.path, component }
 })
@@ -105,14 +53,23 @@ async function initializeApp() {
       loadingIndicator.style.display = 'flex'
     }
 
+    // Create and insert navbar and footer
+    const navbar = createNavbar(router)
+    const footer = createFooter()
+    
+    // Insert navbar before main
+    const main = document.getElementById('app')
+    document.body.insertBefore(navbar, main)
+    
+    // Insert footer after main
+    document.body.appendChild(footer)
+
     await authService.checkSession()
     router.init()
-    renderNavbar()
     initFloatingCart()
   } catch (error) {
     console.error('Error al inicializar la aplicación:', error)
     router.init()
-    renderNavbar()
   } finally {
     if (loadingIndicator) {
       // Ensure loader is visible for at least 300ms
@@ -127,7 +84,6 @@ async function initializeApp() {
   }
 }
 
-store.subscribe('isAuthenticated', renderNavbar)
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeApp)

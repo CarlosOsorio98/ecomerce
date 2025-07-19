@@ -16,6 +16,7 @@ body {
   font-family: Arial, sans-serif;
   line-height: 1.6;
   background-color: #f4f4f4;
+  overflow-x: hidden;
 }
 
 header {
@@ -182,29 +183,54 @@ footer {
   }
 }
 
-/* Simple and smooth page transitions */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.2s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+/* View Transitions API Configuration */
+::view-transition-group(*) {
+  animation-duration: 3ms;
 }
 
 ::view-transition-old(root) {
-  animation-name: fade-out;
+  animation-name: slide-out-to-left;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
 }
 
 ::view-transition-new(root) {
-  animation-name: fade-in;
+  animation-name: slide-in-from-right;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
 }
 
-@keyframes fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes fade-in {
+@keyframes slide-out-to-left {
   from {
-    opacity: 0;
+    transform: translateX(0);
   }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Configure main container for transitions */
+#app {
+  view-transition-name: root;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Prevent flickering during transitions */
+* {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
 }

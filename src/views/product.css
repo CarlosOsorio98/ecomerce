@@ -1,8 +1,3 @@
-
-@view-transition {
-  navigation: auto;
-}
-
 .product-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -163,56 +158,20 @@
   margin: 40px 0;
 }
 
-/* Only specific morphing transitions for products */
-
-/* Morphing Image and Title Transitions - Real View Transitions Magic */
-::view-transition-old(hero-image),
-::view-transition-new(hero-image) {
-  /* Let the browser handle the morphing automatically */
-  animation-duration: 0.6s;
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
-  /* Maintain image properties during morph */
-  object-fit: cover;
-  border-radius: inherit;
-}
-
-::view-transition-old(hero-title),
-::view-transition-new(hero-title) {
-  /* Let the browser handle text morphing */
-  animation-duration: 0.6s;
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
-  /* Maintain text properties during morph */
-  font-weight: inherit;
-  line-height: inherit;
-  text-align: inherit;
-}
-
-/* Smooth morphing container */
-::view-transition-group(hero-image) {
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
-  animation-duration: 0.6s;
-}
-
-::view-transition-group(hero-title) {
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
-  animation-duration: 0.6s;
-}
-
-/* Responsive design */
 @media (max-width: 768px) {
   .product-card {
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .product-image {
     height: 300px;
   }
-  
+
   .product-title {
     font-size: 1.5rem;
   }
-  
+
   .product-price {
     font-size: 1.3rem;
   }

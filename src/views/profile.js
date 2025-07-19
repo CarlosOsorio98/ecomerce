@@ -1,17 +1,18 @@
-import { showQuantityModal } from '../components/modal.js'
-import { userService } from '../services/user.js'
-import { createElement } from '../lib/spa.js'
 import { createHeartButton } from '../components/heartButton.js'
+import { showQuantityModal } from '../components/modal.js'
+import { createElement } from '../lib/spa.js'
 import {
   addToCart,
   getCart,
+  getFavorites,
   getUser,
   removeFromCart,
+  store,
   syncCart,
   syncFavorites,
-  getFavorites,
-  store,
 } from '../lib/state.js'
+import { viewTransitions } from '../lib/viewTransitions.js'
+import { userService } from '../services/user.js'
 
 export function ProfileView(router) {
   return async function () {
@@ -19,42 +20,45 @@ export function ProfileView(router) {
     await syncCart()
     await syncFavorites()
     // Force a second sync to ensure UI consistency
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
     await syncFavorites()
     const cart = getCart()
     const favorites = getFavorites()
 
     const container = createElement('div', { className: 'profile-container' })
-    
+
     let favoritesSection = createFavoritesSection(favorites, router)
     container.appendChild(favoritesSection)
-    
+
     let cartSection = await createCartSection(cart, user, router)
     container.appendChild(cartSection)
-    
+
     const accountSection = createAccountSection(user, router)
     container.appendChild(accountSection)
-    
+
     // Add reactive updates for cart changes
     const unsubscribeCart = store.subscribe('cart', async (newCart) => {
       const newCartSection = await createCartSection(newCart, user, router)
       container.replaceChild(newCartSection, cartSection)
       cartSection = newCartSection
     })
-    
-    // Add reactive updates for favorites changes  
-    const unsubscribeFavorites = store.subscribe('favorites', (newFavorites) => {
-      const newFavoritesSection = createFavoritesSection(newFavorites, router)
-      container.replaceChild(newFavoritesSection, favoritesSection)
-      favoritesSection = newFavoritesSection
-    })
-    
+
+    // Add reactive updates for favorites changes
+    const unsubscribeFavorites = store.subscribe(
+      'favorites',
+      (newFavorites) => {
+        const newFavoritesSection = createFavoritesSection(newFavorites, router)
+        container.replaceChild(newFavoritesSection, favoritesSection)
+        favoritesSection = newFavoritesSection
+      }
+    )
+
     // Cleanup function (not used in this app but good practice)
     container._cleanup = () => {
       unsubscribeCart()
       unsubscribeFavorites()
     }
-    
+
     return container
   }
 }
@@ -85,7 +89,7 @@ async function createCartSection(cart, user, router) {
               try {
                 await addToCart(item.product_id, -1)
               } catch (error) {
-                console.error('Error updating cart:', error);
+                console.error('Error updating cart:', error)
               }
             },
           },
@@ -99,7 +103,7 @@ async function createCartSection(cart, user, router) {
               try {
                 await addToCart(item.product_id, 1)
               } catch (error) {
-                console.error('Error updating cart:', error);
+                console.error('Error updating cart:', error)
               }
             },
           },
@@ -242,34 +246,49 @@ function createFavoritesSection(favorites, router) {
 
   if (!favorites || favorites.length === 0) {
     favoritesSection.appendChild(
-      createElement('p', { className: 'empty-favorites' }, 'No tienes productos favoritos aún.')
+      createElement(
+        'p',
+        { className: 'empty-favorites' },
+        'No tienes productos favoritos aún.'
+      )
     )
   } else {
     const favoritesList = createElement('div', { className: 'favorites-grid' })
-    
+
     favorites.forEach((favorite) => {
-      let imgSrc = favorite.url.startsWith('/') || favorite.url.startsWith('http')
+      const imgSrc =
+        favorite.url.startsWith('/') || favorite.url.startsWith('http')
           ? favorite.url
           : '/' + favorite.url
-      
+
       const favoriteHeader = createElement(
         'div',
         { className: 'favorite-header' },
         createElement('h4', {}, favorite.name),
-        createHeartButton(favorite.product_id, { size: '18', className: 'profile-heart' })
+        createHeartButton(favorite.product_id, {
+          size: '18',
+          className: 'profile-heart',
+        })
       )
-      
+
       const favoriteCard = createElement(
         'div',
         {
           className: 'favorite-card',
           onclick: () => {
-            const img = favoriteCard.querySelector('img');
-            const title = favoriteCard.querySelector('h4');
-            if (img) img.style.viewTransitionName = `product-image-${favorite.product_id}`;
-            if (title) title.style.viewTransitionName = `product-title-${favorite.product_id}`;
-            
-            router.navigateTo(`/product/${favorite.product_id}`);
+            // Set transition names for smooth navigation to product
+            viewTransitions.setProductTransition(
+              favoriteCard,
+              favorite.product_id
+            )
+
+            // Navigate with transition
+            viewTransitions.navigateWithTransition(
+              `/product/${favorite.product_id}`,
+              () => {
+                router.navigateTo(`/product/${favorite.product_id}`)
+              }
+            )
           },
         },
         createElement('img', {
@@ -277,31 +296,35 @@ function createFavoritesSection(favorites, router) {
           alt: favorite.name,
         }),
         favoriteHeader,
-        createElement('p', { className: 'favorite-price' }, `${favorite.price}`),
+        createElement(
+          'p',
+          { className: 'favorite-price' },
+          `${favorite.price}`
+        ),
         createElement(
           'button',
           {
             className: 'add-to-cart-from-favorites',
             onclick: (e) => {
-              e.stopPropagation(); // Prevent navigation
+              e.stopPropagation() // Prevent navigation
               // The favorite object has a similar structure to the product object,
               // but the ID is `product_id`. We create a new object to match
               // the structure expected by `showQuantityModal`.
               const productForModal = {
                 id: favorite.product_id,
                 name: favorite.name,
-                price: favorite.price
-              };
-              showQuantityModal(productForModal);
-            }
+                price: favorite.price,
+              }
+              showQuantityModal(productForModal)
+            },
           },
           'Agregar al carrito'
         )
       )
-      
+
       favoritesList.appendChild(favoriteCard)
     })
-    
+
     favoritesSection.appendChild(favoritesList)
   }
 
