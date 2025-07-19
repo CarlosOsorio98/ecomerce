@@ -25,55 +25,74 @@ export function createNavbar(router) {
     const isAuthenticated = store.getState().isAuthenticated
     const user = store.getState().user
 
-    navLinks.innerHTML = ''
-
-    const homeLink = createElement(
-      'li',
-      {},
-      createElement('a', { href: '/', 'data-link': true }, 'Inicio')
-    )
-    navLinks.appendChild(homeLink)
-
-    if (isAuthenticated && user) {
-      const profileLink = createElement(
+    // Use smooth transition for navbar updates
+    const updateNavContent = () => {
+      const homeLink = createElement(
         'li',
         {},
-        createElement('a', { href: '/profile', 'data-link': true }, user.name)
+        createElement('a', { href: '/', 'data-link': true }, 'Inicio')
       )
-      const logoutButtonLi = createElement('li', {})
-      const logoutButton = createElement(
-        'button',
-        {
-          className: 'logout-button',
-          onclick: async (e) => {
-            e.preventDefault()
-            await authService.signOut()
-            router.navigateTo('/')
-          },
-        },
-        'Cerrar sesión'
-      )
+      
+      const newElements = [homeLink]
 
-      logoutButtonLi.appendChild(logoutButton)
-      navLinks.appendChild(profileLink)
-      navLinks.appendChild(logoutButtonLi)
-    } else {
-      const loginLink = createElement(
-        'li',
-        {},
-        createElement(
-          'a',
-          { href: '/login', 'data-link': true },
-          'Iniciar Sesión'
+      if (isAuthenticated && user) {
+        const profileLink = createElement(
+          'li',
+          {},
+          createElement('a', { href: '/profile', 'data-link': true }, user.name)
         )
-      )
-      const registerLink = createElement(
-        'li',
-        {},
-        createElement('a', { href: '/register', 'data-link': true }, 'Registro')
-      )
-      navLinks.appendChild(loginLink)
-      navLinks.appendChild(registerLink)
+        const logoutButtonLi = createElement('li', {})
+        const logoutButton = createElement(
+          'button',
+          {
+            className: 'logout-button',
+            onclick: async (e) => {
+              e.preventDefault()
+              await authService.signOut()
+              router.navigateTo('/')
+            },
+          },
+          'Cerrar sesión'
+        )
+
+        logoutButtonLi.appendChild(logoutButton)
+        newElements.push(profileLink, logoutButtonLi)
+      } else {
+        const loginLink = createElement(
+          'li',
+          {},
+          createElement(
+            'a',
+            { href: '/login', 'data-link': true },
+            'Iniciar Sesión'
+          )
+        )
+        const registerLink = createElement(
+          'li',
+          {},
+          createElement('a', { href: '/register', 'data-link': true }, 'Registro')
+        )
+        newElements.push(loginLink, registerLink)
+      }
+
+      return newElements
+    }
+
+    // Smooth update with fade effect
+    if ('startViewTransition' in document) {
+      document.startViewTransition(() => {
+        navLinks.innerHTML = ''
+        updateNavContent().forEach(el => navLinks.appendChild(el))
+      })
+    } else {
+      navLinks.style.opacity = '0'
+      navLinks.style.transition = 'opacity 0.15s ease'
+      
+      setTimeout(() => {
+        navLinks.innerHTML = ''
+        updateNavContent().forEach(el => navLinks.appendChild(el))
+        navLinks.style.opacity = '1'
+      }, 150)
     }
   }
 

@@ -3,10 +3,11 @@ import { createElement } from '../lib/spa.js'
 import { createHeartButton } from '../components/heartButton.js'
 import { syncFavorites, isAuthenticated } from '../lib/state.js'
 import { viewTransitions } from '../lib/viewTransitions.js'
+import { navigateToProduct } from '../lib/navigation.js'
 
-export function HomeView() {
+export function HomeView(router) {
   return async function () {
-    const container = createElement('div', { className: 'products-grid' })
+    const container = createElement('div', { className: 'products-grid page-content' })
 
     // Sync favorites if user is authenticated
     if (isAuthenticated()) {
@@ -37,15 +38,15 @@ export function HomeView() {
           imgSrc = '/' + imgSrc
         }
 
-        const navigateToProduct = () => {
-          // Set transition names for smooth navigation
-          viewTransitions.setProductTransition(card, product.id)
-          
-          // Navigate to product page with transition
-          viewTransitions.navigateWithTransition(`/product/${product.id}`, () => {
-            window.history.pushState(null, null, `/product/${product.id}`);
-            window.dispatchEvent(new Event('popstate'));
-          })
+        const navigateToProductPage = () => {
+          // Navigate with consistent transition
+          if ('startViewTransition' in document) {
+            document.startViewTransition(() => {
+              router.navigateTo(`/product/${product.id}`)
+            })
+          } else {
+            router.navigateTo(`/product/${product.id}`)
+          }
         };
         
         const card = createElement(
@@ -53,18 +54,24 @@ export function HomeView() {
           { 
             className: 'product-card',
             style: `cursor: pointer;`,
-            onclick: navigateToProduct
+            onclick: navigateToProductPage
           },
           createElement('div', { className: 'card-header' },
             createElement('img', {
               src: imgSrc,
-              alt: product.name
+              alt: product.name,
+              style: `view-transition-name: product-image-${product.id};`
             }),
             createHeartButton(product.id)
           ),
           createElement('div', { className: 'card-body' },
-            createElement('h3', {}, product.name),
-            createElement('p', { className: 'price' }, `$${product.price}`),
+            createElement('h3', {
+              style: `view-transition-name: product-title-${product.id};`
+            }, product.name),
+            createElement('p', { 
+              className: 'price',
+              style: `view-transition-name: product-price-${product.id};`
+            }, `$${product.price}`),
             createElement(
               'button',
               {

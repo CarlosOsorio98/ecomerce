@@ -1,7 +1,5 @@
-import { createElement } from '../lib/spa.js'
-import { cartService } from '../services/cart.js'
 import { showQuantityModal } from '../components/modal.js'
-import { viewTransitions } from '../lib/viewTransitions.js'
+import { createElement } from '../lib/spa.js'
 
 export const ProductView = (router) => {
   return async () => {
@@ -20,7 +18,9 @@ export const ProductView = (router) => {
 
       const product = await response.json()
 
-      const container = createElement('div', { className: 'product-container' })
+      const container = createElement('div', {
+        className: 'product-container page-content',
+      })
 
       const productCard = createElement('div', { className: 'product-card' })
 
@@ -40,38 +40,37 @@ export const ProductView = (router) => {
             src: imgSrc,
             alt: product.name,
             className: 'product-image',
-          });
-          
-          // Set transition name for smooth navigation from home
-          viewTransitions.setTransitionName(img, `product-image-${product.id}`)
-          
-          imageContainer.appendChild(img);
-        });
+            style: `view-transition-name: product-image-${product.id};`,
+          })
+
+          imageContainer.appendChild(img)
+        })
       } else {
         const placeholder = createElement(
           'div',
           { className: 'product-placeholder' },
           'No image available'
-        );
-        imageContainer.appendChild(placeholder);
+        )
+        imageContainer.appendChild(placeholder)
       }
 
       // Product info
-      const infoContainer = createElement('div', { className: 'product-info' });
+      const infoContainer = createElement('div', { className: 'product-info' })
 
       const title = createElement(
         'h1',
         {
           className: 'product-title',
+          style: `view-transition-name: product-title-${product.id};`,
         },
         product.name
-      );
-      
-      // Set transition name for smooth navigation from home and favorites
-      viewTransitions.setTransitionName(title, `product-title-${product.id}`)
+      )
       const price = createElement(
         'p',
-        { className: 'product-price' },
+        {
+          className: 'product-price',
+          style: `view-transition-name: product-price-${product.id};`,
+        },
         `$${product.price}`
       )
       const description = createElement(
@@ -86,12 +85,12 @@ export const ProductView = (router) => {
         {
           className: 'add-to-cart-btn',
           onclick: (e) => {
-            e.preventDefault();
-            showQuantityModal(product);
+            e.preventDefault()
+            showQuantityModal(product)
           },
         },
         'Add to Cart'
-      );
+      )
 
       // Back button
       const backButton = createElement(
@@ -100,7 +99,14 @@ export const ProductView = (router) => {
           className: 'back-btn',
           onclick: (e) => {
             e.preventDefault()
-            router.navigateTo('/')
+            // Navigate back with transition
+            if ('startViewTransition' in document) {
+              document.startViewTransition(() => {
+                router.navigateTo('/')
+              })
+            } else {
+              router.navigateTo('/')
+            }
           },
         },
         '← Back to Products'

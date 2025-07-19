@@ -5,7 +5,7 @@ export function RegisterView(router) {
   return function () {
     return createElement(
       'div',
-      { className: 'auth-container' },
+      { className: 'auth-container page-content' },
       createElement(
         'form',
         {

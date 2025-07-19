@@ -272,3 +272,92 @@
   transform: translateY(0);
   box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
 }
+
+/* ✨ VIEW TRANSITION ENHANCEMENTS FOR FAVORITES */
+
+/* Override favorite card for enhanced transitions */
+.favorite-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.favorite-card:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.favorite-card:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
+}
+
+/* Enhanced image transition preparation */
+.favorite-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.favorite-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Title transition preparation */
+.favorite-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  flex-grow: 1;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  transition: all 0.3s ease;
+}
+
+/* Price transition preparation */
+.favorite-price {
+  padding: 0 0.75rem;
+  font-weight: bold;
+  color: #2e5258;
+  margin: 0.5rem 0;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  transition: all 0.3s ease;
+}
+
+/* Stagger animation for favorites grid */
+.favorite-card:nth-child(1) { animation-delay: 0ms; }
+.favorite-card:nth-child(2) { animation-delay: 80ms; }
+.favorite-card:nth-child(3) { animation-delay: 160ms; }
+.favorite-card:nth-child(4) { animation-delay: 240ms; }
+.favorite-card:nth-child(5) { animation-delay: 320ms; }
+.favorite-card:nth-child(6) { animation-delay: 400ms; }
+.favorite-card:nth-child(n+7) { animation-delay: 480ms; }
+
+/* Enhanced favorites grid animation */
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  animation: favoritesGridFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes favoritesGridFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

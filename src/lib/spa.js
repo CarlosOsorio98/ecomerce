@@ -53,16 +53,51 @@ export function createRouter(routes) {
 
     try {
       if (_rootElement) {
-        _rootElement.innerHTML = ''
-
-        const view = await route.component()
-
-        _rootElement.appendChild(view)
+        // Use View Transitions API if available
+        if ('startViewTransition' in document) {
+          const transition = document.startViewTransition(async () => {
+            _rootElement.innerHTML = ''
+            const view = await route.component()
+            _rootElement.appendChild(view)
+          })
+          
+          // Wait for transition to complete
+          await transition.finished.catch(() => {
+            // Transition was skipped or interrupted, that's okay
+          })
+        } else {
+          // Enhanced fallback with elegant animations
+          _rootElement.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+          _rootElement.style.opacity = '0'
+          _rootElement.style.transform = 'translateY(-8px) scale(0.99)'
+          
+          await new Promise(resolve => setTimeout(resolve, 200))
+          
+          _rootElement.innerHTML = ''
+          const view = await route.component()
+          _rootElement.appendChild(view)
+          
+          // Force reflow for smooth transition
+          _rootElement.offsetHeight
+          
+          _rootElement.style.opacity = '1'
+          _rootElement.style.transform = 'translateY(0) scale(1)'
+          
+          // Clean up transition styles after animation
+          setTimeout(() => {
+            _rootElement.style.transition = ''
+            _rootElement.style.transform = ''
+          }, 400)
+        }
       } else {
         console.error('Elemento raíz no encontrado')
       }
     } catch (error) {
       console.error('Error al renderizar la vista:', error)
+      // Ensure we don't leave it in a broken state
+      _rootElement.style.opacity = '1'
+      _rootElement.style.transform = ''
+      _rootElement.style.transition = ''
     }
   }
 

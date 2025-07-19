@@ -13,6 +13,7 @@ import {
 } from '../lib/state.js'
 import { viewTransitions } from '../lib/viewTransitions.js'
 import { userService } from '../services/user.js'
+import { navigateToProduct } from '../lib/navigation.js'
 
 export function ProfileView(router) {
   return async function () {
@@ -25,7 +26,7 @@ export function ProfileView(router) {
     const cart = getCart()
     const favorites = getFavorites()
 
-    const container = createElement('div', { className: 'profile-container' })
+    const container = createElement('div', { className: 'profile-container page-content' })
 
     let favoritesSection = createFavoritesSection(favorites, router)
     container.appendChild(favoritesSection)
@@ -264,7 +265,9 @@ function createFavoritesSection(favorites, router) {
       const favoriteHeader = createElement(
         'div',
         { className: 'favorite-header' },
-        createElement('h4', {}, favorite.name),
+        createElement('h4', {
+          style: `view-transition-name: product-title-${favorite.product_id};`
+        }, favorite.name),
         createHeartButton(favorite.product_id, {
           size: '18',
           className: 'profile-heart',
@@ -276,29 +279,28 @@ function createFavoritesSection(favorites, router) {
         {
           className: 'favorite-card',
           onclick: () => {
-            // Set transition names for smooth navigation to product
-            viewTransitions.setProductTransition(
-              favoriteCard,
-              favorite.product_id
-            )
-
-            // Navigate with transition
-            viewTransitions.navigateWithTransition(
-              `/product/${favorite.product_id}`,
-              () => {
+            // Navigate with consistent transition
+            if ('startViewTransition' in document) {
+              document.startViewTransition(() => {
                 router.navigateTo(`/product/${favorite.product_id}`)
-              }
-            )
+              })
+            } else {
+              router.navigateTo(`/product/${favorite.product_id}`)
+            }
           },
         },
         createElement('img', {
           src: imgSrc,
           alt: favorite.name,
+          style: `view-transition-name: product-image-${favorite.product_id};`
         }),
         favoriteHeader,
         createElement(
           'p',
-          { className: 'favorite-price' },
+          { 
+            className: 'favorite-price',
+            style: `view-transition-name: product-price-${favorite.product_id};`
+          },
           `${favorite.price}`
         ),
         createElement(

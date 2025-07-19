@@ -33,11 +33,7 @@ const router = createRouter([])
 const routes = routeDefinitions.map((routeDef) => {
   // Don't pre-instantiate components, keep them as factories
   const component = () => {
-    if (routeDef.componentFactory === HomeView) {
-      return routeDef.componentFactory(basePath)()
-    } else {
-      return routeDef.componentFactory(router)()
-    }
+    return routeDef.componentFactory(router)()
   }
   return { path: routeDef.path, component }
 })

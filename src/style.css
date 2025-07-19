@@ -183,38 +183,69 @@ footer {
   }
 }
 
-/* View Transitions API Configuration */
+/* Elegant View Transitions API Configuration */
 ::view-transition-group(*) {
-  animation-duration: 3ms;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 ::view-transition-old(root) {
-  animation-name: slide-out-to-left;
-  animation-duration: 0.5s;
+  animation-name: elegant-fade-out;
+  animation-duration: 200ms;
   animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
 }
 
 ::view-transition-new(root) {
-  animation-name: slide-in-from-right;
-  animation-duration: 0.5s;
+  animation-name: elegant-fade-in;
+  animation-duration: 400ms;
   animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-delay: 100ms;
 }
 
-@keyframes slide-out-to-left {
-  from {
-    transform: translateX(0);
+@keyframes elegant-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
-  to {
-    transform: translateX(-100%);
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.99);
   }
 }
 
-@keyframes slide-in-from-right {
-  from {
-    transform: translateX(100%);
+@keyframes elegant-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
   }
-  to {
-    transform: translateX(0);
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Enhanced fallback animations */
+@keyframes smooth-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes smooth-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -223,14 +254,303 @@ footer {
   view-transition-name: root;
   overflow-x: hidden;
   position: relative;
+  min-height: 60vh;
 }
 
-/* Prevent flickering during transitions */
-* {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  -moz-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  -moz-transform: translateZ(0);
+/* Optimize rendering performance */
+#app {
+  will-change: contents;
+}
+
+/* Smooth navbar transitions */
+#main-nav-links {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Page transition loading state */
+.page-transitioning #app {
+  pointer-events: none;
+}
+
+/* Smooth content transitions */
+.page-content {
+  animation: contentFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes contentFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  60% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduce layout shifts and smooth grid entrance */
+.products-grid {
+  min-height: 400px;
+  animation: gridFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gridFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card img {
+  background-color: #f0f0f0;
+}
+
+/* Enhanced link transitions */
+nav a, [data-link] {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Loading overlay for smooth transitions */
+.transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(3px);
+  z-index: 9998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transition-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.transition-spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 🚀 SPECTACULAR VIEW TRANSITIONS - BINDING EFFECT */
+
+/* Root container transitions */
+::view-transition-group(root) {
+  animation-duration: 600ms;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 🎯 SPECTACULAR SHARED ELEMENT TRANSITIONS */
+
+/* Global shared element transitions */
+::view-transition-group(*) {
+  animation-duration: 700ms;
+  animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  isolation: isolate;
+}
+
+/* Enhanced morphing animations for all shared elements */
+::view-transition-old(*) {
+  animation-name: shared-element-out;
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  transform-origin: center;
+}
+
+::view-transition-new(*) {
+  animation-name: shared-element-in;
+  animation-duration: 550ms;
+  animation-delay: 150ms;
+  animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: center;
+}
+
+/* Image morphing keyframes */
+@keyframes image-morph-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px) brightness(1);
+  }
+  50% {
+    transform: scale(0.8) rotate(-2deg);
+    filter: blur(1px) brightness(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-5deg);
+    filter: blur(3px) brightness(1.3);
+  }
+}
+
+@keyframes image-morph-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.4) rotate(5deg);
+    filter: blur(3px) brightness(1.3);
+  }
+  30% {
+    opacity: 0.7;
+    transform: scale(1.1) rotate(2deg);
+    filter: blur(1px) brightness(1.1);
+  }
+  70% {
+    transform: scale(0.98) rotate(-0.5deg);
+    filter: blur(0px) brightness(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px) brightness(1);
+  }
+}
+
+/* 📝 PRODUCT TITLE BINDING ANIMATION - Handled by global rules above */
+
+@keyframes title-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    letter-spacing: 0;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+    letter-spacing: 2px;
+  }
+}
+
+@keyframes title-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(1.1);
+    letter-spacing: 3px;
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-2px) scale(1.02);
+    letter-spacing: 1px;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    letter-spacing: 0;
+  }
+}
+
+/* 💰 PRODUCT PRICE BINDING ANIMATION - Handled by global rules above */
+
+@keyframes price-bounce-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.8);
+  }
+}
+
+@keyframes price-bounce-in {
+  0% {
+    opacity: 0;
+    transform: translateX(40px) scale(1.2);
+  }
+  30% {
+    opacity: 0.7;
+    transform: translateX(5px) scale(1.05);
+  }
+  70% {
+    transform: translateX(-2px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* ✨ ENHANCED BINDING EFFECTS */
+
+/* Smooth container morphing */
+::view-transition-group(*) {
+  mix-blend-mode: normal;
+  isolation: isolate;
+}
+
+/* Prepare elements for smooth transitions */
+[style*="view-transition-name"] {
+  contain: layout style;
+  will-change: transform, opacity;
+}
+
+/* Add subtle glow effect during transition */
+::view-transition-new(*),
+::view-transition-old(*) {
+  box-shadow: 0 0 20px rgba(0, 123, 255, 0.1);
+}
+
+/* Smooth root transitions with depth */
+::view-transition-old(root) {
+  animation-name: root-slide-out;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  animation-name: root-slide-in;
+  animation-duration: 600ms;
+  animation-delay: 200ms;
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  z-index: 2;
+}
+
+@keyframes root-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.95);
+  }
+}
+
+@keyframes root-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }

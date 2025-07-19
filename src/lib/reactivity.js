@@ -26,9 +26,12 @@ export function createObservable(initialValue) {
   }
 
   const _notify = () => {
-    for (const subscriber of _subscribers) {
-      subscriber(_value)
-    }
+    // Use microtask to batch multiple updates
+    Promise.resolve().then(() => {
+      for (const subscriber of _subscribers) {
+        subscriber(_value)
+      }
+    })
   }
 
   const subscribe = (subscriber) => {

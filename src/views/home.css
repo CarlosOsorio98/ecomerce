@@ -35,6 +35,13 @@
   height: 200px;
   object-fit: cover;
   transition: transform 0.2s ease;
+  background-color: #f5f5f5;
+  background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                    linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                    linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
 .product-card:hover .card-header img {
@@ -150,4 +157,61 @@
 .card-header .heart-button::before,
 .card-header .heart-button::after {
   content: none !important;
+}
+
+/* ✨ VIEW TRANSITION ENHANCEMENTS */
+
+/* Product cards with binding preparation */
+.product-card {
+  view-transition-name: none; /* Let individual elements handle their own transitions */
+}
+
+/* Enhanced image transition preparation */
+.card-header img {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Title transition preparation */
+.card-body h3 {
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  display: block;
+}
+
+/* Price transition preparation */
+.card-body .price {
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  display: block;
+}
+
+/* Smooth grid entrance with stagger effect */
+.products-grid {
+  container-type: inline-size;
+}
+
+.product-card:nth-child(1) { animation-delay: 0ms; }
+.product-card:nth-child(2) { animation-delay: 100ms; }
+.product-card:nth-child(3) { animation-delay: 200ms; }
+.product-card:nth-child(4) { animation-delay: 300ms; }
+.product-card:nth-child(5) { animation-delay: 400ms; }
+.product-card:nth-child(6) { animation-delay: 500ms; }
+.product-card:nth-child(n+7) { animation-delay: 600ms; }
+
+/* Hover state enhancement for better visual feedback */
+.product-card:hover {
+  transform: translateY(-1px) scale(1.02);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.product-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Active state for click feedback */
+.product-card:active {
+  transform: translateY(1px) scale(0.98);
+  transition: all 0.1s ease;
 }
