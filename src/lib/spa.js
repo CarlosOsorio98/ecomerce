@@ -53,34 +53,11 @@ export function createRouter(routes) {
 
     try {
       if (_rootElement) {
-        console.log('Starting slide animation...')
+        _rootElement.innerHTML = ''
 
-        // Apply slide-out animation using CSS keyframes
-        _rootElement.style.animation = 'slide-out-to-left 3s forwards'
+        const view = await route.component()
 
-        console.log('Applied slide-out, waiting...')
-
-        // Wait for slide-out animation
-        setTimeout(async () => {
-          console.log('Loading new view...')
-          const view = await route.component()
-
-          // Update content
-          _rootElement.innerHTML = ''
-          _rootElement.appendChild(view)
-
-          console.log('Content updated, starting slide-in...')
-
-          // Apply slide-in animation using CSS keyframes
-          _rootElement.style.animation = 'slide-in-from-right 3s forwards'
-          console.log('Slide-in animation started')
-
-          // Clean up after animation
-          setTimeout(() => {
-            _rootElement.style.animation = ''
-            console.log('Animation completed, styles cleaned up')
-          }, 500)
-        }, 500)
+        _rootElement.appendChild(view)
       } else {
         console.error('Elemento raíz no encontrado')
       }
