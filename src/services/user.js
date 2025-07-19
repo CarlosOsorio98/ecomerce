@@ -1,6 +1,11 @@
-import { setUser } from '../lib/state.js'
-
 const USERS_KEY = 'users'
+
+// We'll get the store reference passed to functions that need it
+let storeActions = null
+
+export const setStoreActions = (actions) => {
+  storeActions = actions
+}
 
 const updateProfile = async (userId, updateData) => {
   const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]')
@@ -27,7 +32,9 @@ const updateProfile = async (userId, updateData) => {
       ...allowedUpdates,
     }
     localStorage.setItem('auth_user', JSON.stringify(updatedUser))
-    setUser(updatedUser)
+    if (storeActions) {
+      storeActions.setUser(updatedUser)
+    }
   }
 
   return users[userIndex]
@@ -71,7 +78,10 @@ const deleteAccount = async (userId, password) => {
   const currentUser = JSON.parse(localStorage.getItem('auth_user') || 'null')
   if (currentUser && currentUser.id === userId) {
     localStorage.removeItem('auth_user')
-    setUser(null)
+    if (storeActions) {
+      storeActions.setUser(null)
+      storeActions.setAuthenticated(false)
+    }
   }
 
   return { message: 'Cuenta eliminada exitosamente' }

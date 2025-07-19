@@ -1,0 +1,5314 @@
+
+====================
+FILE: /src/admin.css
+====================
+
+body {
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+}
+
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-panel {
+  display: none;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.product-card {
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.product-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+.edit-btn {
+  background: #28a745;
+  margin-right: 5px;
+}
+
+.edit-btn:hover {
+  background: #218838;
+}
+
+.delete-btn {
+  background: #dc3545;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: black;
+}
+====================
+FILE: /src/admin.html
+====================
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Administrador</title>
+  </head>
+  <body>
+    <div class="login-container" id="loginForm">
+      <h2>Panel de Administrador</h2>
+      <div class="form-group">
+        <label for="adminKey">Contraseña de administrador:</label>
+        <input type="password" id="adminKey" required />
+      </div>
+      <button onclick="login()">Iniciar sesión</button>
+    </div>
+
+    <div class="admin-panel" id="adminPanel">
+      <h2>Gestión de Productos</h2>
+
+      <form id="addProductForm" onsubmit="return addProduct(event)">
+        <h3>Añadir Producto</h3>
+        <div class="form-group">
+          <label for="productName">Nombre:</label>
+          <input type="text" id="productName" required />
+        </div>
+        <div class="form-group">
+          <label for="productDescription">Descripción:</label>
+          <textarea id="productDescription" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="productPrice">Precio:</label>
+          <input type="number" id="productPrice" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label for="productImage">Imagen:</label>
+          <input type="file" id="productImage" accept="image/*" required />
+        </div>
+        <button type="submit">Añadir Producto</button>
+      </form>
+
+      <h3>Productos Existentes</h3>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h3>Editar Producto</h3>
+        <form id="editProductForm" onsubmit="return updateProduct(event)">
+          <input type="hidden" id="editProductId" />
+          <div class="form-group">
+            <label for="editProductName">Nombre:</label>
+            <input type="text" id="editProductName" required />
+          </div>
+          <div class="form-group">
+            <label for="editProductDescription">Descripción:</label>
+            <textarea id="editProductDescription" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editProductPrice">Precio:</label>
+            <input type="number" id="editProductPrice" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="editProductImage">Nueva Imagen (opcional):</label>
+            <input type="file" id="editProductImage" accept="image/*" />
+          </div>
+          <button type="submit">Actualizar Producto</button>
+          <button type="button" onclick="closeEditModal()">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="./admin.js"></script>
+  </body>
+</html>
+====================
+FILE: /src/admin.js
+====================
+
+// Admin Panel JavaScript
+import './admin.css'
+
+let adminToken = ''
+
+async function login() {
+  const key = document.getElementById('adminKey').value.trim()
+  adminToken = key
+  console.log('Intentando login con key:', key)
+
+  try {
+    const response = await fetch('/api/admin/products', {
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (response.ok) {
+      console.log('Login exitoso')
+      document.getElementById('loginForm').style.display = 'none'
+      document.getElementById('adminPanel').style.display = 'block'
+      loadProducts()
+    } else {
+      const error = await response.json()
+      console.error('Error de login:', error)
+      alert('Contraseña incorrecta')
+    }
+  } catch (error) {
+    console.error('Error en login:', error)
+    alert('Error al iniciar sesión')
+  }
+}
+
+async function loadProducts() {
+  try {
+    const response = await fetch('/api/admin/products', {
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    })
+    const products = await response.json()
+
+    const grid = document.getElementById('productGrid')
+    grid.innerHTML = products
+      .map(
+        (product) => {
+          const imageUrl = product.assets && product.assets.length > 0 
+            ? (product.assets[0].url || product.assets[0].url_local || '/placeholder.jpg')
+            : '/placeholder.jpg'
+          
+          return `
+              <div class="product-card">
+                  <img src="${imageUrl}" alt="${product.name}">
+                  <h3>${product.name}</h3>
+                  <p class="description">${product.description || 'Sin descripción'}</p>
+                  <p class="price">$${product.price}</p>
+                  <button class="edit-btn" onclick="openEditModal('${product.id}', '${product.name}', '${product.price}', '${product.description || ''}')">Editar</button>
+                  <button class="delete-btn" onclick="deleteProduct('${product.id}')">Eliminar</button>
+              </div>
+          `
+        }
+      )
+      .join('')
+  } catch (error) {
+    alert('Error al cargar productos')
+  }
+}
+
+async function addProduct(event) {
+  event.preventDefault()
+
+  const formData = new FormData()
+  formData.append('name', document.getElementById('productName').value)
+  formData.append('description', document.getElementById('productDescription').value)
+  formData.append('price', document.getElementById('productPrice').value)
+  formData.append(
+    'file',
+    document.getElementById('productImage').files[0]
+  )
+
+  try {
+    const response = await fetch('/api/admin/products', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: formData,
+    })
+
+    if (response.ok) {
+      document.getElementById('addProductForm').reset()
+      loadProducts()
+    } else {
+      alert('Error al añadir producto')
+    }
+  } catch (error) {
+    alert('Error al añadir producto')
+  }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+    return
+  }
+
+  try {
+    const response = await fetch(`/api/admin/products/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    })
+
+    if (response.ok) {
+      loadProducts()
+    } else {
+      alert('Error al eliminar producto')
+    }
+  } catch (error) {
+    alert('Error al eliminar producto')
+  }
+}
+
+function openEditModal(id, name, price, description) {
+  document.getElementById('editProductId').value = id
+  document.getElementById('editProductName').value = name
+  document.getElementById('editProductDescription').value = description
+  document.getElementById('editProductPrice').value = price
+  document.getElementById('editModal').style.display = 'block'
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none'
+  document.getElementById('editProductForm').reset()
+}
+
+async function updateProduct(event) {
+  event.preventDefault()
+
+  const formData = new FormData()
+  formData.append('name', document.getElementById('editProductName').value)
+  formData.append('description', document.getElementById('editProductDescription').value)
+  formData.append('price', document.getElementById('editProductPrice').value)
+  
+  const fileInput = document.getElementById('editProductImage')
+  if (fileInput.files[0]) {
+    formData.append('file', fileInput.files[0])
+  }
+
+  const productId = document.getElementById('editProductId').value
+
+  try {
+    const response = await fetch(`/api/admin/products/${productId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: formData,
+    })
+
+    if (response.ok) {
+      closeEditModal()
+      loadProducts()
+      alert('Producto actualizado exitosamente')
+    } else {
+      alert('Error al actualizar producto')
+    }
+  } catch (error) {
+    alert('Error al actualizar producto')
+  }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('editModal')
+  if (event.target === modal) {
+    closeEditModal()
+  }
+}
+
+// Export functions to global scope for HTML onclick handlers
+window.login = login
+window.addProduct = addProduct
+window.deleteProduct = deleteProduct
+window.openEditModal = openEditModal
+window.closeEditModal = closeEditModal
+window.updateProduct = updateProduct
+====================
+FILE: /src/app.js
+====================
+
+import { config } from '../server/config.js'
+import { createRouter } from '../server/router.js'
+
+import adminHTML from './admin.html'
+import indexHTML from './index.html'
+
+const server = globalThis.Bun.serve({
+  port: config.server.port,
+  ...createRouter(adminHTML, indexHTML),
+})
+
+console.log(`🚀 Server running at ${server.url}`)
+
+====================
+FILE: /src/components/floatingCart.css
+====================
+
+.floating-cart-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #000;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.floating-cart-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.floating-cart-button:active {
+  transform: translateY(0);
+  transition: all 0.1s ease;
+}
+
+.floating-cart-button .cart-icon {
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 4a2 2 0 11-4 0m4 0a2 2 0 11-4 0'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.floating-cart-button .cart-count {
+  background: #ff3b30;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.2s ease;
+  border: 2px solid #fff;
+}
+
+.floating-cart-button .cart-count.updated {
+  transform: scale(1.1);
+}
+
+/* Estilos para el overlay del carrito (modal/sidebar) */
+.cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  z-index: 1001;
+  display: flex;
+  justify-content: flex-end;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.cart-overlay.open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.cart-content {
+  background: #fff;
+  width: 360px;
+  max-width: 90%;
+  height: 100%;
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+}
+
+.cart-overlay.open .cart-content {
+  transform: translateX(0);
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.close-cart-button {
+  background: #f5f5f5;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+}
+
+.cart-items {
+  flex-grow: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-image {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  margin-right: 16px;
+  border-radius: 8px;
+}
+
+.cart-item-details {
+  flex-grow: 1;
+}
+
+.cart-item-details h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.cart-item-details p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.cart-item-quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-item-quantity-control button {
+  background: #f5f5f5;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-item-quantity-control button:hover {
+  background: #e5e5e5;
+}
+
+.cart-item-quantity-control span {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 24px;
+  text-align: center;
+}
+
+.remove-item-button {
+  background: #f5f5f5;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff3b30;
+  margin-left: 12px;
+  transition: all 0.2s ease;
+  width: 28px;
+  height: 28px;
+}
+
+.cart-total {
+  padding: 24px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.close-cart-button:hover {
+  background: #e5e5e5;
+}
+
+.remove-item-button:hover {
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.close-cart-button svg,
+.remove-item-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+====================
+FILE: /src/components/floatingCart.js
+====================
+
+/**
+ * @file floatingCart.js
+ * @description
+ * Componente de carrito flotante que muestra el número de items y permite ver/gestionar el carrito.
+ */
+import { createElement } from '../lib/spa.js'
+import {
+  addToCart,
+  getCart,
+  removeFromCart,
+  store,
+  syncCart,
+} from '../lib/state.js'
+
+let isCartOpen = false
+let cartOverlay = null
+let cartItemsContainer = null
+
+const closedSVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`
+
+const trashSVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 12L14 16M14 12L10 16M4 6H20M16 6L15.7294 5.18807C15.4671 4.40125 15.3359 4.00784 15.0927 3.71698C14.8779 3.46013 14.6021 3.26132 14.2905 3.13878C13.9376 3 13.523 3 12.6936 3H11.3064C10.477 3 10.0624 3 9.70951 3.13878C9.39792 3.26132 9.12208 3.46013 8.90729 3.71698C8.66405 4.00784 8.53292 4.40125 8.27064 5.18807L8 6M18 6V16.2C18 17.8802 18 18.7202 17.673 19.362C17.3854 19.9265 16.9265 20.3854 16.362 20.673C15.7202 21 14.8802 21 13.2 21H10.8C9.11984 21 8.27976 21 7.63803 20.673C7.07354 20.3854 6.6146 19.9265 6.32698 19.362C6 18.7202 6 17.8802 6 16.2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`
+
+store.subscribe('cart', (cart) => {
+  const countElement = document.getElementById('cart-count')
+  if (countElement) {
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
+    countElement.textContent = totalItems.toString()
+    countElement.classList.add('updated')
+    setTimeout(() => {
+      countElement.classList.remove('updated')
+    }, 300)
+  }
+
+  if (cartItemsContainer) {
+    try {
+      renderCartItems(cartItemsContainer, cart)
+    } catch (error) {
+      console.error('Error rendering cart items:', error)
+    }
+  }
+})
+
+function createFloatingCartButton() {
+  const button = createElement(
+    'button',
+    {
+      id: 'floating-cart-button',
+      className: 'floating-cart-button',
+      onclick: toggleCartView,
+    },
+    createElement('span', { className: 'cart-icon' }),
+    createElement('span', { id: 'cart-count', className: 'cart-count' }, '0')
+  )
+
+  return button
+}
+
+function createCartOverlay() {
+  cartOverlay = createElement('div', { className: 'cart-overlay' })
+  const cartContent = createElement('div', { className: 'cart-content' })
+
+  const closeButton = createElement('button', {
+    className: 'close-cart-button',
+    onclick: toggleCartView,
+  })
+  closeButton.innerHTML = closedSVG
+
+  const header = createElement(
+    'div',
+    { className: 'cart-header' },
+    closeButton,
+    createElement('h2', {}, 'Tu Carrito')
+  )
+
+  cartItemsContainer = createElement('div', { className: 'cart-items' })
+  cartContent.appendChild(header)
+  cartContent.appendChild(cartItemsContainer)
+
+  renderCartItems(cartItemsContainer)
+
+  cartOverlay.appendChild(cartContent)
+  cartOverlay.addEventListener('click', (e) => {
+    if (e.target === cartOverlay) {
+      toggleCartView()
+    }
+  })
+
+  return cartOverlay
+}
+
+function renderCartItems(container, cart = null) {
+  container.innerHTML = ''
+  const cartData = cart || getCart()
+
+  if (!cartData || cartData.length === 0) {
+    container.appendChild(createElement('p', {}, 'El carrito está vacío.'))
+    return
+  }
+
+  cartData.forEach((item) => {
+    const imgSrc = item.url.startsWith('/') || item.url.startsWith('http') ? item.url : `/${item.url}`
+
+    const itemElement = createElement(
+      'div',
+      { className: 'cart-item' },
+      createElement('img', {
+        src: imgSrc,
+        alt: item.name,
+        className: 'cart-item-image',
+      }),
+      createElement(
+        'div',
+        { className: 'cart-item-details' },
+        createElement('h4', {}, item.name),
+        createElement('p', {}, `$${item.price.toFixed(2)} c/u`),
+        createElement(
+          'div',
+          { className: 'cart-item-quantity-control' },
+          createElement(
+            'button',
+            {
+              onclick: async () => {
+                try {
+                  await addToCart(item.product_id, -1)
+                } catch (error) {
+                  console.error('Error updating cart:', error)
+                  // Optionally, show a user-facing error message
+                }
+              },
+            },
+            '-'
+          ),
+          createElement('span', {}, item.quantity),
+          createElement(
+            'button',
+            {
+              onclick: async () => {
+                try {
+                  await addToCart(item.product_id, 1)
+                } catch (error) {
+                  console.error('Error updating cart:', error)
+                  // Optionally, show a user-facing error message
+                }
+              },
+            },
+            '+'
+          )
+        )
+      ),
+      (() => {
+        const removeButton = createElement('button', {
+          className: 'remove-item-button',
+          onclick: () => removeFromCart(item.id),
+        })
+        removeButton.innerHTML = trashSVG
+        return removeButton
+      })()
+    )
+    container.appendChild(itemElement)
+  })
+
+  const total = cartData.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  )
+  const totalElement = createElement(
+    'div',
+    { className: 'cart-total' },
+    createElement('h3', {}, 'Total:'),
+    createElement('span', {}, `$${total.toFixed(2)}`)
+  )
+  container.appendChild(totalElement)
+}
+
+function toggleCartView() {
+  if (!cartOverlay) {
+    cartOverlay = createCartOverlay()
+    document.body.appendChild(cartOverlay)
+  }
+
+  isCartOpen = !isCartOpen
+  if (isCartOpen) {
+    cartOverlay.classList.add('open')
+  } else {
+    cartOverlay.classList.remove('open')
+  }
+}
+
+export function initFloatingCart() {
+  const floatingButton = createFloatingCartButton()
+  document.body.appendChild(floatingButton)
+  syncCart()
+}
+
+====================
+FILE: /src/components/footer.js
+====================
+
+import { createElement } from '../lib/spa.js'
+
+export function createFooter() {
+  const footer = createElement('footer')
+  
+  const footerContent = createElement('div', { className: 'footer-content' })
+  
+  // About section
+  const aboutSection = createElement(
+    'div',
+    { className: 'footer-section' },
+    createElement('h3', {}, 'Sobre Nosotros'),
+    createElement(
+      'p',
+      {},
+      'Somos tu tienda de confianza para encontrar las mejores prendas de vestir con la mejor calidad y precios.'
+    )
+  )
+  
+  // Links section
+  const linksSection = createElement(
+    'div',
+    { className: 'footer-section' },
+    createElement('h3', {}, 'Enlaces Útiles'),
+    createElement(
+      'ul',
+      {},
+      createElement(
+        'li',
+        {},
+        createElement('a', { href: '/', 'data-link': true }, 'Inicio')
+      ),
+      createElement(
+        'li',
+        {},
+        createElement('a', { href: '#' }, 'Términos y Condiciones')
+      ),
+      createElement(
+        'li',
+        {},
+        createElement('a', { href: '#' }, 'Política de Privacidad')
+      ),
+      createElement(
+        'li',
+        {},
+        createElement('a', { href: '#' }, 'Preguntas Frecuentes')
+      )
+    )
+  )
+  
+  // Contact section
+  const contactSection = createElement(
+    'div',
+    { className: 'footer-section' },
+    createElement('h3', {}, 'Contacto'),
+    createElement(
+      'ul',
+      {},
+      createElement('li', {}, 'Email: info@mitienda.com'),
+      createElement('li', {}, 'Teléfono: (123) 456-7890'),
+      createElement('li', {}, 'Dirección: Calle Principal #123')
+    )
+  )
+  
+  footerContent.appendChild(aboutSection)
+  footerContent.appendChild(linksSection)
+  footerContent.appendChild(contactSection)
+  
+  const footerBottom = createElement(
+    'div',
+    { className: 'footer-bottom' },
+    createElement('p', {}, '© 2025 Mi Tienda. Todos los derechos reservados.')
+  )
+  
+  footer.appendChild(footerContent)
+  footer.appendChild(footerBottom)
+  
+  return footer
+}
+====================
+FILE: /src/components/heartButton.js
+====================
+
+import { createElement } from '../lib/spa.js'
+import { toggleFavorite, isFavorite, isAuthenticated } from '../lib/state.js'
+
+export function createHeartButton(productId, options = {}) {
+  const { size = '24', className = '' } = options
+  
+  const createHeartSVG = (isFav) => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('width', size)
+    svg.setAttribute('height', size)
+    svg.setAttribute('viewBox', '0 0 24 24')
+    svg.setAttribute('class', 'heart-svg')
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z')
+    path.setAttribute('stroke', '#666')
+    path.setAttribute('stroke-width', '2')
+    path.setAttribute('fill', isFav ? '#e74c3c' : 'none')
+    path.setAttribute('class', 'heart-path')
+    
+    svg.appendChild(path)
+    return svg
+  }
+
+  const updateHeartButton = (button, isFav) => {
+    const svg = button.querySelector('.heart-svg')
+    const path = svg.querySelector('.heart-path')
+    
+    // Add animation class
+    button.classList.add('heart-animating')
+    
+    // Update fill and stroke
+    path.setAttribute('fill', isFav ? '#e74c3c' : 'none')
+    path.setAttribute('stroke', isFav ? '#e74c3c' : '#666')
+    
+    // Update aria label
+    button.setAttribute('aria-label', isFav ? 'Quitar de favoritos' : 'Agregar a favoritos')
+    button.classList.toggle('favorite', isFav)
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+      button.classList.remove('heart-animating')
+    }, 300)
+  }
+
+  const heartButton = createElement('button', {
+    className: `heart-button ${className}`,
+    onclick: async (e) => {
+      e.stopPropagation() // Prevent parent click events
+      
+      if (!isAuthenticated()) {
+        alert('Debes iniciar sesión para usar favoritos')
+        return
+      }
+
+      try {
+        heartButton.disabled = true
+        await toggleFavorite(productId)
+        // State is updated optimistically, just update UI
+        const newIsFavorite = isFavorite(productId)
+        updateHeartButton(heartButton, newIsFavorite)
+      } catch (error) {
+        console.error('Error toggling favorite:', error)
+        alert('Error al actualizar favoritos')
+      } finally {
+        heartButton.disabled = false
+      }
+    }
+  })
+
+  // Initial state
+  const initialIsFavorite = isFavorite(productId)
+  const svg = createHeartSVG(initialIsFavorite)
+  heartButton.appendChild(svg)
+  heartButton.setAttribute('aria-label', initialIsFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos')
+  heartButton.classList.toggle('favorite', initialIsFavorite)
+
+  return heartButton
+}
+====================
+FILE: /src/components/loading.css
+====================
+
+#loading-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  backdrop-filter: blur(10px);
+}
+
+.loader-container {
+  margin-bottom: 2rem;
+  filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.1));
+}
+
+.modern-loader {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.loader-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid #ffffff;
+  border-right: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.loader-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(45deg, #ffffff, #f8f9fa);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.loading-text {
+  text-align: center;
+}
+
+.loading-main {
+  font-size: 18px;
+  font-weight: 300;
+  color: #ffffff;
+  letter-spacing: 1.2px;
+  text-transform: lowercase;
+  animation: fadeIn 2.5s ease-in-out infinite;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  25% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  75% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+@keyframes fadeIn {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+====================
+FILE: /src/components/modal.css
+====================
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 10px 25px rgba(0, 0, 0, 0.2);
+  transform: translateY(-20px);
+  animation: modalSlideIn 0.3s ease-out forwards;
+  position: relative;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-content h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modal-content p {
+  margin: 0 0 1rem 0;
+  color: #4a5568;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.modal-content input[type='number'] {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.modal-content input[type='number']:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+.modal-content input[type='number']::-webkit-outer-spin-button,
+.modal-content input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.modal-content input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.modal-actions button {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2c324d 0%, #294c61 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.modal-content p:last-of-type {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.plus-and-minus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.plus-and-minus:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.plus-and-minus button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: linear-gradient(135deg, #181d31 0%, #07071a 100%);
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  min-width: 40px;
+}
+
+.minus-button {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.plus-button {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+.plus-and-minus button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.plus-and-minus button:active {
+  transform: scale(0.95);
+}
+
+.plus-and-minus input[type='number'] {
+  width: 80px;
+  margin: 0 !important;
+  border: none;
+  background: white;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  height: 40px;
+}
+
+.plus-and-minus input[type='number']:focus {
+  outline: none;
+  background: white;
+  border-color: #cbd5e0;
+  box-shadow: none;
+  transform: none;
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+  .plus-and-minus {
+    margin-bottom: 1rem;
+  }
+}
+
+====================
+FILE: /src/components/modal.js
+====================
+
+import { createElement } from '../lib/spa.js'
+import { addToCart, isAuthenticated } from '../lib/state.js'
+
+const plusAndMinus = (quantityInput) => {
+  return createElement('div', { className: 'plus-and-minus' }, [
+    createElement(
+      'button',
+      {
+        className: 'minus-button',
+        onclick: () => {
+          const input = document.getElementById('quantity-input')
+          const currentValue = parseInt(input.value, 10)
+          if (currentValue > 1) {
+            input.value = currentValue - 1
+            input.dispatchEvent(new Event('input', { bubbles: true }))
+          }
+        },
+      },
+      '-'
+    ),
+    quantityInput,
+    createElement(
+      'button',
+      {
+        className: 'plus-button',
+        onclick: () => {
+          const input = document.getElementById('quantity-input')
+          const currentValue = parseInt(input.value, 10)
+          input.value = currentValue + 1
+          input.dispatchEvent(new Event('input', { bubbles: true }))
+        },
+      },
+      '+'
+    ),
+  ])
+}
+
+export function showQuantityModal(product) {
+  const modalOverlay = createElement('div', { className: 'modal-overlay' })
+  const modalContent = createElement('div', { className: 'modal-content' })
+
+  // Check if user is authenticated
+  if (!isAuthenticated()) {
+    const title = createElement('h2', {}, 'Iniciar Sesión Requerido')
+    const message = createElement('p', {}, 'Para agregar productos al carrito necesitas iniciar sesión.')
+    
+    const actions = createElement('div', { className: 'modal-actions' })
+    const loginButton = createElement(
+      'button',
+      {
+        className: 'btn-primary',
+        onclick: () => {
+          document.body.removeChild(modalOverlay)
+          window.history.pushState(null, null, '/login')
+          window.dispatchEvent(new Event('popstate'))
+        },
+      },
+      'Iniciar Sesión'
+    )
+
+    const cancelButton = createElement(
+      'button',
+      {
+        className: 'btn-secondary',
+        onclick: () => document.body.removeChild(modalOverlay),
+      },
+      'Cancelar'
+    )
+
+    actions.appendChild(loginButton)
+    actions.appendChild(cancelButton)
+
+    modalContent.appendChild(title)
+    modalContent.appendChild(message)
+    modalContent.appendChild(actions)
+
+    modalOverlay.appendChild(modalContent)
+    document.body.appendChild(modalOverlay)
+    return
+  }
+
+  // Normal quantity modal for authenticated users
+  let quantity = 1
+  let totalPrice = product.price
+
+  const title = createElement('h2', {}, `Agregar ${product.name}`)
+  const quantityLabel = createElement('p', {}, 'Cantidad:')
+  const quantityInput = createElement('input', {
+    id: 'quantity-input',
+    type: 'number',
+    value: quantity,
+    min: 1,
+    oninput: (e) => {
+      quantity = parseInt(e.target.value, 10)
+      if (isNaN(quantity) || quantity < 1) {
+        quantity = 1
+        e.target.value = 1
+      }
+      totalPrice = product.price * quantity
+      priceDisplay.textContent = `Precio Total: $${totalPrice.toFixed(2)}`
+    },
+  })
+  const priceDisplay = createElement(
+    'p',
+    {},
+    `Precio Total: $${totalPrice.toFixed(2)}`
+  )
+
+  const actions = createElement('div', { className: 'modal-actions' })
+  const addButton = createElement(
+    'button',
+    {
+      className: 'btn-primary',
+      onclick: async () => {
+        try {
+          await addToCart(product.id, quantity)
+          document.body.removeChild(modalOverlay)
+        } catch (e) {
+          console.error('Add to cart error:', e)
+          alert('Error al agregar al carrito')
+        }
+      },
+    },
+    'Agregar'
+  )
+
+  const cancelButton = createElement(
+    'button',
+    {
+      className: 'btn-secondary',
+      onclick: () => document.body.removeChild(modalOverlay),
+    },
+    'Cancelar'
+  )
+
+  actions.appendChild(addButton)
+  actions.appendChild(cancelButton)
+
+  modalContent.appendChild(title)
+  modalContent.appendChild(quantityLabel)
+  modalContent.appendChild(plusAndMinus(quantityInput))
+  modalContent.appendChild(priceDisplay)
+  modalContent.appendChild(actions)
+
+  modalOverlay.appendChild(modalContent)
+  document.body.appendChild(modalOverlay)
+}
+
+====================
+FILE: /src/components/navbar.js
+====================
+
+import { createElement } from '../lib/spa.js'
+import { store } from '../lib/state.js'
+import { authService } from '../services/auth.js'
+
+export function createNavbar(router) {
+  const header = createElement('header')
+  const nav = createElement('nav')
+  
+  // Logo/Title
+  const logoLink = createElement(
+    'a',
+    { href: '/', 'data-link': true },
+    createElement('h1', {}, 'Mi Tienda')
+  )
+  
+  // Navigation links container
+  const navLinks = createElement('ul', { id: 'main-nav-links' })
+  
+  nav.appendChild(logoLink)
+  nav.appendChild(navLinks)
+  header.appendChild(nav)
+  
+  // Function to render navigation links
+  const renderNavLinks = () => {
+    const isAuthenticated = store.getState().isAuthenticated
+    const user = store.getState().user
+
+    navLinks.innerHTML = ''
+
+    const homeLink = createElement(
+      'li',
+      {},
+      createElement('a', { href: '/', 'data-link': true }, 'Inicio')
+    )
+    navLinks.appendChild(homeLink)
+
+    if (isAuthenticated && user) {
+      const profileLink = createElement(
+        'li',
+        {},
+        createElement('a', { href: '/profile', 'data-link': true }, user.name)
+      )
+      const logoutButtonLi = createElement('li', {})
+      const logoutButton = createElement(
+        'button',
+        {
+          className: 'logout-button',
+          onclick: async (e) => {
+            e.preventDefault()
+            await authService.signOut()
+            router.navigateTo('/')
+          },
+        },
+        'Cerrar sesión'
+      )
+
+      logoutButtonLi.appendChild(logoutButton)
+      navLinks.appendChild(profileLink)
+      navLinks.appendChild(logoutButtonLi)
+    } else {
+      const loginLink = createElement(
+        'li',
+        {},
+        createElement(
+          'a',
+          { href: '/login', 'data-link': true },
+          'Iniciar Sesión'
+        )
+      )
+      const registerLink = createElement(
+        'li',
+        {},
+        createElement('a', { href: '/register', 'data-link': true }, 'Registro')
+      )
+      navLinks.appendChild(loginLink)
+      navLinks.appendChild(registerLink)
+    }
+  }
+
+  // Initial render
+  renderNavLinks()
+
+  // Subscribe to auth state changes
+  store.subscribe('isAuthenticated', renderNavLinks)
+
+  return header
+}
+====================
+FILE: /src/frontend.js
+====================
+
+import { initFloatingCart } from './components/floatingCart.js'
+import { createNavbar } from './components/navbar.js'
+import { createFooter } from './components/footer.js'
+import { authService } from './services/auth.js'
+import { createElement, createRouter } from './lib/spa.js'
+import { store } from './lib/state.js'
+import { HomeView } from './views/home.js'
+import { LoginView } from './views/login.js'
+import { ProfileView } from './views/profile.js'
+import { RegisterView } from './views/register.js'
+import { ProductView } from './views/product.js'
+
+const basePath = (() => {
+  const script = document.querySelector('script[src*="frontend.js"]')
+  if (script) {
+    return script.getAttribute('src').replace('frontend.js', '')
+  }
+  return './'
+})()
+
+
+const routeDefinitions = [
+  { path: '/', componentFactory: HomeView },
+  { path: '/login', componentFactory: LoginView },
+  { path: '/register', componentFactory: RegisterView },
+  { path: '/profile', componentFactory: ProfileView },
+  { path: '/product/:id', componentFactory: ProductView },
+  { path: '*', componentFactory: HomeView },
+]
+
+const router = createRouter([])
+
+const routes = routeDefinitions.map((routeDef) => {
+  // Don't pre-instantiate components, keep them as factories
+  const component = () => {
+    if (routeDef.componentFactory === HomeView) {
+      return routeDef.componentFactory(basePath)()
+    } else {
+      return routeDef.componentFactory(router)()
+    }
+  }
+  return { path: routeDef.path, component }
+})
+
+router.routes = routes
+
+async function initializeApp() {
+  const loadingIndicator = document.getElementById('loading-indicator')
+  const startTime = Date.now()
+
+  try {
+    if (loadingIndicator) {
+      loadingIndicator.style.display = 'flex'
+    }
+
+    // Create and insert navbar and footer
+    const navbar = createNavbar(router)
+    const footer = createFooter()
+    
+    // Insert navbar before main
+    const main = document.getElementById('app')
+    document.body.insertBefore(navbar, main)
+    
+    // Insert footer after main
+    document.body.appendChild(footer)
+
+    await authService.checkSession()
+    router.init()
+    initFloatingCart()
+  } catch (error) {
+    console.error('Error al inicializar la aplicación:', error)
+    router.init()
+  } finally {
+    if (loadingIndicator) {
+      // Ensure loader is visible for at least 300ms
+      const elapsed = Date.now() - startTime
+      const minDisplayTime = 300
+      const remainingTime = Math.max(0, minDisplayTime - elapsed)
+      
+      setTimeout(() => {
+        loadingIndicator.style.display = 'none'
+      }, remainingTime)
+    }
+  }
+}
+
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp)
+} else {
+  initializeApp()
+}
+
+====================
+FILE: /src/index.html
+====================
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi Tienda</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="loading-indicator">
+      <div class="loader-container">
+        <div class="modern-loader">
+          <div class="loader-ring"></div>
+          <div class="loader-dot"></div>
+        </div>
+      </div>
+      <div class="loading-text">
+        <div class="loading-main">Cargando...</div>
+      </div>
+    </div>
+    <main id="app"></main>
+    <script type="module" src="./frontend.js"></script>
+  </body>
+</html>
+
+====================
+FILE: /src/lib/reactivity.js
+====================
+
+export function createObservable(initialValue) {
+  let _value = initialValue
+  const _subscribers = new Set()
+
+  const _deepEqual = (a, b) => {
+    if (a === b) return true
+    if (a == null || b == null) return false
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false
+      for (let i = 0; i < a.length; i++) {
+        if (!_deepEqual(a[i], b[i])) return false
+      }
+      return true
+    }
+    if (typeof a === 'object' && typeof b === 'object') {
+      const keysA = Object.keys(a)
+      const keysB = Object.keys(b)
+      if (keysA.length !== keysB.length) return false
+      for (const key of keysA) {
+        if (!keysB.includes(key)) return false
+        if (!_deepEqual(a[key], b[key])) return false
+      }
+      return true
+    }
+    return false
+  }
+
+  const _notify = () => {
+    for (const subscriber of _subscribers) {
+      subscriber(_value)
+    }
+  }
+
+  const subscribe = (subscriber) => {
+    _subscribers.add(subscriber)
+    subscriber(_value)
+    return () => {
+      _subscribers.delete(subscriber)
+    }
+  }
+
+  const getValue = () => _value
+
+  const setValue = (newValue) => {
+    if (!_deepEqual(_value, newValue)) {
+      _value = newValue
+      _notify()
+    }
+  }
+
+  return {
+    get value() {
+      return getValue()
+    },
+    set value(newValue) {
+      setValue(newValue)
+    },
+    subscribe,
+    getValue,
+    setValue,
+  }
+}
+
+export function createStore(initialState = {}) {
+  const state = {}
+
+  for (const [key, value] of Object.entries(initialState)) {
+    state[key] = createObservable(value)
+  }
+
+  return {
+    getState() {
+      const currentState = {}
+      for (const [key, observable] of Object.entries(state)) {
+        currentState[key] = observable.value
+      }
+      return currentState
+    },
+
+    setState(newState) {
+      for (const [key, value] of Object.entries(newState)) {
+        if (state[key]) {
+          state[key].value = value
+        } else {
+          state[key] = createObservable(value)
+        }
+      }
+    },
+
+    subscribe(key, callback) {
+      if (state[key]) {
+        return state[key].subscribe(callback)
+      }
+      return () => {}
+    },
+  }
+}
+
+====================
+FILE: /src/lib/spa.js
+====================
+
+import { setCurrentRoute } from './state.js'
+
+export function createElement(tag, props = {}, ...children) {
+  const element = document.createElement(tag)
+
+  Object.entries(props).forEach(([key, value]) => {
+    if (key === 'className') {
+      element.className = value
+    } else if (key.startsWith('on') && typeof value === 'function') {
+      element.addEventListener(key.toLowerCase().slice(2), value)
+    } else {
+      element.setAttribute(key, value)
+    }
+  })
+
+  children.flat().forEach((child) => {
+    if (child instanceof Node) {
+      element.appendChild(child)
+    } else if (child !== null && child !== undefined) {
+      element.appendChild(document.createTextNode(child))
+    }
+  })
+
+  return element
+}
+
+export function createRouter(routes) {
+  let _routes = routes
+  let _rootElement = null
+  let _basePath = ''
+
+  const getBasePath = () => {
+    const script = document.querySelector('script[src*="frontend.js"]')
+    if (script) {
+      const scriptPath = script.getAttribute('src')
+      const srcIndex = scriptPath.indexOf('src/')
+      if (srcIndex !== -1) {
+        return scriptPath.substring(0, srcIndex)
+      }
+    }
+    return './'
+  }
+
+  const getRelativePath = (path) => {
+    const relative = path.startsWith(_basePath)
+      ? path.slice(_basePath.length)
+      : path
+    return `/${relative}`.replace(/\/+/g, '/')
+  }
+
+  const updateView = async (route, relativePath) => {
+    setCurrentRoute(relativePath)
+
+    try {
+      if (_rootElement) {
+        _rootElement.innerHTML = ''
+
+        const view = await route.component()
+
+        _rootElement.appendChild(view)
+      } else {
+        console.error('Elemento raíz no encontrado')
+      }
+    } catch (error) {
+      console.error('Error al renderizar la vista:', error)
+    }
+  }
+
+  const handleRoute = async () => {
+    let path = window.location.pathname
+    if (path.endsWith('/') && path.length > 1) {
+      path = path.slice(0, -1)
+    }
+
+    const relativePath = getRelativePath(path)
+
+    // Check for exact match first
+    let route = _routes.find((r) => r.path === relativePath)
+
+    // If no exact match, check for dynamic routes
+    if (!route) {
+      route = _routes.find((r) => {
+        if (r.path.includes(':')) {
+          const pathParts = r.path.split('/')
+          const relativeParts = relativePath.split('/')
+
+          if (pathParts.length !== relativeParts.length) {
+            return false
+          }
+
+          return pathParts.every((part, index) => {
+            return part.startsWith(':') || part === relativeParts[index]
+          })
+        }
+        return false
+      })
+    }
+
+    // Fallback to wildcard route
+    if (!route) {
+      route = _routes.find((r) => r.path === '*')
+    }
+
+    if (!route) {
+      console.error('Ruta no encontrada:', relativePath)
+      return
+    }
+
+    await updateView(route, relativePath)
+  }
+
+  const navigateTo = (path) => {
+    let fullPath
+    if (path.startsWith('/')) {
+      fullPath = path
+    } else {
+      const separator =
+        _basePath.endsWith('/') || _basePath.length === 1 ? '' : '/'
+      fullPath = _basePath + separator + path
+    }
+    window.history.pushState(null, null, fullPath)
+    handleRoute()
+  }
+
+  const init = () => {
+    _rootElement = document.getElementById('app')
+    _basePath = getBasePath()
+
+    window.addEventListener('popstate', () => handleRoute())
+
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('[data-link]')
+      if (link) {
+        e.preventDefault()
+        const href = link.getAttribute('href')
+
+        navigateTo(href)
+      }
+    })
+
+    handleRoute()
+  }
+
+  return {
+    get routes() {
+      return _routes
+    },
+    set routes(newRoutes) {
+      _routes = newRoutes
+    },
+    getBasePath,
+    getRelativePath,
+    handleRoute,
+    navigateTo,
+    init,
+  }
+}
+
+====================
+FILE: /src/lib/state.js
+====================
+
+/* eslint-disable camelcase */
+import { createStore } from './reactivity.js'
+import { cartService } from '../services/cart.js'
+import { favoritesService } from '../services/favorites.js'
+
+const initialState = {
+  user: null,
+  isAuthenticated: false,
+  currentRoute: window.location.pathname,
+  cart: [],
+  favorites: [],
+}
+
+export const store = createStore(initialState)
+
+export const getUser = () => store.getState().user
+export const isAuthenticated = () => store.getState().isAuthenticated
+export const getCurrentRoute = () => store.getState().currentRoute
+export const getCart = () => store.getState().cart
+export const getFavorites = () => store.getState().favorites
+
+export const setUser = (user) => {
+  store.setState({
+    user,
+    isAuthenticated: !!user,
+  })
+}
+
+export const setCurrentRoute = (route) => {
+  store.setState({ currentRoute: route })
+}
+
+export const syncCart = async () => {
+  if (!isAuthenticated()) {
+    store.setState({ cart: [] })
+    return
+  }
+  
+  try {
+    const cart = await cartService.getCart()
+    store.setState({ cart })
+  } catch (error) {
+    console.error('Error al sincronizar carrito:', error)
+    store.setState({ cart: [] })
+  }
+}
+
+export const addToCart = async (asset_id, quantity) => {
+  await cartService.addToCart(asset_id, quantity)
+  await syncCart()
+}
+
+export const removeFromCart = async (id) => {
+  await cartService.removeFromCart(id)
+  await syncCart()
+}
+
+export const updateCartItemQuantity = async (asset_id, newQuantity) => {
+  const cart = store.getState().cart
+  const item = cart.find((i) => i.asset_id === asset_id)
+  if (!item) return
+
+  const diff = newQuantity - item.quantity
+  if (diff === 0) return
+  if (newQuantity <= 0) {
+    await removeFromCart(item.id)
+  } else {
+    await addToCart(asset_id, diff)
+  }
+}
+
+export const syncFavorites = async () => {
+  if (!isAuthenticated()) {
+    store.setState({ favorites: [] })
+    return
+  }
+  try {
+    const favorites = await favoritesService.getFavorites()
+    store.setState({ favorites })
+  } catch (error) {
+    console.error('Error al sincronizar favoritos:', error)
+    store.setState({ favorites: [] })
+  }
+}
+
+export const toggleFavorite = async (productId) => {
+  if (!isAuthenticated()) {
+    throw new Error('Debes iniciar sesión para usar favoritos')
+  }
+
+  // Optimistic update
+  const currentFavorites = store.getState().favorites
+  const isCurrentlyFavorite = currentFavorites.some(fav => fav.product_id === productId)
+  
+  if (isCurrentlyFavorite) {
+    // Remove from favorites optimistically
+    const newFavorites = currentFavorites.filter(fav => fav.product_id !== productId)
+    store.setState({ favorites: newFavorites })
+  } else {
+    // We don't have full asset data for optimistic add, so we'll just sync after API call
+  }
+
+  try {
+    const result = await favoritesService.toggleFavorite(productId)
+    // Always sync after API call to ensure consistency
+    await syncFavorites()
+    return result
+  } catch (error) {
+    // Revert optimistic update on error
+    await syncFavorites()
+    throw error
+  }
+}
+
+export const isFavorite = (productId) => {
+  const favorites = store.getState().favorites
+  return favorites.some(fav => fav.product_id === productId)
+}
+
+export const logout = () => {
+  store.setState({
+    user: null,
+    isAuthenticated: false,
+    cart: [],
+    favorites: [],
+  })
+  
+  // Additional cleanup to ensure state is completely reset
+  try {
+    localStorage.removeItem('user_session')
+    localStorage.removeItem('auth_user')
+    sessionStorage.removeItem('user_session')
+    sessionStorage.removeItem('auth_user')
+  } catch (e) {
+    console.warn('Failed to clear storage during logout:', e)
+  }
+}
+
+====================
+FILE: /src/lib/viewTransitions.js
+====================
+
+/**
+ * View Transition Service for SPA - Factory Pattern
+ * Manages smooth transitions between views with unique element references
+ */
+
+const createViewTransitionService = () => {
+  const supportsViewTransitions = 'startViewTransition' in document
+  const activeTransitions = new Map() // Store active transition references
+  let transitionCounter = 0
+
+  /**
+   * Check if browser supports View Transitions API
+   */
+  const isSupported = () => supportsViewTransitions
+
+  /**
+   * Set unique transition name for an element
+   * @param {HTMLElement} element - The element to set transition name
+   * @param {string} identifier - Unique identifier (e.g., product-image-123)
+   */
+  const setTransitionName = (element, identifier) => {
+    if (!element || !identifier) return
+
+    if (supportsViewTransitions) {
+      element.style.viewTransitionName = identifier
+      activeTransitions.set(identifier, {
+        element,
+        timestamp: Date.now()
+      })
+    }
+  }
+
+  /**
+   * Remove transition name from element
+   * @param {string} identifier - The identifier to remove
+   */
+  const removeTransitionName = (identifier) => {
+    if (activeTransitions.has(identifier)) {
+      const transition = activeTransitions.get(identifier)
+      if (transition.element && transition.element.style) {
+        transition.element.style.viewTransitionName = ''
+      }
+      activeTransitions.delete(identifier)
+    }
+  }
+
+  /**
+   * Generate unique transition identifier
+   * @param {string} type - Type of element (image, title, card)
+   * @param {string|number} id - Unique ID (product ID, etc.)
+   */
+  const generateIdentifier = (type, id) => {
+    return `${type}-${id}-${++transitionCounter}`
+  }
+
+  /**
+   * Set product transition names (image and title)
+   * @param {HTMLElement} container - Container element with image and title
+   * @param {string|number} productId - Product ID
+   */
+  const setProductTransition = (container, productId) => {
+    if (!container || !productId) return
+
+    const img = container.querySelector('img')
+    const title = container.querySelector('h3, h4, h1')
+
+    if (img) {
+      setTransitionName(img, `product-image-${productId}`)
+    }
+    if (title) {
+      setTransitionName(title, `product-title-${productId}`)
+    }
+
+    return {
+      imageId: img ? `product-image-${productId}` : null,
+      titleId: title ? `product-title-${productId}` : null
+    }
+  }
+
+  /**
+   * Execute view transition with fallback
+   * @param {Function} updateCallback - Function to execute during transition
+   * @returns {Promise} - Transition promise
+   */
+  const executeTransition = async (updateCallback) => {
+    if (!updateCallback || typeof updateCallback !== 'function') {
+      throw new Error('Update callback is required')
+    }
+
+    // Fallback for browsers that don't support View Transitions
+    if (!supportsViewTransitions) {
+      updateCallback()
+      return Promise.resolve()
+    }
+
+    // With View Transitions API
+    try {
+      const transition = document.startViewTransition(() => updateCallback())
+      return transition.finished
+    } catch (error) {
+      console.warn('View transition failed, falling back:', error)
+      updateCallback()
+      return Promise.resolve()
+    }
+  }
+
+  /**
+   * Navigate with transition
+   * @param {string} path - Path to navigate to
+   * @param {Function} router - Router navigation function
+   */
+  const navigateWithTransition = async (path, router) => {
+    await executeTransition(() => {
+      router(path)
+    })
+  }
+
+  /**
+   * Clean up old transitions (older than 5 seconds)
+   */
+  const cleanup = () => {
+    const now = Date.now()
+    const maxAge = 5000 // 5 seconds
+
+    for (const [identifier, transition] of activeTransitions.entries()) {
+      if (now - transition.timestamp > maxAge) {
+        removeTransitionName(identifier)
+      }
+    }
+  }
+
+  /**
+   * Clear all active transitions
+   */
+  const clearAll = () => {
+    for (const identifier of activeTransitions.keys()) {
+      removeTransitionName(identifier)
+    }
+    activeTransitions.clear()
+  }
+
+  // Auto cleanup every 10 seconds
+  setInterval(cleanup, 10000)
+
+  return {
+    isSupported,
+    setTransitionName,
+    removeTransitionName,
+    generateIdentifier,
+    setProductTransition,
+    executeTransition,
+    navigateWithTransition,
+    cleanup,
+    clearAll
+  }
+}
+
+// Export factory function and create singleton instance
+export const createViewTransitions = createViewTransitionService
+export const viewTransitions = createViewTransitionService()
+====================
+FILE: /src/services/auth.js
+====================
+
+import { logout, setUser } from '../lib/state.js'
+import { userApi } from './user.js'
+
+const clearLocalData = async (forceReload = false) => {
+  // Clear all localStorage items (including any foreign data)
+  const keysToRemove = [
+    'user_session',
+    'debug_session',
+    'debug_login',
+    'auth_user',
+    'token',
+    'user',
+    'company_name',
+    'service_type',
+    'training_files',
+    'images',
+    'prompt',
+    'assistant_name',
+    'address',
+    'phone',
+    'country_code',
+  ]
+
+  keysToRemove.forEach((key) => {
+    localStorage.removeItem(key)
+    sessionStorage.removeItem(key)
+  })
+
+  // Clear any other non-essential localStorage items
+  Object.keys(localStorage).forEach((key) => {
+    if (
+      key.includes('clientfy') ||
+      key.includes('training') ||
+      key.includes('ecaes')
+    ) {
+      localStorage.removeItem(key)
+    }
+  })
+
+  // Multiple methods to clear the session cookie
+  const cookieClearMethods = [
+    // Method 1: Cookie Store API (modern browsers)
+    async () => {
+      if ('cookieStore' in window) {
+        try {
+          await cookieStore.delete('session')
+          await cookieStore.delete({ name: 'session', path: '/' })
+          await cookieStore.delete({
+            name: 'session',
+            path: '/',
+            domain: window.location.hostname,
+          })
+          // Cookie cleared via Cookie Store API
+          return true
+        } catch (error) {
+          console.warn('Cookie Store API failed:', error)
+          return false
+        }
+      }
+      return false
+    },
+
+    // Method 2: Multiple document.cookie attempts with different configurations
+    () => {
+      const configs = [
+        'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;',
+        'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' +
+          window.location.hostname +
+          ';',
+        'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' +
+          window.location.hostname +
+          ';',
+        'session=; max-age=0; path=/;',
+        'session=; max-age=0; path=/; domain=' + window.location.hostname + ';',
+        'session=; max-age=0; path=/; domain=.' +
+          window.location.hostname +
+          ';',
+        'session=deleted; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;',
+        'session=deleted; max-age=0; path=/;',
+      ]
+
+      configs.forEach((config) => {
+        document.cookie = config
+      })
+
+      // Cookie cleared via document.cookie
+      return true
+    },
+  ]
+
+  // Try all methods
+  for (const method of cookieClearMethods) {
+    try {
+      const success = await method()
+      if (success) break
+    } catch (error) {
+      console.warn('Cookie clear method failed:', error)
+    }
+  }
+
+  // Only force reload if explicitly requested (for invalid sessions)
+  if (
+    forceReload &&
+    window.location.pathname !== '/login' &&
+    window.location.pathname !== '/register'
+  ) {
+    console.log('Forcing page reload to clear invalid session state')
+    setTimeout(() => window.location.reload(), 100)
+  }
+}
+
+const checkSession = async (retries = 2) => {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch('/api/auth/session', {
+        credentials: 'include',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          // Token inválido, expirado o revocado
+          await clearLocalData(false) // Don't force reload on normal auth failure
+          logout()
+          return null
+        }
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      }
+
+      const user = await res.json()
+      localStorage.setItem('user_session', JSON.stringify(user))
+
+      setUser(user)
+      return user
+    } catch (error) {
+      if (attempt === retries) {
+        await clearLocalData(false) // Don't force reload on network errors
+        return null
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)))
+    }
+  }
+
+  return null
+}
+
+const signIn = async (email, password) => {
+  if (!email || !password) {
+    throw new Error('Email y contraseña son requeridos')
+  }
+
+  const user = await userApi.login({ email, password })
+
+  if (!user) {
+    throw new Error('Credenciales inválidas')
+  }
+
+  localStorage.setItem('debug_login', JSON.stringify(user))
+  localStorage.setItem('user_session', JSON.stringify(user))
+
+  const { password: _, ...userWithoutPassword } = user
+
+  setUser(userWithoutPassword)
+
+  return userWithoutPassword
+}
+
+const signUp = async (userData) => {
+  const { email, password, name } = userData
+
+  if (!email || !password || !name) {
+    throw new Error('Todos los campos son requeridos')
+  }
+
+  const user = await userApi.register({ name, email, password })
+
+  return user
+}
+
+const signOut = async () => {
+  try {
+    const res = await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!res.ok) {
+      console.warn('Error al cerrar sesión en el servidor')
+    }
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error)
+  } finally {
+    await clearLocalData(false) // Normal logout, don't force reload
+    logout()
+  }
+}
+
+// Utility function to force clear all possible session data
+const forceSessionClear = async () => {
+  console.log('Force clearing all session data...')
+
+  // Clear all localStorage
+  try {
+    localStorage.clear()
+  } catch (e) {
+    console.warn('Failed to clear localStorage:', e)
+  }
+
+  // Clear all sessionStorage
+  try {
+    sessionStorage.clear()
+  } catch (e) {
+    console.warn('Failed to clear sessionStorage:', e)
+  }
+
+  // Clear all cookies from current domain
+  const cookies = document.cookie.split(';')
+  for (const cookie of cookies) {
+    const [name] = cookie.split('=')
+    const cookieName = name.trim()
+    if (cookieName) {
+      // Try multiple deletion strategies
+      const deletionStrategies = [
+        `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`,
+        `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`,
+        `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname};`,
+        `${cookieName}=; max-age=0; path=/;`,
+        `${cookieName}=; max-age=0; path=/; domain=${window.location.hostname};`,
+      ]
+
+      deletionStrategies.forEach((strategy) => {
+        document.cookie = strategy
+      })
+    }
+  }
+
+  // Update app state
+  logout()
+
+  console.log('Force session clear completed')
+}
+
+export const authService = {
+  checkSession,
+  signIn,
+  signUp,
+  signOut,
+  clearLocalData,
+  forceSessionClear,
+}
+
+====================
+FILE: /src/services/cart.js
+====================
+
+/* eslint-disable camelcase */
+// Service for consuming the cart API with new product schema
+const API_BASE = '/api'
+
+const handleApiError = async (res, defaultMessage) => {
+  let errorMsg = defaultMessage
+  try {
+    const errorData = await res.json()
+    errorMsg = errorData.error || errorData.message || `HTTP ${res.status}: ${res.statusText}`
+  } catch {
+    errorMsg = `HTTP ${res.status}: ${res.statusText}`
+  }
+  throw new Error(errorMsg)
+}
+
+export const cartService = {
+  async getCart() {
+    try {
+      const res = await fetch(`${API_BASE}/cart`, {
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        await handleApiError(res, 'Error al obtener el carrito')
+      }
+      return res.json()
+    } catch (error) {
+      console.error('Cart service error:', error)
+      throw error
+    }
+  },
+  async addToCart(product_id, quantity = 1) {
+    try {
+      const res = await fetch(`${API_BASE}/cart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ product_id, quantity }),
+      })
+      if (!res.ok) {
+        await handleApiError(res, 'Error al agregar al carrito')
+      }
+      return res.json()
+    } catch (error) {
+      console.error('Add to cart error:', error)
+      throw error
+    }
+  },
+  async removeFromCart(id) {
+    try {
+      const res = await fetch(`${API_BASE}/cart/${id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        await handleApiError(res, 'Error al eliminar del carrito')
+      }
+      return res.json()
+    } catch (error) {
+      console.error('Remove from cart error:', error)
+      throw error
+    }
+  },
+  async updateCartItem(id, quantity) {
+    try {
+      const res = await fetch(`${API_BASE}/cart/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ quantity }),
+      })
+      if (!res.ok) {
+        await handleApiError(res, 'Error al actualizar el carrito')
+      }
+      return res.json()
+    } catch (error) {
+      console.error('Update cart item error:', error)
+      throw error
+    }
+  },
+  async clearCart() {
+    try {
+      const res = await fetch(`${API_BASE}/cart`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        await handleApiError(res, 'Error al limpiar el carrito')
+      }
+      return res.json()
+    } catch (error) {
+      console.error('Clear cart error:', error)
+      throw error
+    }
+  },
+}
+====================
+FILE: /src/services/favorites.js
+====================
+
+export const favoritesService = {
+  async getFavorites() {
+    const response = await fetch('/api/favorites', {
+      credentials: 'include'
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response.json()
+  },
+
+  async toggleFavorite(productId) {
+    const response = await fetch(`/api/favorites/${productId}`, {
+      method: 'POST',
+      credentials: 'include'
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response.json()
+  },
+
+  async checkIsFavorite(productId) {
+    const response = await fetch(`/api/favorites/check?productId=${productId}`, {
+      credentials: 'include'
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    return response.json()
+  }
+}
+====================
+FILE: /src/services/products.js
+====================
+
+// Service for consuming the products API
+const API_BASE = '/api'
+
+const handleApiError = async (res, defaultMessage) => {
+  let errorMsg = defaultMessage
+  try {
+    const errorData = await res.json()
+    errorMsg = errorData.error || errorData.message || `HTTP ${res.status}: ${res.statusText}`
+  } catch {
+    errorMsg = `HTTP ${res.status}: ${res.statusText}`
+  }
+  throw new Error(errorMsg)
+}
+
+export const productsService = {
+  async getAllProducts() {
+    try {
+      const res = await fetch(`${API_BASE}/products`, {
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        await handleApiError(res, 'Error al obtener los productos')
+      }
+      return res.json()
+    } catch (error) {
+      console.error('Products service error:', error)
+      throw error
+    }
+  },
+  
+  async getProductById(id) {
+    try {
+      const res = await fetch(`${API_BASE}/products/${id}`, {
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        await handleApiError(res, 'Error al obtener el producto')
+      }
+      return res.json()
+    } catch (error) {
+      console.error('Product by ID service error:', error)
+      throw error
+    }
+  }
+}
+====================
+FILE: /src/services/user.js
+====================
+
+import { setUser } from '../lib/state.js'
+
+const USERS_KEY = 'users'
+
+const updateProfile = async (userId, updateData) => {
+  const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]')
+  const userIndex = users.findIndex((u) => u.id === userId)
+
+  if (userIndex === -1) {
+    throw new Error('Usuario no encontrado')
+  }
+
+  const { email, password, id, ...allowedUpdates } = updateData
+
+  users[userIndex] = {
+    ...users[userIndex],
+    ...allowedUpdates,
+    updatedAt: new Date().toISOString(),
+  }
+
+  localStorage.setItem(USERS_KEY, JSON.stringify(users))
+
+  const currentUser = JSON.parse(localStorage.getItem('auth_user') || 'null')
+  if (currentUser && currentUser.id === userId) {
+    const updatedUser = {
+      ...currentUser,
+      ...allowedUpdates,
+    }
+    localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+    setUser(updatedUser)
+  }
+
+  return users[userIndex]
+}
+
+const changePassword = async (userId, oldPassword, newPassword) => {
+  const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]')
+  const userIndex = users.findIndex((u) => u.id === userId)
+
+  if (userIndex === -1) {
+    throw new Error('Usuario no encontrado')
+  }
+
+  if (users[userIndex].password !== oldPassword) {
+    throw new Error('Contraseña actual incorrecta')
+  }
+
+  users[userIndex].password = newPassword
+  users[userIndex].updatedAt = new Date().toISOString()
+
+  localStorage.setItem(USERS_KEY, JSON.stringify(users))
+
+  return { message: 'Contraseña actualizada exitosamente' }
+}
+
+const deleteAccount = async (userId, password) => {
+  const users = JSON.parse(localStorage.getItem(USERS_KEY) || '[]')
+  const userIndex = users.findIndex((u) => u.id === userId)
+
+  if (userIndex === -1) {
+    throw new Error('Usuario no encontrado')
+  }
+
+  if (users[userIndex].password !== password) {
+    throw new Error('Contraseña incorrecta')
+  }
+
+  users.splice(userIndex, 1)
+  localStorage.setItem(USERS_KEY, JSON.stringify(users))
+
+  const currentUser = JSON.parse(localStorage.getItem('auth_user') || 'null')
+  if (currentUser && currentUser.id === userId) {
+    localStorage.removeItem('auth_user')
+    setUser(null)
+  }
+
+  return { message: 'Cuenta eliminada exitosamente' }
+}
+
+export const userService = {
+  updateProfile,
+  changePassword,
+  deleteAccount,
+}
+
+const API_BASE = '/api'
+
+export const userApi = {
+  async register({ name, email, password }) {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    })
+    if (!res.ok) {
+      let errorMsg = 'Error en registro'
+      try {
+        const errorData = await res.json()
+        errorMsg = errorData.error || errorData.message || `HTTP ${res.status}: ${res.statusText}`
+      } catch {
+        errorMsg = `HTTP ${res.status}: ${res.statusText}`
+      }
+      throw new Error(errorMsg)
+    }
+    return res.json()
+  },
+  async login({ email, password }) {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include',
+    })
+    if (!res.ok) {
+      let errorMsg = 'Error en login'
+      try {
+        const errorData = await res.json()
+        errorMsg = errorData.error || errorData.message || `HTTP ${res.status}: ${res.statusText}`
+      } catch {
+        errorMsg = `HTTP ${res.status}: ${res.statusText}`
+      }
+      throw new Error(errorMsg)
+    }
+    return res.json()
+  },
+}
+
+====================
+FILE: /src/style.css
+====================
+
+@import url('./components/floatingCart.css');
+@import url('./components/loading.css');
+@import url('./components/modal.css');
+@import url('./views/profile.css');
+@import url('./views/home.css');
+@import url('./views/auth.css');
+@import url('./views/product.css');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background-color: #f4f4f4;
+  overflow-x: hidden;
+}
+
+header {
+  background: linear-gradient(135deg, #29356d 0%, #22222c 100%);
+  color: white;
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+nav h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #ffffff 0%, #f0f8ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: -0.5px;
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 25px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+nav a:hover::before {
+  left: 100%;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  nav h1 {
+    font-size: 1.5rem;
+  }
+
+  nav ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  nav a {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  nav ul {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  nav a {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+footer {
+  background-color: #000000;
+  color: white;
+  padding: 2rem 0;
+  margin-top: 3rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.footer-section h3 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.footer-section p {
+  color: #a0a0a0;
+  line-height: 1.6;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
+  color: #a0a0a0;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+  color: #ffffff;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 2rem;
+  margin-top: 2rem;
+  border-top: 1px solid #333;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+/* View Transitions API Configuration */
+::view-transition-group(*) {
+  animation-duration: 3ms;
+}
+
+::view-transition-old(root) {
+  animation-name: slide-out-to-left;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+}
+
+::view-transition-new(root) {
+  animation-name: slide-in-from-right;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slide-out-to-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Configure main container for transitions */
+#app {
+  view-transition-name: root;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Prevent flickering during transitions */
+* {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+}
+
+====================
+FILE: /src/views/auth.css
+====================
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+.auth-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-form h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #333;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.auth-form button:hover {
+  background-color: #06041b;
+}
+
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  padding: 1rem;
+}
+
+.logout-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 25px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+}
+
+.logout-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.logout-button:hover::before {
+  left: 100%;
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.auth-footer p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+  display: inline;
+}
+
+.auth-footer a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.auth-footer a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+====================
+FILE: /src/views/home.css
+====================
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 32px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-card {
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.product-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-header img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.product-card:hover .card-header img {
+  transform: scale(1.02);
+}
+
+.card-body {
+  padding: 24px;
+  background: #fff;
+}
+
+.card-body h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #000;
+  line-height: 1.3;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.card-header .heart-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: transparent;
+  padding: 0;
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.heart-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.heart-svg {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heart-path {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heart-button.heart-animating .heart-svg {
+  animation: heartBeat 0.3s ease-in-out;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heart-button.favorite .heart-path {
+  filter: drop-shadow(0 0 3px rgba(231, 76, 60, 0.3));
+}
+
+.product-card .price {
+  font-size: 18px;
+  color: #000;
+  font-weight: 600;
+  margin-bottom: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-card button {
+  width: 100%;
+  padding: 12px 24px;
+  background: #000;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.product-card button:active {
+  transform: translateY(0);
+  transition: all 0.1s ease;
+}
+
+.card-header .heart-button .heart-svg {
+  width: 24px;
+  height: 24px;
+}
+.card-header .heart-button::before,
+.card-header .heart-button::after {
+  content: none !important;
+}
+
+====================
+FILE: /src/views/home.js
+====================
+
+import { showQuantityModal } from '../components/modal.js'
+import { createElement } from '../lib/spa.js'
+import { createHeartButton } from '../components/heartButton.js'
+import { syncFavorites, isAuthenticated } from '../lib/state.js'
+import { viewTransitions } from '../lib/viewTransitions.js'
+
+export function HomeView() {
+  return async function () {
+    const container = createElement('div', { className: 'products-grid' })
+
+    // Sync favorites if user is authenticated
+    if (isAuthenticated()) {
+      await syncFavorites()
+    }
+
+    try {
+      const response = await fetch('/api/products')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const products = await response.json()
+
+      if (!Array.isArray(products)) {
+        throw new Error('Invalid response format: expected array')
+      }
+
+      products.forEach((product) => {
+        // Get the first asset's image or placeholder
+        let imgSrc = product.assets && product.assets.length > 0 
+          ? (product.assets[0].url || product.assets[0].url_local || '/placeholder.jpg')
+          : '/placeholder.jpg'
+        
+        // Ensure URL starts with / for absolute path
+        if (imgSrc && !imgSrc.startsWith('/') && !imgSrc.startsWith('http')) {
+          imgSrc = '/' + imgSrc
+        }
+
+        const navigateToProduct = () => {
+          // Set transition names for smooth navigation
+          viewTransitions.setProductTransition(card, product.id)
+          
+          // Navigate to product page with transition
+          viewTransitions.navigateWithTransition(`/product/${product.id}`, () => {
+            window.history.pushState(null, null, `/product/${product.id}`);
+            window.dispatchEvent(new Event('popstate'));
+          })
+        };
+        
+        const card = createElement(
+          'div',
+          { 
+            className: 'product-card',
+            style: `cursor: pointer;`,
+            onclick: navigateToProduct
+          },
+          createElement('div', { className: 'card-header' },
+            createElement('img', {
+              src: imgSrc,
+              alt: product.name
+            }),
+            createHeartButton(product.id)
+          ),
+          createElement('div', { className: 'card-body' },
+            createElement('h3', {}, product.name),
+            createElement('p', { className: 'price' }, `$${product.price}`),
+            createElement(
+              'button',
+              {
+                className: 'add-to-cart',
+                onclick: (e) => {
+                  e.stopPropagation()
+                  showQuantityModal(product)
+                },
+              },
+              'Agregar al carrito'
+            )
+          )
+        )
+        container.appendChild(card)
+      })
+    } catch (error) {
+      console.error('Error cargando productos:', error)
+      container.appendChild(
+        createElement(
+          'p',
+          { className: 'error-message' },
+          'Error al cargar los productos. Por favor, intente más tarde.'
+        )
+      )
+    }
+
+    return container
+  }
+}
+
+====================
+FILE: /src/views/login.js
+====================
+
+import { authService } from '../services/auth.js'
+import { createElement } from '../lib/spa.js'
+
+export function LoginView(router) {
+  return function () {
+    return createElement(
+      'div',
+      { className: 'auth-container' },
+      createElement(
+        'form',
+        {
+          className: 'auth-form',
+          onsubmit: async (e) => {
+            e.preventDefault()
+            const email = e.target.email.value
+            const password = e.target.password.value
+
+            try {
+              await authService.signIn(email, password)
+              router.navigateTo('/')
+            } catch (error) {
+              console.error('Login error:', error)
+              let msg = 'Error al iniciar sesión'
+              
+              if (error instanceof Error) {
+                msg = error.message
+              } else if (error && typeof error === 'object') {
+                if (error.error) msg = error.error
+                else if (error.message) msg = error.message
+                else msg = 'Error desconocido al iniciar sesión'
+              } else if (typeof error === 'string') {
+                msg = error
+              }
+              
+              alert(msg)
+            }
+          },
+        },
+        createElement('h2', {}, 'Iniciar Sesión'),
+        createElement('input', {
+          type: 'email',
+          name: 'email',
+          placeholder: 'Correo electrónico',
+          required: true,
+        }),
+        createElement('input', {
+          type: 'password',
+          name: 'password',
+          placeholder: 'Contraseña',
+          required: true,
+        }),
+        createElement('button', { type: 'submit' }, 'Ingresar'),
+        createElement('div', { className: 'auth-footer' },
+          createElement('p', {}, '¿No tienes cuenta? '),
+          createElement('a', {
+            href: '/register',
+            'data-link': true,
+            onclick: (e) => {
+              e.preventDefault()
+              router.navigateTo('/register')
+            }
+          }, 'Regístrate')
+        )
+      )
+    )
+  }
+}
+
+====================
+FILE: /src/views/product.css
+====================
+
+.product-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.product-images {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  position: relative;
+}
+
+.product-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+}
+
+.product-image:hover {
+  transform: scale(1.01);
+}
+
+.product-placeholder {
+  width: 100%;
+  height: 400px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 18px;
+  font-weight: 500;
+  border-radius: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-info {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #fff;
+}
+
+.product-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+  line-height: 1.2;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-price {
+  font-size: 24px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-description {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #666;
+  margin: 0;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.add-to-cart-btn {
+  background: #000;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin-top: 8px;
+}
+
+.add-to-cart-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.add-to-cart-btn:active {
+  transform: translateY(0);
+  transition: all 0.1s ease;
+}
+
+.back-btn {
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.back-btn:hover {
+  background: #e5e5e5;
+}
+
+.success-message {
+  background: #10b981;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error {
+  text-align: center;
+  color: #ef4444;
+  font-size: 1.2rem;
+  margin: 40px 0;
+}
+
+@media (max-width: 768px) {
+  .product-card {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .product-image {
+    height: 300px;
+  }
+
+  .product-title {
+    font-size: 1.5rem;
+  }
+
+  .product-price {
+    font-size: 1.3rem;
+  }
+}
+
+====================
+FILE: /src/views/product.js
+====================
+
+import { createElement } from '../lib/spa.js'
+import { cartService } from '../services/cart.js'
+import { showQuantityModal } from '../components/modal.js'
+import { viewTransitions } from '../lib/viewTransitions.js'
+
+export const ProductView = (router) => {
+  return async () => {
+    const productId = window.location.pathname.split('/product/')[1]
+
+    if (!productId) {
+      return createElement('div', { className: 'error' }, 'Product not found')
+    }
+
+    try {
+      const response = await fetch(`/api/products/${productId}`)
+
+      if (!response.ok) {
+        throw new Error('Product not found')
+      }
+
+      const product = await response.json()
+
+      const container = createElement('div', { className: 'product-container' })
+
+      const productCard = createElement('div', { className: 'product-card' })
+
+      // Product images
+      const imageContainer = createElement('div', {
+        className: 'product-images',
+      })
+
+      if (product.assets && product.assets.length > 0) {
+        product.assets.forEach((asset) => {
+          let imgSrc = asset.url || asset.url_local || '/placeholder.jpg'
+          // Ensure URL starts with / for absolute path
+          if (imgSrc && !imgSrc.startsWith('/') && !imgSrc.startsWith('http')) {
+            imgSrc = '/' + imgSrc
+          }
+          const img = createElement('img', {
+            src: imgSrc,
+            alt: product.name,
+            className: 'product-image',
+          });
+          
+          // Set transition name for smooth navigation from home
+          viewTransitions.setTransitionName(img, `product-image-${product.id}`)
+          
+          imageContainer.appendChild(img);
+        });
+      } else {
+        const placeholder = createElement(
+          'div',
+          { className: 'product-placeholder' },
+          'No image available'
+        );
+        imageContainer.appendChild(placeholder);
+      }
+
+      // Product info
+      const infoContainer = createElement('div', { className: 'product-info' });
+
+      const title = createElement(
+        'h1',
+        {
+          className: 'product-title',
+        },
+        product.name
+      );
+      
+      // Set transition name for smooth navigation from home and favorites
+      viewTransitions.setTransitionName(title, `product-title-${product.id}`)
+      const price = createElement(
+        'p',
+        { className: 'product-price' },
+        `$${product.price}`
+      )
+      const description = createElement(
+        'p',
+        { className: 'product-description' },
+        product.description || 'No description available'
+      )
+
+      // Add to cart button
+      const addToCartButton = createElement(
+        'button',
+        {
+          className: 'add-to-cart-btn',
+          onclick: (e) => {
+            e.preventDefault();
+            showQuantityModal(product);
+          },
+        },
+        'Add to Cart'
+      );
+
+      // Back button
+      const backButton = createElement(
+        'button',
+        {
+          className: 'back-btn',
+          onclick: (e) => {
+            e.preventDefault()
+            router.navigateTo('/')
+          },
+        },
+        '← Back to Products'
+      )
+
+      infoContainer.appendChild(title)
+      infoContainer.appendChild(price)
+      infoContainer.appendChild(description)
+      infoContainer.appendChild(addToCartButton)
+      infoContainer.appendChild(backButton)
+
+      productCard.appendChild(imageContainer)
+      productCard.appendChild(infoContainer)
+
+      container.appendChild(productCard)
+
+      return container
+    } catch (error) {
+      console.error('Error loading product:', error)
+      return createElement(
+        'div',
+        { className: 'error' },
+        'Error loading product'
+      )
+    }
+  }
+}
+
+====================
+FILE: /src/views/profile.css
+====================
+
+@view-transition {
+  navigation: auto;
+}
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.cart-section,
+.account-section,
+.favorites-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cart-section h2,
+.cart-section h3 {
+  margin: 0 0 1rem 0;
+  text-align: left;
+}
+
+.cart-section h2 {
+  font-size: 1.5rem;
+  color: #2e5258;
+  font-weight: 600;
+}
+
+.cart-section h3 {
+  font-size: 1.25rem;
+  color: #4a6741;
+  font-weight: 500;
+  margin-top: 1.5rem;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.favorite-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.favorite-card:hover {
+  transform: translateY(-2px);
+}
+
+.favorite-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.favorite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+}
+
+.favorite-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  flex-grow: 1;
+}
+
+.favorite-price {
+  padding: 0 0.75rem;
+  font-weight: bold;
+  color: #2e5258;
+  margin: 0.5rem 0;
+}
+
+.add-to-cart-from-favorites {
+  width: 100%;
+  padding: 0.75rem;
+  background: #2e5258;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+.add-to-cart-from-favorites:hover {
+  background: #041629;
+}
+
+.empty-favorites {
+  text-align: center;
+  color: #666;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+/* Heart button styles - shared with home.css */
+.heart-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.heart-button:hover {
+  transform: scale(1.1);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.heart-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.heart-svg {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heart-path {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heart-button.heart-animating .heart-svg {
+  animation: heartBeat 0.3s ease-in-out;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heart-button.favorite .heart-path {
+  filter: drop-shadow(0 0 3px rgba(231, 76, 60, 0.3));
+}
+
+.cart-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+.cart-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+  text-align: right;
+}
+
+.cart-total {
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: right;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-controls button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  cursor: pointer;
+}
+
+.remove-item {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+}
+
+.change-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.account-section .delete-account {
+  width: 100%;
+}
+
+.delete-account {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border: 2px solid #dc3545;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 25px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  margin-top: 1rem;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.delete-account::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.delete-account:hover::before {
+  left: 100%;
+}
+
+.delete-account:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  border-color: #bd2130;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.delete-account:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+====================
+FILE: /src/views/profile.js
+====================
+
+import { createHeartButton } from '../components/heartButton.js'
+import { showQuantityModal } from '../components/modal.js'
+import { createElement } from '../lib/spa.js'
+import {
+  addToCart,
+  getCart,
+  getFavorites,
+  getUser,
+  removeFromCart,
+  store,
+  syncCart,
+  syncFavorites,
+} from '../lib/state.js'
+import { viewTransitions } from '../lib/viewTransitions.js'
+import { userService } from '../services/user.js'
+
+export function ProfileView(router) {
+  return async function () {
+    const user = getUser()
+    await syncCart()
+    await syncFavorites()
+    // Force a second sync to ensure UI consistency
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    await syncFavorites()
+    const cart = getCart()
+    const favorites = getFavorites()
+
+    const container = createElement('div', { className: 'profile-container' })
+
+    let favoritesSection = createFavoritesSection(favorites, router)
+    container.appendChild(favoritesSection)
+
+    let cartSection = await createCartSection(cart, user, router)
+    container.appendChild(cartSection)
+
+    const accountSection = createAccountSection(user, router)
+    container.appendChild(accountSection)
+
+    // Add reactive updates for cart changes
+    const unsubscribeCart = store.subscribe('cart', async (newCart) => {
+      const newCartSection = await createCartSection(newCart, user, router)
+      container.replaceChild(newCartSection, cartSection)
+      cartSection = newCartSection
+    })
+
+    // Add reactive updates for favorites changes
+    const unsubscribeFavorites = store.subscribe(
+      'favorites',
+      (newFavorites) => {
+        const newFavoritesSection = createFavoritesSection(newFavorites, router)
+        container.replaceChild(newFavoritesSection, favoritesSection)
+        favoritesSection = newFavoritesSection
+      }
+    )
+
+    // Cleanup function (not used in this app but good practice)
+    container._cleanup = () => {
+      unsubscribeCart()
+      unsubscribeFavorites()
+    }
+
+    return container
+  }
+}
+
+async function createCartSection(cart, user, router) {
+  const cartSection = createElement(
+    'div',
+    { className: 'cart-section' },
+    createElement('h2', {}, `Bienvenido, ${user.name}`),
+    createElement('h3', {}, 'Tu Carrito de Compras')
+  )
+
+  if (!cart || cart.length === 0) {
+    cartSection.appendChild(createElement('p', {}, 'Tu carrito está vacío.'))
+  } else {
+    let total = 0
+    const cartList = createElement('ul', { className: 'cart-list' })
+    for (const item of cart) {
+      const subtotal = item.price * item.quantity
+      total += subtotal
+      const quantityControls = createElement(
+        'div',
+        { className: 'quantity-controls' },
+        createElement(
+          'button',
+          {
+            onclick: async () => {
+              try {
+                await addToCart(item.product_id, -1)
+              } catch (error) {
+                console.error('Error updating cart:', error)
+              }
+            },
+          },
+          '-'
+        ),
+        createElement('span', {}, item.quantity),
+        createElement(
+          'button',
+          {
+            onclick: async () => {
+              try {
+                await addToCart(item.product_id, 1)
+              } catch (error) {
+                console.error('Error updating cart:', error)
+              }
+            },
+          },
+          '+'
+        )
+      )
+      const itemDetails = createElement(
+        'div',
+        { className: 'item-details' },
+        `${item.name} ($${item.price.toFixed(2)} c/u)`
+      )
+      const itemSubtotal = createElement(
+        'div',
+        { className: 'item-subtotal' },
+        `Subtotal: $${subtotal.toFixed(2)}`
+      )
+      const removeButton = createElement(
+        'button',
+        {
+          className: 'remove-item',
+          onclick: () => {
+            removeFromCart(item.id)
+          },
+        },
+        '×'
+      )
+      const cartItem = createElement(
+        'li',
+        { className: 'cart-item' },
+        itemDetails,
+        quantityControls,
+        itemSubtotal,
+        removeButton
+      )
+      cartList.appendChild(cartItem)
+    }
+    const totalElement = createElement(
+      'p',
+      { className: 'cart-total' },
+      `Total: $${total.toFixed(2)}`
+    )
+    cartSection.appendChild(cartList)
+    cartSection.appendChild(totalElement)
+  }
+  return cartSection
+}
+
+function createAccountSection(user, router) {
+  const accountSection = createElement('div', {
+    className: 'account-section auth-form',
+  })
+
+  const changePasswordForm = createElement('form', {
+    className: 'change-password-form',
+    onsubmit: async (e) => {
+      e.preventDefault()
+      const currentPassword = e.target.currentPassword.value
+      const newPassword = e.target.newPassword.value
+      const confirmPassword = e.target.confirmPassword.value
+
+      if (newPassword !== confirmPassword) {
+        alert('La nueva contraseña y la confirmación no coinciden.')
+        return
+      }
+      if (!newPassword || !currentPassword) {
+        alert('Por favor, completa todos los campos.')
+        return
+      }
+
+      try {
+        await userService.changePassword(user.id, currentPassword, newPassword)
+        alert('¡Contraseña actualizada exitosamente!')
+        e.target.reset()
+      } catch (error) {
+        alert(`Error: ${error.message}`)
+      }
+    },
+  })
+
+  changePasswordForm.append(
+    createElement('h3', {}, 'Cambiar Contraseña'),
+    createElement('input', {
+      type: 'password',
+      name: 'currentPassword',
+      placeholder: 'Contraseña Actual',
+      required: true,
+    }),
+    createElement('input', {
+      type: 'password',
+      name: 'newPassword',
+      placeholder: 'Nueva Contraseña',
+      required: true,
+    }),
+    createElement('input', {
+      type: 'password',
+      name: 'confirmPassword',
+      placeholder: 'Confirmar Nueva Contraseña',
+      required: true,
+    }),
+    createElement('button', { type: 'submit' }, 'Actualizar Contraseña')
+  )
+
+  const deleteButton = createElement(
+    'button',
+    {
+      className: 'delete-account',
+      onclick: async () => {
+        const password = prompt(
+          'Para eliminar tu cuenta, por favor, introduce tu contraseña:'
+        )
+        if (password === null) return
+
+        try {
+          await userService.deleteAccount(user.id, password)
+          alert('Cuenta eliminada exitosamente.')
+          router.navigateTo('/')
+        } catch (error) {
+          alert(`Error: ${error.message}`)
+        }
+      },
+    },
+    'Eliminar cuenta'
+  )
+
+  accountSection.append(
+    createElement('h3', {}, 'Gestionar Cuenta'),
+    changePasswordForm,
+    deleteButton
+  )
+
+  return accountSection
+}
+
+function createFavoritesSection(favorites, router) {
+  const favoritesSection = createElement(
+    'div',
+    { className: 'favorites-section' },
+    createElement('h2', {}, 'Mis Favoritos')
+  )
+
+  if (!favorites || favorites.length === 0) {
+    favoritesSection.appendChild(
+      createElement(
+        'p',
+        { className: 'empty-favorites' },
+        'No tienes productos favoritos aún.'
+      )
+    )
+  } else {
+    const favoritesList = createElement('div', { className: 'favorites-grid' })
+
+    favorites.forEach((favorite) => {
+      const imgSrc =
+        favorite.url.startsWith('/') || favorite.url.startsWith('http')
+          ? favorite.url
+          : '/' + favorite.url
+
+      const favoriteHeader = createElement(
+        'div',
+        { className: 'favorite-header' },
+        createElement('h4', {}, favorite.name),
+        createHeartButton(favorite.product_id, {
+          size: '18',
+          className: 'profile-heart',
+        })
+      )
+
+      const favoriteCard = createElement(
+        'div',
+        {
+          className: 'favorite-card',
+          onclick: () => {
+            // Set transition names for smooth navigation to product
+            viewTransitions.setProductTransition(
+              favoriteCard,
+              favorite.product_id
+            )
+
+            // Navigate with transition
+            viewTransitions.navigateWithTransition(
+              `/product/${favorite.product_id}`,
+              () => {
+                router.navigateTo(`/product/${favorite.product_id}`)
+              }
+            )
+          },
+        },
+        createElement('img', {
+          src: imgSrc,
+          alt: favorite.name,
+        }),
+        favoriteHeader,
+        createElement(
+          'p',
+          { className: 'favorite-price' },
+          `${favorite.price}`
+        ),
+        createElement(
+          'button',
+          {
+            className: 'add-to-cart-from-favorites',
+            onclick: (e) => {
+              e.stopPropagation() // Prevent navigation
+              // The favorite object has a similar structure to the product object,
+              // but the ID is `product_id`. We create a new object to match
+              // the structure expected by `showQuantityModal`.
+              const productForModal = {
+                id: favorite.product_id,
+                name: favorite.name,
+                price: favorite.price,
+              }
+              showQuantityModal(productForModal)
+            },
+          },
+          'Agregar al carrito'
+        )
+      )
+
+      favoritesList.appendChild(favoriteCard)
+    })
+
+    favoritesSection.appendChild(favoritesList)
+  }
+
+  return favoritesSection
+}
+
+====================
+FILE: /src/views/register.js
+====================
+
+import { authService } from '../services/auth.js'
+import { createElement } from '../lib/spa.js'
+
+export function RegisterView(router) {
+  return function () {
+    return createElement(
+      'div',
+      { className: 'auth-container' },
+      createElement(
+        'form',
+        {
+          className: 'auth-form',
+          onsubmit: async (e) => {
+            e.preventDefault()
+            const name = e.target.name.value
+            const email = e.target.email.value
+            const password = e.target.password.value
+            const confirmPassword = e.target.confirmPassword.value
+
+            if (password !== confirmPassword) {
+              alert('Las contraseñas no coinciden')
+              return
+            }
+
+            try {
+              await authService.signUp({ name, email, password })
+              router.navigateTo('/login')
+            } catch (error) {
+              let msg = error
+              if (msg && typeof msg === 'object') {
+                if (msg.error) msg = msg.error
+                else if (msg.message) msg = msg.message
+                else msg = JSON.stringify(msg)
+              }
+              alert(msg)
+            }
+          },
+        },
+        createElement('h2', {}, 'Registro'),
+        createElement('input', {
+          type: 'text',
+          name: 'name',
+          placeholder: 'Nombre completo',
+          required: true,
+        }),
+        createElement('input', {
+          type: 'email',
+          name: 'email',
+          placeholder: 'Correo electrónico',
+          required: true,
+        }),
+        createElement('input', {
+          type: 'password',
+          name: 'password',
+          placeholder: 'Contraseña',
+          required: true,
+        }),
+        createElement('input', {
+          type: 'password',
+          name: 'confirmPassword',
+          placeholder: 'Confirmar contraseña',
+          required: true,
+        }),
+        createElement('button', { type: 'submit' }, 'Registrarse')
+      )
+    )
+  }
+}
+
+====================
+FILE: /experimental/.cursor/rules/use-bun-instead-of-node-vite-npm-pnpm.mdc
+====================
+
+---
+description: Use Bun instead of Node.js, npm, pnpm, or vite.
+globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
+alwaysApply: false
+---
+
+Default to using Bun instead of Node.js.
+
+- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
+- Use `bun test` instead of `jest` or `vitest`
+- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
+- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
+- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
+- Bun automatically loads .env, so don't use dotenv.
+
+## APIs
+
+- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
+- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
+- `Bun.redis` for Redis. Don't use `ioredis`.
+- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
+- `WebSocket` is built-in. Don't use `ws`.
+- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
+- Bun.$`ls` instead of execa.
+
+## Frontend
+
+Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+
+Server:
+
+```ts#index.ts
+import index from "./index.html"
+
+Bun.serve({
+  routes: {
+    "/": index,
+    "/api/users/:id": {
+      GET: (req) => {
+        return new Response(JSON.stringify({ id: req.params.id }));
+      },
+    },
+  },
+  // optional websocket support
+  websocket: {
+    open: (ws) => {
+      ws.send("Hello, world!");
+    },
+    message: (ws, message) => {
+      ws.send(message);
+    },
+    close: (ws) => {
+      // handle close
+    }
+  },
+  development: {
+    hmr: true,
+    console: true,
+  }
+})
+```
+
+HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+
+```html#index.html
+<html>
+  <body>
+    <h1>Hello, world!</h1>
+    <script type="module" src="./frontend.tsx"></script>
+  </body>
+</html>
+```
+
+With the following `frontend.tsx`:
+
+```tsx#frontend.tsx
+import React from "react";
+
+// import .css files directly and it works
+import './index.css';
+
+import { createRoot } from "react-dom/client";
+
+const root = createRoot(document.body);
+
+export default function Frontend() {
+  return <h1>Hello, world!</h1>;
+}
+
+root.render(<Frontend />);
+```
+
+Then, run index.ts
+
+```sh
+bun --hot ./index.ts
+```
+
+For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+
+====================
+FILE: /experimental/.gitignore
+====================
+
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+
+====================
+FILE: /experimental/README.md
+====================
+
+# bun-react-template
+
+To install dependencies:
+
+```bash
+bun install
+```
+
+To start a development server:
+
+```bash
+bun dev
+```
+
+To run for production:
+
+```bash
+bun start
+```
+
+This project was created using `bun init` in bun v1.2.16. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+
+====================
+FILE: /experimental/bun-env.d.ts
+====================
+
+// Generated by `bun init`
+
+declare module "*.svg" {
+  /**
+   * A path to the SVG file
+   */
+  const path: `${string}.svg`;
+  export = path;
+}
+
+declare module "*.module.css" {
+  /**
+   * A record of class names to their corresponding CSS module classes
+   */
+  const classes: { readonly [key: string]: string };
+  export = classes;
+}
+
+====================
+FILE: /experimental/bun.lock
+====================
+
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "bun-react-template",
+      "dependencies": {
+        "react": "^19",
+        "react-dom": "^19",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+      },
+    },
+  },
+  "packages": {
+    "@types/bun": ["@types/bun@1.2.18", "", { "dependencies": { "bun-types": "1.2.18" } }, "sha512-Xf6RaWVheyemaThV0kUfaAUvCNokFr+bH8Jxp+tTZfx7dAPA8z9ePnP9S9+Vspzuxxx9JRAXhnyccRj3GyCMdQ=="],
+
+    "@types/node": ["@types/node@24.0.15", "", { "dependencies": { "undici-types": "~7.8.0" } }, "sha512-oaeTSbCef7U/z7rDeJA138xpG3NuKc64/rZ2qmUFkFJmnMsAPaluIifqyWd8hSSMxyP9oie3dLAqYPblag9KgA=="],
+
+    "@types/react": ["@types/react@19.1.8", "", { "dependencies": { "csstype": "^3.0.2" } }, "sha512-AwAfQ2Wa5bCx9WP8nZL2uMZWod7J7/JSplxbTmBQ5ms6QpqNYm672H0Vu9ZVKVngQ+ii4R/byguVEUZQyeg44g=="],
+
+    "@types/react-dom": ["@types/react-dom@19.1.6", "", { "peerDependencies": { "@types/react": "^19.0.0" } }, "sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw=="],
+
+    "bun-types": ["bun-types@1.2.18", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-04+Eha5NP7Z0A9YgDAzMk5PHR16ZuLVa83b26kH5+cp1qZW4F6FmAURngE7INf4tKOvCE69vYvDEwoNl1tGiWw=="],
+
+    "csstype": ["csstype@3.1.3", "", {}, "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw=="],
+
+    "react": ["react@19.1.0", "", {}, "sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg=="],
+
+    "react-dom": ["react-dom@19.1.0", "", { "dependencies": { "scheduler": "^0.26.0" }, "peerDependencies": { "react": "^19.1.0" } }, "sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g=="],
+
+    "scheduler": ["scheduler@0.26.0", "", {}, "sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA=="],
+
+    "undici-types": ["undici-types@7.8.0", "", {}, "sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw=="],
+  }
+}
+
+====================
+FILE: /experimental/bunfig.toml
+====================
+
+[serve.static]
+env = "BUN_PUBLIC_*"
+====================
+FILE: /experimental/package.json
+====================
+
+{
+  "name": "bun-react-template",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.tsx",
+  "module": "src/index.tsx",
+  "scripts": {
+    "dev": "bun --hot src/index.tsx",
+    "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
+    "start": "NODE_ENV=production bun src/index.tsx"
+  },
+  "dependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/bun": "latest"
+  }
+}
+
+====================
+FILE: /experimental/src/APITester.tsx
+====================
+
+import { useRef, type FormEvent } from "react";
+
+export function APITester() {
+  const responseInputRef = useRef<HTMLTextAreaElement>(null);
+
+  const testEndpoint = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+      const endpoint = formData.get("endpoint") as string;
+      const url = new URL(endpoint, location.href);
+      const method = formData.get("method") as string;
+      const res = await fetch(url, { method });
+
+      const data = await res.json();
+      responseInputRef.current!.value = JSON.stringify(data, null, 2);
+    } catch (error) {
+      responseInputRef.current!.value = String(error);
+    }
+  };
+
+  return (
+    <div className="api-tester">
+      <form onSubmit={testEndpoint} className="endpoint-row">
+        <select name="method" className="method">
+          <option value="GET">GET</option>
+          <option value="PUT">PUT</option>
+        </select>
+        <input type="text" name="endpoint" defaultValue="/api/hello" className="url-input" placeholder="/api/hello" />
+        <button type="submit" className="send-button">
+          Send
+        </button>
+      </form>
+      <textarea ref={responseInputRef} readOnly placeholder="Response will appear here..." className="response-area" />
+    </div>
+  );
+}
+
+====================
+FILE: /experimental/src/App.tsx
+====================
+
+import { APITester } from "./APITester";
+import "./index.css";
+
+import logo from "./logo.svg";
+import reactLogo from "./react.svg";
+
+export function App() {
+  return (
+    <div className="app">
+      <div className="logo-container">
+        <img src={logo} alt="Bun Logo" className="logo bun-logo" />
+        <img src={reactLogo} alt="React Logo" className="logo react-logo" />
+      </div>
+
+      <h1>Bun + React</h1>
+      <p>
+        Edit <code>src/App.tsx</code> and save to test HMR
+      </p>
+      <APITester />
+    </div>
+  );
+}
+
+export default App;
+
+====================
+FILE: /experimental/src/frontend.tsx
+====================
+
+/**
+ * This file is the entry point for the React app, it sets up the root
+ * element and renders the App component to the DOM.
+ *
+ * It is included in `src/index.html`.
+ */
+
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "./App";
+
+const elem = document.getElementById("root")!;
+const app = (
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+if (import.meta.hot) {
+  // With hot module reloading, `import.meta.hot.data` is persisted.
+  const root = (import.meta.hot.data.root ??= createRoot(elem));
+  root.render(app);
+} else {
+  // The hot module reloading API is not available in production.
+  createRoot(elem).render(app);
+}
+
+====================
+FILE: /experimental/src/index.css
+====================
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+}
+body {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  position: relative;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.05;
+  background: url("./logo.svg");
+  background-size: 256px;
+  transform: rotate(-12deg) scale(1.35);
+  animation: slide 30s linear infinite;
+  pointer-events: none;
+}
+@keyframes slide {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 256px 224px;
+  }
+}
+.app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 0.3s;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.bun-logo {
+  transform: scale(1.2);
+}
+.bun-logo:hover {
+  filter: drop-shadow(0 0 2em #fbf0dfaa);
+}
+.react-logo {
+  animation: spin 20s linear infinite;
+}
+.react-logo:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+@keyframes spin {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+code {
+  background-color: #1a1a1a;
+  padding: 0.2em 0.4em;
+  border-radius: 0.3em;
+  font-family: monospace;
+}
+.api-tester {
+  margin: 2rem auto 0;
+  width: 100%;
+  max-width: 600px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.endpoint-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #1a1a1a;
+  padding: 0.75rem;
+  border-radius: 12px;
+  font: monospace;
+  border: 2px solid #fbf0df;
+  transition: 0.3s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.endpoint-row:focus-within {
+  border-color: #f3d5a3;
+}
+.method {
+  background: #fbf0df;
+  color: #1a1a1a;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9em;
+  appearance: none;
+  margin: 0;
+  width: min-content;
+  display: block;
+  flex-shrink: 0;
+  border: none;
+}
+.method option {
+  text-align: left;
+}
+.url-input {
+  width: 100%;
+  flex: 1;
+  background: 0;
+  border: 0;
+  color: #fbf0df;
+  font: 1em monospace;
+  padding: 0.2rem;
+  outline: 0;
+}
+.url-input:focus {
+  color: #fff;
+}
+.url-input::placeholder {
+  color: rgba(251, 240, 223, 0.4);
+}
+.send-button {
+  background: #fbf0df;
+  color: #1a1a1a;
+  border: 0;
+  padding: 0.4rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 700;
+  transition: 0.1s;
+  cursor: var(--bun-cursor);
+}
+.send-button:hover {
+  background: #f3d5a3;
+  transform: translateY(-1px);
+  cursor: pointer;
+}
+.response-area {
+  width: 100%;
+  min-height: 120px;
+  background: #1a1a1a;
+  border: 2px solid #fbf0df;
+  border-radius: 12px;
+  padding: 0.75rem;
+  color: #fbf0df;
+  font: monospace;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.response-area:focus {
+  border-color: #f3d5a3;
+}
+.response-area::placeholder {
+  color: rgba(251, 240, 223, 0.4);
+}
+@media (prefers-reduced-motion) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+  }
+}
+
+====================
+FILE: /experimental/src/index.html
+====================
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <title>Bun + React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./frontend.tsx"></script>
+  </body>
+</html>
+
+====================
+FILE: /experimental/src/index.tsx
+====================
+
+import { serve } from "bun";
+import index from "./index.html";
+
+const server = serve({
+  routes: {
+    // Serve index.html for all unmatched routes.
+    "/*": index,
+
+    "/api/hello": {
+      async GET(req) {
+        return Response.json({
+          message: "Hello, world!",
+          method: "GET",
+        });
+      },
+      async PUT(req) {
+        return Response.json({
+          message: "Hello, world!",
+          method: "PUT",
+        });
+      },
+    },
+
+    "/api/hello/:name": async req => {
+      const name = req.params.name;
+      return Response.json({
+        message: `Hello, ${name}!`,
+      });
+    },
+  },
+
+  development: process.env.NODE_ENV !== "production" && {
+    // Enable browser hot reloading in development
+    hmr: true,
+
+    // Echo console logs from the browser to the server
+    console: true,
+  },
+});
+
+console.log(`🚀 Server running at ${server.url}`);
+
+====================
+FILE: /experimental/src/logo.svg
+====================
+
+<svg id="Bun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 70"><title>Bun Logo</title><path id="Shadow" d="M71.09,20.74c-.16-.17-.33-.34-.5-.5s-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5A26.46,26.46,0,0,1,75.5,35.7c0,16.57-16.82,30.05-37.5,30.05-11.58,0-21.94-4.23-28.83-10.86l.5.5.5.5.5.5.5.5.5.5.5.5.5.5C19.55,65.3,30.14,69.75,42,69.75c20.68,0,37.5-13.48,37.5-30C79.5,32.69,76.46,26,71.09,20.74Z"/><g id="Body"><path id="Background" d="M73,35.7c0,15.21-15.67,27.54-35,27.54S3,50.91,3,35.7C3,26.27,9,17.94,18.22,13S33.18,3,38,3s8.94,4.13,19.78,10C67,17.94,73,26.27,73,35.7Z" style="fill:#fbf0df"/><path id="Bottom_Shadow" data-name="Bottom Shadow" d="M73,35.7a21.67,21.67,0,0,0-.8-5.78c-2.73,33.3-43.35,34.9-59.32,24.94A40,40,0,0,0,38,63.24C57.3,63.24,73,50.89,73,35.7Z" style="fill:#f6dece"/><path id="Light_Shine" data-name="Light Shine" d="M24.53,11.17C29,8.49,34.94,3.46,40.78,3.45A9.29,9.29,0,0,0,38,3c-2.42,0-5,1.25-8.25,3.13-1.13.66-2.3,1.39-3.54,2.15-2.33,1.44-5,3.07-8,4.7C8.69,18.13,3,26.62,3,35.7c0,.4,0,.8,0,1.19C9.06,15.48,20.07,13.85,24.53,11.17Z" style="fill:#fffefc"/><path id="Top" d="M35.12,5.53A16.41,16.41,0,0,1,29.49,18c-.28.25-.06.73.3.59,3.37-1.31,7.92-5.23,6-13.14C35.71,5,35.12,5.12,35.12,5.53Zm2.27,0A16.24,16.24,0,0,1,39,19c-.12.35.31.65.55.36C41.74,16.56,43.65,11,37.93,5,37.64,4.74,37.19,5.14,37.39,5.49Zm2.76-.17A16.42,16.42,0,0,1,47,17.12a.33.33,0,0,0,.65.11c.92-3.49.4-9.44-7.17-12.53C40.08,4.54,39.82,5.08,40.15,5.32ZM21.69,15.76a16.94,16.94,0,0,0,10.47-9c.18-.36.75-.22.66.18-1.73,8-7.52,9.67-11.12,9.45C21.32,16.4,21.33,15.87,21.69,15.76Z" style="fill:#ccbea7;fill-rule:evenodd"/><path id="Outline" d="M38,65.75C17.32,65.75.5,52.27.5,35.7c0-10,6.18-19.33,16.53-24.92,3-1.6,5.57-3.21,7.86-4.62,1.26-.78,2.45-1.51,3.6-2.19C32,1.89,35,.5,38,.5s5.62,1.2,8.9,3.14c1,.57,2,1.19,3.07,1.87,2.49,1.54,5.3,3.28,9,5.27C69.32,16.37,75.5,25.69,75.5,35.7,75.5,52.27,58.68,65.75,38,65.75ZM38,3c-2.42,0-5,1.25-8.25,3.13-1.13.66-2.3,1.39-3.54,2.15-2.33,1.44-5,3.07-8,4.7C8.69,18.13,3,26.62,3,35.7,3,50.89,18.7,63.25,38,63.25S73,50.89,73,35.7C73,26.62,67.31,18.13,57.78,13,54,11,51.05,9.12,48.66,7.64c-1.09-.67-2.09-1.29-3-1.84C42.63,4,40.42,3,38,3Z"/></g><g id="Mouth"><g id="Background-2" data-name="Background"><path d="M45.05,43a8.93,8.93,0,0,1-2.92,4.71,6.81,6.81,0,0,1-4,1.88A6.84,6.84,0,0,1,34,47.71,8.93,8.93,0,0,1,31.12,43a.72.72,0,0,1,.8-.81H44.26A.72.72,0,0,1,45.05,43Z" style="fill:#b71422"/></g><g id="Tongue"><path id="Background-3" data-name="Background" d="M34,47.79a6.91,6.91,0,0,0,4.12,1.9,6.91,6.91,0,0,0,4.11-1.9,10.63,10.63,0,0,0,1-1.07,6.83,6.83,0,0,0-4.9-2.31,6.15,6.15,0,0,0-5,2.78C33.56,47.4,33.76,47.6,34,47.79Z" style="fill:#ff6164"/><path id="Outline-2" data-name="Outline" d="M34.16,47a5.36,5.36,0,0,1,4.19-2.08,6,6,0,0,1,4,1.69c.23-.25.45-.51.66-.77a7,7,0,0,0-4.71-1.93,6.36,6.36,0,0,0-4.89,2.36A9.53,9.53,0,0,0,34.16,47Z"/></g><path id="Outline-3" data-name="Outline" d="M38.09,50.19a7.42,7.42,0,0,1-4.45-2,9.52,9.52,0,0,1-3.11-5.05,1.2,1.2,0,0,1,.26-1,1.41,1.41,0,0,1,1.13-.51H44.26a1.44,1.44,0,0,1,1.13.51,1.19,1.19,0,0,1,.25,1h0a9.52,9.52,0,0,1-3.11,5.05A7.42,7.42,0,0,1,38.09,50.19Zm-6.17-7.4c-.16,0-.2.07-.21.09a8.29,8.29,0,0,0,2.73,4.37A6.23,6.23,0,0,0,38.09,49a6.28,6.28,0,0,0,3.65-1.73,8.3,8.3,0,0,0,2.72-4.37.21.21,0,0,0-.2-.09Z"/></g><g id="Face"><ellipse id="Right_Blush" data-name="Right Blush" cx="53.22" cy="40.18" rx="5.85" ry="3.44" style="fill:#febbd0"/><ellipse id="Left_Bluch" data-name="Left Bluch" cx="22.95" cy="40.18" rx="5.85" ry="3.44" style="fill:#febbd0"/><path id="Eyes" d="M25.7,38.8a5.51,5.51,0,1,0-5.5-5.51A5.51,5.51,0,0,0,25.7,38.8Zm24.77,0A5.51,5.51,0,1,0,45,33.29,5.5,5.5,0,0,0,50.47,38.8Z" style="fill-rule:evenodd"/><path id="Iris" d="M24,33.64a2.07,2.07,0,1,0-2.06-2.07A2.07,2.07,0,0,0,24,33.64Zm24.77,0a2.07,2.07,0,1,0-2.06-2.07A2.07,2.07,0,0,0,48.75,33.64Z" style="fill:#fff;fill-rule:evenodd"/></g></svg>
+====================
+FILE: /experimental/src/react.svg
+====================
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-11.5 -10.23174 23 20.46348">
+  <circle cx="0" cy="0" r="2.05" fill="#61dafb"/>
+  <g stroke="#61dafb" stroke-width="1" fill="none">
+    <ellipse rx="11" ry="4.2"/>
+    <ellipse rx="11" ry="4.2" transform="rotate(60)"/>
+    <ellipse rx="11" ry="4.2" transform="rotate(120)"/>
+  </g>
+</svg>
+
+====================
+FILE: /experimental/tsconfig.json
+====================
+
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": ["dist", "node_modules"]
+}

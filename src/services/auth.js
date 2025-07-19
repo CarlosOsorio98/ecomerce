@@ -1,5 +1,11 @@
-import { logout, setUser } from '../lib/state.js'
 import { userApi } from './user.js'
+
+// We'll get the store reference passed to functions that need it
+let storeActions = null
+
+export const setStoreActions = (actions) => {
+  storeActions = actions
+}
 
 const clearLocalData = async (forceReload = false) => {
   // Clear all localStorage items (including any foreign data)
@@ -124,7 +130,10 @@ const checkSession = async (retries = 2) => {
         if (res.status === 401 || res.status === 403) {
           // Token inválido, expirado o revocado
           await clearLocalData(false) // Don't force reload on normal auth failure
-          logout()
+          if (storeActions) {
+            storeActions.setUser(null)
+            storeActions.setAuthenticated(false)
+          }
           return null
         }
         throw new Error(`HTTP ${res.status}: ${res.statusText}`)
@@ -133,7 +142,10 @@ const checkSession = async (retries = 2) => {
       const user = await res.json()
       localStorage.setItem('user_session', JSON.stringify(user))
 
-      setUser(user)
+      if (storeActions) {
+        storeActions.setUser(user)
+        storeActions.setAuthenticated(true)
+      }
       return user
     } catch (error) {
       if (attempt === retries) {
@@ -164,7 +176,10 @@ const signIn = async (email, password) => {
 
   const { password: _, ...userWithoutPassword } = user
 
-  setUser(userWithoutPassword)
+  if (storeActions) {
+    storeActions.setUser(userWithoutPassword)
+    storeActions.setAuthenticated(true)
+  }
 
   return userWithoutPassword
 }
@@ -198,7 +213,10 @@ const signOut = async () => {
     console.error('Error al cerrar sesión:', error)
   } finally {
     await clearLocalData(false) // Normal logout, don't force reload
-    logout()
+    if (storeActions) {
+      storeActions.setUser(null)
+      storeActions.setAuthenticated(false)
+    }
   }
 }
 
@@ -242,7 +260,10 @@ const forceSessionClear = async () => {
   }
 
   // Update app state
-  logout()
+  if (storeActions) {
+    storeActions.setUser(null)
+    storeActions.setAuthenticated(false)
+  }
 
   console.log('Force session clear completed')
 }

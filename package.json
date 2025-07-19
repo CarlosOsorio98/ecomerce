@@ -6,13 +6,17 @@
     "start": "NODE_ENV=production bun run src/app.js",
     "dev": "bun run --hot src/app.js",
     "migrate": "bun run scripts/migrate.js",
-    "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"'",
+    "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --jsx-runtime=automatic",
     "preview": "bun run build && bun run start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/plugin-transform-react-jsx": "^7.27.1",
     "@types/bun": "latest",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
     "drizzle-kit": "^0.31.4",
     "eslint": "^9.31.0",
     "eslint-import-resolver-alias": "^1.1.2",
@@ -27,7 +31,11 @@
     "@libsql/client": "^0.15.10",
     "drizzle-orm": "^0.44.3",
     "jsonwebtoken": "^9.0.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0",
     "sharp": "^0.34.3",
-    "zod": "^4.0.5"
+    "zod": "^4.0.5",
+    "zustand": "^5.0.6"
   }
 }
