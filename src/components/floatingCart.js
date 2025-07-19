@@ -123,7 +123,14 @@ function renderCartItems(container, cart = null) {
           createElement(
             'button',
             {
-              onclick: () => addToCart(item.asset_id, -1),
+              onclick: async () => {
+                try {
+                  await addToCart(item.product_id, -1)
+                } catch (error) {
+                  console.error('Error updating cart:', error)
+                  // Optionally, show a user-facing error message
+                }
+              },
             },
             '-'
           ),
@@ -131,7 +138,14 @@ function renderCartItems(container, cart = null) {
           createElement(
             'button',
             {
-              onclick: () => addToCart(item.asset_id, 1),
+              onclick: async () => {
+                try {
+                  await addToCart(item.product_id, 1)
+                } catch (error) {
+                  console.error('Error updating cart:', error)
+                  // Optionally, show a user-facing error message
+                }
+              },
             },
             '+'
           )
