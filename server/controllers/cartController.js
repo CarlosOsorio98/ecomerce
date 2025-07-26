@@ -41,7 +41,7 @@ export const addToCart = async (req) => {
     throw createValidationError('Invalid data', parsed.error.errors)
   }
 
-  const result = await addItemToCart(body.product_id || body.asset_id, userId, body.quantity)
+  const result = await addItemToCart(body.product_id || body.asset_id, userId, body.quantity, body.size_id)
 
   return new Response(JSON.stringify(result), {
     status: 200,

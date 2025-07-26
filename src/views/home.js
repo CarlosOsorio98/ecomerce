@@ -71,17 +71,20 @@ export function HomeView(router) {
             createElement('p', { 
               className: 'price',
               style: `view-transition-name: product-price-${product.id};`
-            }, `$${product.price}`),
+            }, product.hasSizes === false ? 'Sin tallas configuradas' : `$${product.price}`),
             createElement(
               'button',
               {
-                className: 'add-to-cart',
+                className: product.hasSizes === false ? 'add-to-cart disabled' : 'add-to-cart',
+                disabled: product.hasSizes === false,
                 onclick: (e) => {
                   e.stopPropagation()
-                  showQuantityModal(product)
+                  if (product.hasSizes !== false) {
+                    showQuantityModal(product)
+                  }
                 },
               },
-              'Agregar al carrito'
+              product.hasSizes === false ? 'Configurar tallas' : 'Agregar al carrito'
             )
           )
         )

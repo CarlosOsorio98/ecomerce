@@ -28,13 +28,18 @@ export const cartService = {
       throw error
     }
   },
-  async addToCart(product_id, quantity = 1) {
+  async addToCart(product_id, quantity = 1, size_id = null) {
     try {
+      const body = { product_id, quantity }
+      if (size_id) {
+        body.size_id = size_id
+      }
+      
       const res = await fetch(`${API_BASE}/cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ product_id, quantity }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         await handleApiError(res, 'Error al agregar al carrito')

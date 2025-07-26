@@ -29,12 +29,11 @@
           <textarea id="productDescription" rows="3"></textarea>
         </div>
         <div class="form-group">
-          <label for="productPrice">Precio:</label>
-          <input type="number" id="productPrice" step="0.01" required />
-        </div>
-        <div class="form-group">
           <label for="productImage">Imagen:</label>
           <input type="file" id="productImage" accept="image/*" required />
+        </div>
+        <div class="form-note">
+          <p><strong>Nota:</strong> Los precios se configuran por talla después de crear el producto.</p>
         </div>
         <button type="submit">Añadir Producto</button>
       </form>
@@ -59,15 +58,70 @@
             <textarea id="editProductDescription" rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label for="editProductPrice">Precio:</label>
-            <input type="number" id="editProductPrice" step="0.01" required />
-          </div>
-          <div class="form-group">
             <label for="editProductImage">Nueva Imagen (opcional):</label>
             <input type="file" id="editProductImage" accept="image/*" />
           </div>
+          <div class="form-note">
+            <p><strong>Nota:</strong> Los precios se configuran por talla. Usa el botón "Tallas" para gestionar precios.</p>
+          </div>
           <button type="submit">Actualizar Producto</button>
           <button type="button" onclick="closeEditModal()">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sizes Management Modal -->
+    <div id="sizesModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeSizesModal()">&times;</span>
+        <h3>Gestionar Tallas - <span id="sizesProductName"></span></h3>
+        <input type="hidden" id="sizesProductId" />
+        
+        <form id="addSizeForm" onsubmit="return addSize(event)">
+          <h4>Añadir Nueva Talla</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="sizeSize">Talla:</label>
+              <input type="text" id="sizeSize" placeholder="S, M, L, XL..." required />
+            </div>
+            <div class="form-group">
+              <label for="sizePrice">Precio:</label>
+              <input type="number" id="sizePrice" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label for="sizeStock">Stock:</label>
+              <input type="number" id="sizeStock" min="0" value="0" />
+            </div>
+          </div>
+          <button type="submit">Añadir Talla</button>
+        </form>
+
+        <h4>Tallas Existentes</h4>
+        <div id="sizesList"></div>
+      </div>
+    </div>
+
+    <!-- Edit Size Modal -->
+    <div id="editSizeModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeEditSizeModal()">&times;</span>
+        <h3>Editar Talla</h3>
+        <form id="editSizeForm" onsubmit="return updateSize(event)">
+          <input type="hidden" id="editSizeId" />
+          <div class="form-group">
+            <label for="editSizeSize">Talla:</label>
+            <input type="text" id="editSizeSize" required />
+          </div>
+          <div class="form-group">
+            <label for="editSizePrice">Precio:</label>
+            <input type="number" id="editSizePrice" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="editSizeStock">Stock:</label>
+            <input type="number" id="editSizeStock" min="0" />
+          </div>
+          <button type="submit">Actualizar Talla</button>
+          <button type="button" onclick="closeEditSizeModal()">Cancelar</button>
         </form>
       </div>
     </div>

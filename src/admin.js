@@ -54,8 +54,9 @@ async function loadProducts() {
                   <img src="${imageUrl}" alt="${product.name}">
                   <h3>${product.name}</h3>
                   <p class="description">${product.description || 'Sin descripción'}</p>
-                  <p class="price">$${product.price}</p>
-                  <button class="edit-btn" onclick="openEditModal('${product.id}', '${product.name}', '${product.price}', '${product.description || ''}')">Editar</button>
+                  <p class="price">${product.sizes && product.sizes.length > 0 ? `$${product.price} (promedio)` : 'Sin tallas configuradas'}</p>
+                  <button class="edit-btn" onclick="openEditModal('${product.id}', '${product.name}', '${product.description || ''}')">Editar</button>
+                  <button class="sizes-btn" onclick="openSizesModal('${product.id}', '${product.name}')">Tallas</button>
                   <button class="delete-btn" onclick="deleteProduct('${product.id}')">Eliminar</button>
               </div>
           `
@@ -73,7 +74,7 @@ async function addProduct(event) {
   const formData = new FormData()
   formData.append('name', document.getElementById('productName').value)
   formData.append('description', document.getElementById('productDescription').value)
-  formData.append('price', document.getElementById('productPrice').value)
+  formData.append('price', '0') // Temporary price, will be set via sizes
   formData.append(
     'file',
     document.getElementById('productImage').files[0]
@@ -122,11 +123,10 @@ async function deleteProduct(id) {
   }
 }
 
-function openEditModal(id, name, price, description) {
+function openEditModal(id, name, description) {
   document.getElementById('editProductId').value = id
   document.getElementById('editProductName').value = name
   document.getElementById('editProductDescription').value = description
-  document.getElementById('editProductPrice').value = price
   document.getElementById('editModal').style.display = 'block'
 }
 
@@ -141,7 +141,7 @@ async function updateProduct(event) {
   const formData = new FormData()
   formData.append('name', document.getElementById('editProductName').value)
   formData.append('description', document.getElementById('editProductDescription').value)
-  formData.append('price', document.getElementById('editProductPrice').value)
+  formData.append('price', '0') // Price is managed via sizes
   
   const fileInput = document.getElementById('editProductImage')
   if (fileInput.files[0]) {
@@ -171,11 +171,159 @@ async function updateProduct(event) {
   }
 }
 
-// Close modal when clicking outside
+
+// Size management functions
+async function openSizesModal(productId, productName) {
+  document.getElementById('sizesProductId').value = productId
+  document.getElementById('sizesProductName').textContent = productName
+  document.getElementById('sizesModal').style.display = 'block'
+  await loadProductSizes(productId)
+}
+
+function closeSizesModal() {
+  document.getElementById('sizesModal').style.display = 'none'
+  document.getElementById('addSizeForm').reset()
+}
+
+async function loadProductSizes(productId) {
+  try {
+    const response = await fetch(`/api/admin/products/${productId}/sizes`, {
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    })
+    const sizes = await response.json()
+
+    const sizesList = document.getElementById('sizesList')
+    sizesList.innerHTML = sizes
+      .map(
+        (size) => `
+          <div class="size-item">
+            <span class="size-info">
+              <strong>${size.size}</strong> - $${size.price}
+              ${size.stock ? ` (Stock: ${size.stock})` : ''}
+            </span>
+            <div class="size-actions">
+              <button class="edit-size-btn" onclick="openEditSizeModal(${size.id}, '${size.size}', ${size.price}, ${size.stock || 0})">Editar</button>
+              <button class="delete-size-btn" onclick="deleteSize(${size.id})">Eliminar</button>
+            </div>
+          </div>
+        `
+      )
+      .join('')
+  } catch (error) {
+    alert('Error al cargar las tallas')
+  }
+}
+
+async function addSize(event) {
+  event.preventDefault()
+
+  const productId = document.getElementById('sizesProductId').value
+  const size = document.getElementById('sizeSize').value
+  const price = parseFloat(document.getElementById('sizePrice').value)
+  const stock = parseInt(document.getElementById('sizeStock').value) || 0
+
+  try {
+    const response = await fetch(`/api/admin/products/${productId}/sizes`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ size, price, stock }),
+    })
+
+    if (response.ok) {
+      document.getElementById('addSizeForm').reset()
+      await loadProductSizes(productId)
+    } else {
+      alert('Error al añadir talla')
+    }
+  } catch (error) {
+    alert('Error al añadir talla')
+  }
+}
+
+function openEditSizeModal(sizeId, size, price, stock) {
+  document.getElementById('editSizeId').value = sizeId
+  document.getElementById('editSizeSize').value = size
+  document.getElementById('editSizePrice').value = price
+  document.getElementById('editSizeStock').value = stock
+  document.getElementById('editSizeModal').style.display = 'block'
+}
+
+function closeEditSizeModal() {
+  document.getElementById('editSizeModal').style.display = 'none'
+  document.getElementById('editSizeForm').reset()
+}
+
+async function updateSize(event) {
+  event.preventDefault()
+
+  const sizeId = document.getElementById('editSizeId').value
+  const size = document.getElementById('editSizeSize').value
+  const price = parseFloat(document.getElementById('editSizePrice').value)
+  const stock = parseInt(document.getElementById('editSizeStock').value) || 0
+
+  try {
+    const response = await fetch(`/api/admin/products/0/sizes/${sizeId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ size, price, stock }),
+    })
+
+    if (response.ok) {
+      closeEditSizeModal()
+      const productId = document.getElementById('sizesProductId').value
+      await loadProductSizes(productId)
+    } else {
+      alert('Error al actualizar talla')
+    }
+  } catch (error) {
+    alert('Error al actualizar talla')
+  }
+}
+
+async function deleteSize(sizeId) {
+  if (!confirm('¿Estás seguro de que quieres eliminar esta talla?')) {
+    return
+  }
+
+  try {
+    const response = await fetch(`/api/admin/products/0/sizes/${sizeId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+      },
+    })
+
+    if (response.ok) {
+      const productId = document.getElementById('sizesProductId').value
+      await loadProductSizes(productId)
+    } else {
+      alert('Error al eliminar talla')
+    }
+  } catch (error) {
+    alert('Error al eliminar talla')
+  }
+}
+
+// Close modals when clicking outside
 window.onclick = function(event) {
-  const modal = document.getElementById('editModal')
-  if (event.target === modal) {
+  const editModal = document.getElementById('editModal')
+  const sizesModal = document.getElementById('sizesModal')
+  const editSizeModal = document.getElementById('editSizeModal')
+  
+  if (event.target === editModal) {
     closeEditModal()
+  } else if (event.target === sizesModal) {
+    closeSizesModal()
+  } else if (event.target === editSizeModal) {
+    closeEditSizeModal()
   }
 }
 
@@ -186,3 +334,10 @@ window.deleteProduct = deleteProduct
 window.openEditModal = openEditModal
 window.closeEditModal = closeEditModal
 window.updateProduct = updateProduct
+window.openSizesModal = openSizesModal
+window.closeSizesModal = closeSizesModal
+window.addSize = addSize
+window.openEditSizeModal = openEditSizeModal
+window.closeEditSizeModal = closeEditSizeModal
+window.updateSize = updateSize
+window.deleteSize = deleteSize

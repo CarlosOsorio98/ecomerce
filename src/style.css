@@ -189,14 +189,14 @@ footer {
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-::view-transition-old(root) {
+::view-transition-old(main-app) {
   animation-name: elegant-fade-out;
   animation-duration: 200ms;
   animation-fill-mode: forwards;
   animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
 }
 
-::view-transition-new(root) {
+::view-transition-new(main-app) {
   animation-name: elegant-fade-in;
   animation-duration: 400ms;
   animation-fill-mode: forwards;
@@ -251,7 +251,7 @@ footer {
 
 /* Configure main container for transitions */
 #app {
-  view-transition-name: root;
+  view-transition-name: main-app;
   overflow-x: hidden;
   position: relative;
   min-height: 60vh;
@@ -360,7 +360,7 @@ nav a, [data-link] {
 /* 🚀 SPECTACULAR VIEW TRANSITIONS - BINDING EFFECT */
 
 /* Root container transitions */
-::view-transition-group(root) {
+::view-transition-group(main-app) {
   animation-duration: 600ms;
   animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -518,22 +518,22 @@ nav a, [data-link] {
 }
 
 /* Smooth root transitions with depth */
-::view-transition-old(root) {
-  animation-name: root-slide-out;
+::view-transition-old(main-app) {
+  animation-name: main-app-slide-out;
   animation-duration: 400ms;
   animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
   z-index: 1;
 }
 
-::view-transition-new(root) {
-  animation-name: root-slide-in;
+::view-transition-new(main-app) {
+  animation-name: main-app-slide-in;
   animation-duration: 600ms;
   animation-delay: 200ms;
   animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   z-index: 2;
 }
 
-@keyframes root-slide-out {
+@keyframes main-app-slide-out {
   0% {
     opacity: 1;
     transform: translateX(0) scale(1);
@@ -544,7 +544,7 @@ nav a, [data-link] {
   }
 }
 
-@keyframes root-slide-in {
+@keyframes main-app-slide-in {
   0% {
     opacity: 0;
     transform: translateX(30px) scale(0.95);

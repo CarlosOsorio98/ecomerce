@@ -88,29 +88,27 @@ export const getProducts = async (req) => {
 export const addProduct = async (req) => {
   const contentType = req.headers.get('Content-Type')
   
-  let name, description, price, file
+  let name, description, file
   
   if (contentType && contentType.includes('application/json')) {
     // Handle JSON request
     const data = await req.json()
     name = data.name
     description = data.description
-    price = parseFloat(data.price)
     file = null
   } else {
     // Handle form data request
     const formData = await req.formData()
     name = formData.get('name')
     description = formData.get('description')
-    price = parseFloat(formData.get('price'))
     file = formData.get('file')
   }
 
-  if (!name || !price) {
-    throw createValidationError('Missing required data')
+  if (!name) {
+    throw createValidationError('Missing required data: name')
   }
 
-  const product = await productService.createProduct(name, description, price)
+  const product = await productService.createProduct(name, description)
   
   // Add asset if file is provided
   if (file && file.size > 0) {
@@ -130,14 +128,13 @@ export const updateProduct = async (req) => {
   
   const name = formData.get('name')
   const description = formData.get('description')
-  const price = parseFloat(formData.get('price'))
   const file = formData.get('file')
 
-  if (!name || !price) {
-    throw createValidationError('Missing required data')
+  if (!name) {
+    throw createValidationError('Missing required data: name')
   }
 
-  const updatedProduct = await productService.updateProduct(productId, name, description, price)
+  const updatedProduct = await productService.updateProduct(productId, name, description)
 
   if (!updatedProduct) {
     throw createNotFoundError('Product not found')
@@ -164,6 +161,68 @@ export const removeProduct = async (req) => {
     throw createNotFoundError('Product not found')
   }
 
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
+  })
+}
+
+// Product sizes admin endpoints
+export const getProductSizes = async (req) => {
+  const productId = req.params.id
+  
+  const sizes = await productService.getProductSizes(productId)
+  return new Response(JSON.stringify(sizes), {
+    status: 200,
+    headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
+  })
+}
+
+export const addProductSize = async (req) => {
+  const productId = req.params.id
+  const data = await req.json()
+  
+  const { size, price, stock } = data
+  
+  if (!size || !price) {
+    throw createValidationError('Missing required data: size and price')
+  }
+  
+  const productSize = await productService.createProductSize(productId, size, price, stock)
+  
+  return new Response(JSON.stringify(productSize), {
+    status: 201,
+    headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
+  })
+}
+
+export const updateProductSize = async (req) => {
+  const sizeId = req.params.id
+  const data = await req.json()
+  
+  const { size, price, stock } = data
+  
+  const updatedSize = await productService.updateProductSize(sizeId, size, price, stock)
+  
+  if (!updatedSize) {
+    throw createNotFoundError('Product size not found')
+  }
+  
+  return new Response(JSON.stringify(updatedSize), {
+    status: 200,
+    headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },
+  })
+}
+
+export const removeProductSize = async (req) => {
+  const sizeId = req.params.id
+  
+  const size = await productService.deleteProductSize(sizeId)
+  
+  if (!size) {
+    throw createNotFoundError('Product size not found')
+  }
+  
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { ...getCORSHeaders(), 'Content-Type': 'application/json' },

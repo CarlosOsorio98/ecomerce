@@ -36,6 +36,12 @@ const plusAndMinus = (quantityInput) => {
 }
 
 export function showQuantityModal(product) {
+  // Check if product has sizes configured
+  if (!product.sizes || product.sizes.length === 0) {
+    alert('Este producto no tiene tallas configuradas y no está disponible para compra.')
+    return
+  }
+
   const modalOverlay = createElement('div', { className: 'modal-overlay' })
   const modalContent = createElement('div', { className: 'modal-content' })
 
@@ -81,9 +87,103 @@ export function showQuantityModal(product) {
 
   // Normal quantity modal for authenticated users
   let quantity = 1
-  let totalPrice = product.price
+  let selectedSize = null
+  let currentPrice = product.price
 
   const title = createElement('h2', {}, `Agregar ${product.name}`)
+
+  // Create add button first so it can be referenced in selector
+  const addButton = createElement(
+    'button',
+    {
+      className: 'btn-primary',
+      disabled: true, // Initially disabled
+      onclick: async () => {
+        try {
+          if (!selectedSize) {
+            alert('Por favor selecciona una talla')
+            return
+          }
+          
+          if (selectedSize.stock <= 0) {
+            alert('Esta talla no tiene stock disponible')
+            return
+          }
+          
+          if (quantity > selectedSize.stock) {
+            alert(`Solo hay ${selectedSize.stock} unidades disponibles de esta talla`)
+            return
+          }
+          
+          await addToCart(product.id, quantity, selectedSize.id)
+          document.body.removeChild(modalOverlay)
+        } catch (e) {
+          console.error('Add to cart error:', e)
+          alert('Error al agregar al carrito')
+        }
+      },
+    },
+    'Selecciona una talla'
+  )
+
+  // Size selection (required for all products)
+  const sizeLabel = createElement('p', {}, 'Talla:')
+  const sizeSelector = createElement('select', {
+    id: 'size-select',
+    onchange: (e) => {
+      const sizeId = parseInt(e.target.value)
+      selectedSize = sizeId ? product.sizes.find(s => s.id === sizeId) : null
+      currentPrice = selectedSize ? selectedSize.price : 0
+      updateTotalPrice()
+      
+      // Update quantity input constraints based on stock
+      if (selectedSize && selectedSize.stock > 0) {
+        quantityInput.max = selectedSize.stock
+        if (quantity > selectedSize.stock) {
+          quantity = selectedSize.stock
+          quantityInput.value = quantity
+          updateTotalPrice()
+        }
+      }
+      
+      // Update stock display
+      if (selectedSize) {
+        stockDisplay.textContent = selectedSize.stock > 0 
+          ? `Stock disponible: ${selectedSize.stock}` 
+          : 'Sin stock disponible'
+        stockDisplay.className = selectedSize.stock > 0 ? 'stock-info' : 'stock-info no-stock'
+      } else {
+        stockDisplay.textContent = ''
+      }
+      
+      // Update add button state
+      addButton.disabled = !selectedSize || (selectedSize && selectedSize.stock <= 0)
+      addButton.textContent = selectedSize 
+        ? (selectedSize.stock > 0 ? 'Agregar' : 'Sin stock')
+        : 'Selecciona una talla'
+    }
+  })
+
+  // Add default option
+  const defaultOption = createElement('option', { value: '' }, 'Selecciona una talla')
+  sizeSelector.appendChild(defaultOption)
+
+  // Add size options
+  product.sizes.forEach(size => {
+    const stockText = size.stock > 0 ? ` (Stock: ${size.stock})` : ' (Sin stock)'
+    const isOutOfStock = size.stock <= 0
+    
+    const option = createElement('option', { 
+      value: size.id,
+      disabled: isOutOfStock
+    }, `${size.size} - $${size.price}${stockText}`)
+    
+    sizeSelector.appendChild(option)
+  })
+
+  modalContent.appendChild(sizeLabel)
+  modalContent.appendChild(sizeSelector)
+
   const quantityLabel = createElement('p', {}, 'Cantidad:')
   const quantityInput = createElement('input', {
     id: 'quantity-input',
@@ -96,33 +196,34 @@ export function showQuantityModal(product) {
         quantity = 1
         e.target.value = 1
       }
-      totalPrice = product.price * quantity
-      priceDisplay.textContent = `Precio Total: $${totalPrice.toFixed(2)}`
+      
+      // Validate against stock if size is selected
+      if (selectedSize && selectedSize.stock > 0 && quantity > selectedSize.stock) {
+        quantity = selectedSize.stock
+        e.target.value = selectedSize.stock
+      }
+      
+      updateTotalPrice()
     },
   })
+
+  const updateTotalPrice = () => {
+    const totalPrice = currentPrice * quantity
+    priceDisplay.textContent = `Precio Total: $${totalPrice.toFixed(2)}`
+  }
+
+  const stockDisplay = createElement('p', { 
+    id: 'stock-display',
+    className: 'stock-info'
+  }, '')
+  
   const priceDisplay = createElement(
     'p',
     {},
-    `Precio Total: $${totalPrice.toFixed(2)}`
+    `Precio Total: $${(currentPrice * quantity).toFixed(2)}`
   )
 
   const actions = createElement('div', { className: 'modal-actions' })
-  const addButton = createElement(
-    'button',
-    {
-      className: 'btn-primary',
-      onclick: async () => {
-        try {
-          await addToCart(product.id, quantity)
-          document.body.removeChild(modalOverlay)
-        } catch (e) {
-          console.error('Add to cart error:', e)
-          alert('Error al agregar al carrito')
-        }
-      },
-    },
-    'Agregar'
-  )
 
   const cancelButton = createElement(
     'button',
@@ -139,6 +240,7 @@ export function showQuantityModal(product) {
   modalContent.appendChild(title)
   modalContent.appendChild(quantityLabel)
   modalContent.appendChild(plusAndMinus(quantityInput))
+  modalContent.appendChild(stockDisplay)
   modalContent.appendChild(priceDisplay)
   modalContent.appendChild(actions)
 

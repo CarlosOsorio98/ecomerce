@@ -71,8 +71,34 @@ export const ProductView = (router) => {
           className: 'product-price',
           style: `view-transition-name: product-price-${product.id};`,
         },
-        `$${product.price}`
+        product.sizes && product.sizes.length > 0 
+          ? `Desde $${Math.min(...product.sizes.map(s => s.price))} (precio promedio: $${product.price})`
+          : 'Sin tallas configuradas - No disponible para compra'
       )
+      
+      // Display available sizes
+      let sizesDisplay = null
+      if (product.sizes && product.sizes.length > 0) {
+        const sizesTitle = createElement('h3', { className: 'sizes-title' }, 'Tallas disponibles:')
+        const sizesList = createElement('div', { className: 'sizes-list' })
+        
+        product.sizes.forEach(size => {
+          const stockText = size.stock > 0 ? `Stock: ${size.stock}` : 'Sin stock'
+          const stockClass = size.stock > 0 ? 'size-stock' : 'size-stock no-stock'
+          
+          const sizeItem = createElement('div', { 
+            className: size.stock > 0 ? 'size-item' : 'size-item out-of-stock' 
+          }, [
+            createElement('span', { className: 'size-name' }, size.size),
+            createElement('span', { className: 'size-price' }, `$${size.price}`),
+            createElement('span', { className: stockClass }, stockText)
+          ])
+          sizesList.appendChild(sizeItem)
+        })
+        
+        sizesDisplay = createElement('div', { className: 'sizes-section' }, [sizesTitle, sizesList])
+      }
+      
       const description = createElement(
         'p',
         { className: 'product-description' },
@@ -83,13 +109,16 @@ export const ProductView = (router) => {
       const addToCartButton = createElement(
         'button',
         {
-          className: 'add-to-cart-btn',
+          className: product.sizes && product.sizes.length > 0 ? 'add-to-cart-btn' : 'add-to-cart-btn disabled',
+          disabled: !product.sizes || product.sizes.length === 0,
           onclick: (e) => {
             e.preventDefault()
-            showQuantityModal(product)
+            if (product.sizes && product.sizes.length > 0) {
+              showQuantityModal(product)
+            }
           },
         },
-        'Add to Cart'
+        product.sizes && product.sizes.length > 0 ? 'Agregar al carrito' : 'Sin tallas disponibles'
       )
 
       // Back button
@@ -114,6 +143,9 @@ export const ProductView = (router) => {
 
       infoContainer.appendChild(title)
       infoContainer.appendChild(price)
+      if (sizesDisplay) {
+        infoContainer.appendChild(sizesDisplay)
+      }
       infoContainer.appendChild(description)
       infoContainer.appendChild(addToCartButton)
       infoContainer.appendChild(backButton)

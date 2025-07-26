@@ -266,7 +266,7 @@ function createFavoritesSection(favorites, router) {
         'div',
         { className: 'favorite-header' },
         createElement('h4', {
-          style: `view-transition-name: product-title-${favorite.product_id};`
+          style: `view-transition-name: favorite-title-${favorite.product_id};`
         }, favorite.name),
         createHeartButton(favorite.product_id, {
           size: '18',
@@ -292,14 +292,14 @@ function createFavoritesSection(favorites, router) {
         createElement('img', {
           src: imgSrc,
           alt: favorite.name,
-          style: `view-transition-name: product-image-${favorite.product_id};`
+          style: `view-transition-name: favorite-image-${favorite.product_id};`
         }),
         favoriteHeader,
         createElement(
           'p',
           { 
             className: 'favorite-price',
-            style: `view-transition-name: product-price-${favorite.product_id};`
+            style: `view-transition-name: favorite-price-${favorite.product_id};`
           },
           `${favorite.price}`
         ),

@@ -215,3 +215,17 @@
   transform: translateY(1px) scale(0.98);
   transition: all 0.1s ease;
 }
+
+.product-card button.disabled {
+  background: #ccc !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.product-card button.disabled:hover {
+  background: #ccc !important;
+  transform: none !important;
+  box-shadow: none !important;
+}

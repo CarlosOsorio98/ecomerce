@@ -28,19 +28,17 @@ export const getProductById = async (id) => {
   return await productRepository.getProductWithAssets(id)
 }
 
-export const createProduct = async (name, description, price) => {
-  const validatedData = productSchema.parse({
-    id: 'temp', // Will be replaced by repository
-    name,
-    description,
-    price
-  })
+export const createProduct = async (name, description) => {
+  // Basic validation without price
+  if (!name || typeof name !== 'string') {
+    throw new Error('Name is required and must be a string')
+  }
   
-  return await productRepository.createProduct(name, description, price)
+  return await productRepository.createProduct(name, description)
 }
 
-export const updateProduct = async (id, name, description, price) => {
-  return await productRepository.updateProduct(id, name, description, price)
+export const updateProduct = async (id, name, description) => {
+  return await productRepository.updateProduct(id, name, description)
 }
 
 export const deleteProduct = async (id) => {
@@ -88,4 +86,21 @@ export const addAssetToProduct = async (productId, imageFile) => {
   }
   
   return await assetRepository.createAsset(productId, url, urlLocal)
+}
+
+// Product sizes service methods
+export const getProductSizes = async (productId) => {
+  return await productRepository.getProductSizes(productId)
+}
+
+export const createProductSize = async (productId, size, price, stock = 0) => {
+  return await productRepository.createProductSize(productId, size, price, stock)
+}
+
+export const updateProductSize = async (sizeId, size, price, stock) => {
+  return await productRepository.updateProductSize(sizeId, size, price, stock)
+}
+
+export const deleteProductSize = async (sizeId) => {
+  return await productRepository.deleteProductSize(sizeId)
 }

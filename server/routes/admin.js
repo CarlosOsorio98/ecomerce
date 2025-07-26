@@ -7,6 +7,10 @@ import {
   getProducts,
   removeProduct,
   updateProduct,
+  getProductSizes,
+  addProductSize,
+  updateProductSize,
+  removeProductSize,
 } from '../controllers/adminController.js'
 import { adminMiddleware } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/errorHandler.js'
@@ -37,6 +41,18 @@ const createAdminRouter = () => {
       requiresAuth: true,
     }),
     createRoute('DELETE', '/api/admin/products/:id', removeProduct, {
+      requiresAuth: true,
+    }),
+    createRoute('GET', '/api/admin/products/:id/sizes', getProductSizes, {
+      requiresAuth: true,
+    }),
+    createRoute('POST', '/api/admin/products/:id/sizes', addProductSize, {
+      requiresAuth: true,
+    }),
+    createRoute('PUT', '/api/admin/products/:productId/sizes/:id', updateProductSize, {
+      requiresAuth: true,
+    }),
+    createRoute('DELETE', '/api/admin/products/:productId/sizes/:id', removeProductSize, {
       requiresAuth: true,
     }),
   ]

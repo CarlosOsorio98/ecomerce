@@ -45,8 +45,8 @@ export const syncCart = async () => {
   }
 }
 
-export const addToCart = async (asset_id, quantity) => {
-  await cartService.addToCart(asset_id, quantity)
+export const addToCart = async (product_id, quantity, size_id = null) => {
+  await cartService.addToCart(product_id, quantity, size_id)
   await syncCart()
 }
 
@@ -55,9 +55,9 @@ export const removeFromCart = async (id) => {
   await syncCart()
 }
 
-export const updateCartItemQuantity = async (asset_id, newQuantity) => {
+export const updateCartItemQuantity = async (product_id, newQuantity, size_id = null) => {
   const cart = store.getState().cart
-  const item = cart.find((i) => i.asset_id === asset_id)
+  const item = cart.find((i) => i.product_id === product_id && (!size_id || i.size_id === size_id))
   if (!item) return
 
   const diff = newQuantity - item.quantity
@@ -65,7 +65,7 @@ export const updateCartItemQuantity = async (asset_id, newQuantity) => {
   if (newQuantity <= 0) {
     await removeFromCart(item.id)
   } else {
-    await addToCart(asset_id, diff)
+    await addToCart(product_id, diff, size_id)
   }
 }
 

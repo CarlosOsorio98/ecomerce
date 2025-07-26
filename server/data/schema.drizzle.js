@@ -32,7 +32,6 @@ export const products = sqliteTable('products', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
-  price: real('price').notNull(),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 })
@@ -56,13 +55,15 @@ export const cart = sqliteTable('cart', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   productId: text('product_id').notNull(),
   userId: integer('user_id').notNull(),
+  sizeId: integer('size_id'),
   quantity: integer('quantity').notNull(),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
   userIdIdx: index('idx_cart_user_id').on(table.userId),
   productIdIdx: index('idx_cart_product_id').on(table.productId),
-  uniqueUserProduct: unique().on(table.productId, table.userId),
+  sizeIdIdx: index('idx_cart_size_id').on(table.sizeId),
+  uniqueUserProductSize: unique().on(table.productId, table.userId, table.sizeId),
   productIdFk: foreignKey({
     columns: [table.productId],
     foreignColumns: [products.id],
@@ -70,6 +71,10 @@ export const cart = sqliteTable('cart', {
   userIdFk: foreignKey({
     columns: [table.userId],
     foreignColumns: [users.id],
+  }).onDelete('cascade'),
+  sizeIdFk: foreignKey({
+    columns: [table.sizeId],
+    foreignColumns: [productSizes.id],
   }).onDelete('cascade'),
 }))
 
@@ -86,6 +91,23 @@ export const favorites = sqliteTable('favorites', {
     columns: [table.userId],
     foreignColumns: [users.id],
   }).onDelete('cascade'),
+  productIdFk: foreignKey({
+    columns: [table.productId],
+    foreignColumns: [products.id],
+  }).onDelete('cascade'),
+}))
+
+export const productSizes = sqliteTable('product_sizes', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  productId: text('product_id').notNull(),
+  size: text('size').notNull(),
+  price: real('price').notNull(),
+  stock: integer('stock').default(0),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  productIdIdx: index('idx_product_sizes_product_id').on(table.productId),
+  uniqueProductSize: unique().on(table.productId, table.size),
   productIdFk: foreignKey({
     columns: [table.productId],
     foreignColumns: [products.id],
@@ -147,5 +169,11 @@ export const productsRelations = {
     table: favorites,
     fields: [products.id],
     references: [favorites.productId],
+  },
+  sizes: {
+    relation: 'many',
+    table: productSizes,
+    fields: [products.id],
+    references: [productSizes.productId],
   },
 }

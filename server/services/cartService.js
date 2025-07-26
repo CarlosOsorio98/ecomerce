@@ -12,23 +12,23 @@ import {
 
 export const getCartItems = async (userId) => await getCart(userId)
 
-export const addItemToCart = async (productId, userId, quantity) => {
+export const addItemToCart = async (productId, userId, quantity, sizeId = null) => {
   const product = await getProductById(productId)
   if (!product) {
     throw createNotFoundError('Product does not exist')
   }
 
-  const existingItem = await getCartItemByProductId(productId, userId)
+  const existingItem = await getCartItemByProductId(productId, userId, sizeId)
 
   if (existingItem) {
     const newQuantity = existingItem.quantity + quantity
     if (newQuantity <= 0) {
-      await removeFromCart(productId, userId)
+      await removeFromCart(productId, userId, sizeId)
     } else {
-      await updateCartQuantity(productId, userId, newQuantity)
+      await updateCartQuantity(productId, userId, newQuantity, sizeId)
     }
   } else if (quantity > 0) {
-    await addToCart(productId, userId, quantity)
+    await addToCart(productId, userId, quantity, sizeId)
   }
 
   return { success: true }
